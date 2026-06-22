@@ -4,7 +4,7 @@ import { useTabStore } from './useTabStore'
 export function TabBar() {
   const openFiles = useTabStore((s) => s.openFiles)
   const activeFile = useTabStore((s) => s.activeFile)
-  const dirtyFiles = useTabStore((s) => s.dirtyFiles)
+  const isDirty = useTabStore((s) => s.isDirty)
   const setActive = useTabStore((s) => s.setActive)
   const closeFile = useTabStore((s) => s.closeFile)
 
@@ -14,7 +14,7 @@ export function TabBar() {
     <div className="flex border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 overflow-x-auto">
       {openFiles.map((filePath) => {
         const isActive = filePath === activeFile
-        const isDirty = dirtyFiles.has(filePath)
+        const dirty = isDirty(filePath)
         return (
           <div
             key={filePath}
@@ -34,7 +34,7 @@ export function TabBar() {
             `}
           >
             <span className="truncate max-w-32">{basename(filePath)}</span>
-            {isDirty && <span className="w-1.5 h-1.5 rounded-full bg-blue-500" />}
+            {dirty && <span className="w-1.5 h-1.5 rounded-full bg-blue-500" />}
             <button
               onClick={(e) => {
                 e.stopPropagation()

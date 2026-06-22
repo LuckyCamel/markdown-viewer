@@ -9,23 +9,21 @@ test.describe('Theme Switching', () => {
 
     // Need a workspace so Layout renders (SettingsPanel is inside Layout)
     await openWorkspace(electronApp, page, dir.path)
-    await page.waitForTimeout(500)
+    await expect(page.getByText('File Tree')).toBeVisible({ timeout: 10000 })
 
     // Open settings panel via IPC (simulating menu click)
     await electronApp.evaluate(({ BrowserWindow }) => {
       BrowserWindow.getAllWindows()[0]?.webContents.send('menu:openSettings')
     })
-    await page.waitForTimeout(500)
+    await expect(page.getByText('Settings').first()).toBeVisible({ timeout: 10000 })
 
     // Switch to dark — verify class added
     await page.getByRole('button', { name: 'Dark' }).click()
-    await page.waitForTimeout(300)
-    await expect(html).toHaveClass(/dark/)
+    await expect(html).toHaveClass(/dark/, { timeout: 5000 })
 
     // Switch to light — verify class removed
     await page.getByRole('button', { name: 'Light' }).click()
-    await page.waitForTimeout(300)
-    await expect(html).not.toHaveClass(/dark/)
+    await expect(html).not.toHaveClass(/dark/, { timeout: 5000 })
 
     dir.cleanup()
     await cleanup()

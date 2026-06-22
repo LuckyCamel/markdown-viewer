@@ -25,7 +25,7 @@ export function useScrollRestore(activeFile: string | null, content: string | un
         .get<Record<string, number>>('readingPositions')
         .catch((err) => {
           logError('useScrollRestore:load', err)
-          return null as Record<string, number> | undefined
+          return undefined
         })
       if (positions?.[activeFile]) {
         const container = document.querySelector('main > div:first-child')

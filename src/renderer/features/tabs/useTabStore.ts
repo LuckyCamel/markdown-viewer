@@ -3,7 +3,9 @@ import { create } from 'zustand'
 interface TabState {
   openFiles: string[]
   activeFile: string | null
+  /** @deprecated Use isDirty() instead */
   dirtyFiles: Set<string>
+  isDirty: (filePath: string) => boolean
   openFile: (filePath: string) => void
   closeFile: (filePath: string) => void
   setActive: (filePath: string) => void
@@ -16,7 +18,8 @@ interface TabState {
 export const useTabStore = create<TabState>((set, get) => ({
   openFiles: [],
   activeFile: null,
-  dirtyFiles: new Set(),
+  dirtyFiles: new Set<string>(),
+  isDirty: (filePath) => get().dirtyFiles.has(filePath),
   openFile: (filePath) => {
     const { openFiles } = get()
     if (!openFiles.includes(filePath)) {

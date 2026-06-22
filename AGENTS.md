@@ -9,7 +9,7 @@
 - `dialog.showErrorBox` 已拦截（E2E 测试不会被原生错误对话框阻塞）
 - React ErrorBoundary 已添加（防止组件崩溃 → 白屏）
 - 每条错误路径用统一 `logError` 记录：位置、错误类型、消息、stack
-- Pre-commit hook 仍坏（`tsc --noEmit` TS5112），使用 `--no-verify`
+- Pre-commit hook 已修复（`lint-staged` 中 `tsc --noEmit` 改为指定子项目 `-p tsconfig.node.json` + `-p tsconfig.web.json`）
 
 ## Progress
 ### Done
@@ -20,7 +20,12 @@
 - 错误处理 T4：ErrorBoundary + 渲染进程全局处理器
 - 错误处理 T5：渲染进程 async 缺口补全（6 个 hook/组件）
 - 错误处理 T6：E2E 对话框拦截
-- 全部 29 单元测试 + 29 E2E 测试通过
+- 架构加深第二轮（9 项候选 14 个 task 全部完成）
+  - P0：4 个 Hook 测试 + 3 个 Store 独立测试
+  - P1：ErrorBoundary 测试 + ContentSearch deps 修复
+  - P2：主进程 handler 抽取 + 测试（`src/main/handlers.ts`）
+  - P3：DEFAULT_IGNORE 去重 + IPC_CHANNELS 常量迁移 + E2E waitForTimeout 替换 + dirtyFiles 防御封装
+- 全部 123 单元测试（主 36 + 渲染 87）+ 29 E2E 测试通过
 
 ### Blocked
 - (none)
@@ -47,3 +52,7 @@
 - `e2e/file-tree.spec.ts` / `e2e/tabs.spec.ts`：10 E2E 测试
 - `docs/superpowers/specs/2026-06-21-system-error-handling-design.md`：设计规约
 - `docs/superpowers/plans/2026-06-21-system-error-handling.md`：实现计划
+- `docs/superpowers/specs/2026-06-21-architecture-review-design.md`：架构检查报告
+- `docs/superpowers/specs/2026-06-21-architecture-review-solution.md`：架构加深方案
+- `docs/superpowers/plans/2026-06-21-architecture-deepening-round2.md`：架构加深执行计划
+- `src/main/handlers.ts` / `src/main/handlers.spec.ts`：IPC handler 纯函数 + 测试

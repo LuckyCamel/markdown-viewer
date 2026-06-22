@@ -3,10 +3,18 @@ import { createWindow, getMainWindow } from './window'
 import { registerFileProtocol } from './protocol'
 import { createAppMenu } from './menu'
 import { appStore, type StoreSchema } from './store'
-import { listDirectory, readFile, getFileInfo } from './files'
 import { watchFile, unwatchFile } from './watcher'
-import { searchDirectory } from './search'
 import { logError } from './logger'
+import { IPC_CHANNELS } from '../shared/types'
+import {
+  handleListDirectory,
+  handleReadFile,
+  handleGetFileInfo,
+  handleStoreGet,
+  handleStoreSet,
+  handleStoreDelete,
+  handleSearchContent,
+} from './handlers'
 
 process.on('uncaughtException', (err) => {
   logError('uncaughtException', err)
@@ -19,35 +27,38 @@ app.on('ready', () => {
   try {
     registerFileProtocol()
 
-    ipcMain.handle('files:listDirectory', (_event, dirPath: string) => {
-      const ignoreList = appStore.get('ignoreList')
-      return listDirectory(dirPath, ignoreList)
-    })
-    ipcMain.handle('files:readFile', (_event, filePath: string) => readFile(filePath))
-    ipcMain.handle('files:getFileInfo', (_event, filePath: string) => getFileInfo(filePath))
-    ipcMain.handle('store:get', (_event, key: string) => {
+    ipcMain.handle(IPC_CHANNELS.FILES_LIST_DIRECTORY, (_event, dirPath: string) =>
+      handleListDirectory(dirPath, appStore.get('ignoreList')),
+    )
+    ipcMain.handle(IPC_CHANNELS.FILES_READ_FILE, (_event, filePath: string) =>
+      handleReadFile(filePath),
+    )
+    ipcMain.handle(IPC_CHANNELS.FILES_GET_FILE_INFO, (_event, filePath: string) =>
+      handleGetFileInfo(filePath),
+    )
+    ipcMain.handle(IPC_CHANNELS.STORE_GET, (_event, key: string) => {
       try {
-        return appStore.get(key as keyof StoreSchema)
+        return handleStoreGet(appStore.get, key as keyof StoreSchema)
       } catch (err) {
         logError('store:get', err)
         throw err
       }
     })
-    ipcMain.handle('store:set', (_event, key: string, value: unknown) => {
+    ipcMain.handle(IPC_CHANNELS.STORE_SET, (_event, key: string, value: unknown) => {
       try {
-        appStore.set(key as keyof StoreSchema, value as any)
+        handleStoreSet(appStore.set, key as keyof StoreSchema, value as any)
       } catch (err) {
         logError('store:set', err)
       }
     })
-    ipcMain.handle('store:delete', (_event, key: string) => {
+    ipcMain.handle(IPC_CHANNELS.STORE_DELETE, (_event, key: string) => {
       try {
-        appStore.delete(key as keyof StoreSchema)
+        handleStoreDelete(appStore.delete, key as keyof StoreSchema)
       } catch (err) {
         logError('store:delete', err)
       }
     })
-    ipcMain.handle('dialog:openDirectory', async () => {
+    ipcMain.handle(IPC_CHANNELS.DIALOG_OPEN_DIRECTORY, async () => {
       try {
         const result = await dialog.showOpenDialog({ properties: ['openDirectory'] })
         return result.canceled ? null : result.filePaths[0]
@@ -56,7 +67,7 @@ app.on('ready', () => {
         throw err
       }
     })
-    ipcMain.handle('dialog:openFile', async () => {
+    ipcMain.handle(IPC_CHANNELS.DIALOG_OPEN_FILE, async () => {
       try {
         const result = await dialog.showOpenDialog({ properties: ['openFile'] })
         return result.canceled ? null : result.filePaths[0]
@@ -65,15 +76,17 @@ app.on('ready', () => {
         throw err
       }
     })
-    ipcMain.handle('shell:openExternal', (_event, url: string) => shell.openExternal(url))
+    ipcMain.handle(IPC_CHANNELS.SHELL_OPEN_EXTERNAL, (_event, url: string) =>
+      shell.openExternal(url),
+    )
 
     const win = createWindow()
     createAppMenu(win)
 
-    ipcMain.on('watcher:watchFile', (_event, filePath: string) => {
+    ipcMain.on(IPC_CHANNELS.WATCHER_WATCH_FILE, (_event, filePath: string) => {
       watchFile(filePath, win)
     })
-    ipcMain.on('watcher:unwatchFile', (_event, filePath: string) => {
+    ipcMain.on(IPC_CHANNELS.WATCHER_UNWATCH_FILE, (_event, filePath: string) => {
       try {
         unwatchFile(filePath)
       } catch (err) {
@@ -81,18 +94,13 @@ app.on('ready', () => {
       }
     })
 
-    ipcMain.on('files:searchContent', (_event, dirPath: string, query: string) => {
+    ipcMain.on(IPC_CHANNELS.FILES_SEARCH_CONTENT, (_event, dirPath: string, query: string) => {
       const mainWin = getMainWindow()
       if (!mainWin) return
       const ignoreList = appStore.get('ignoreList')
-      searchDirectory(
-        dirPath,
-        query,
-        (progress) => {
-          mainWin.webContents.send('search:result', progress)
-        },
-        ignoreList,
-      )
+      handleSearchContent(dirPath, query, ignoreList, (progress) => {
+        mainWin.webContents.send(IPC_CHANNELS.SEARCH_RESULT, progress)
+      })
     })
   } catch (err) {
     logError('app:ready', err)

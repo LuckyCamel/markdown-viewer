@@ -20,15 +20,15 @@ export function ContentSearch({ workspacePath, onSelect }: ContentSearchProps) {
     setIsSearching(true)
     setResults(null)
 
-    const onResult = (progress: SearchProgress) => {
+    const handleResult = (progress: SearchProgress) => {
       setResults(progress)
     }
 
-    ipc.search.onResult(onResult)
+    ipc.search.onResult(handleResult)
     ipc.search.searchContent(workspacePath, query)
 
     return () => {
-      ipc.search.offResult(onResult)
+      ipc.search.offResult(handleResult)
     }
   }, [query, workspacePath, setResults, setIsSearching])
 

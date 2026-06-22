@@ -1,4 +1,5 @@
 import ElectronStore from 'electron-store'
+import { DEFAULT_IGNORE } from './files'
 
 export interface StoreSchema {
   theme: 'system' | 'light' | 'dark'
@@ -14,7 +15,7 @@ export interface StoreSchema {
 
 const defaults: StoreSchema = {
   theme: 'system',
-  ignoreList: ['.git', 'node_modules', '__pycache__', '.DS_Store'],
+  ignoreList: [...DEFAULT_IGNORE],
   recentFiles: [],
   recentDirs: [],
   readingPositions: {},

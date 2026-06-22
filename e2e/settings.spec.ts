@@ -7,7 +7,7 @@ test.describe('Settings Panel', () => {
     const dir = createTestDir()
 
     await openWorkspace(electronApp, page, dir.path)
-    await page.waitForTimeout(500)
+    await expect(page.getByText('File Tree')).toBeVisible({ timeout: 10000 })
 
     await electronApp.evaluate(({ BrowserWindow }) => {
       BrowserWindow.getAllWindows()[0]?.webContents.send('menu:openSettings')
@@ -24,7 +24,7 @@ test.describe('Settings Panel', () => {
     const dir = createTestDir()
 
     await openWorkspace(electronApp, page, dir.path)
-    await page.waitForTimeout(500)
+    await expect(page.getByText('File Tree')).toBeVisible({ timeout: 10000 })
 
     await electronApp.evaluate(({ BrowserWindow }) => {
       BrowserWindow.getAllWindows()[0]?.webContents.send('menu:openSettings')
@@ -33,9 +33,8 @@ test.describe('Settings Panel', () => {
     await expect(page.getByText('Settings').first()).toBeVisible({ timeout: 10000 })
 
     await page.keyboard.press('Escape')
-    await page.waitForTimeout(300)
 
-    await expect(page.getByText('Settings').first()).not.toBeVisible()
+    await expect(page.getByText('Settings').first()).not.toBeVisible({ timeout: 10000 })
 
     dir.cleanup()
     await cleanup()

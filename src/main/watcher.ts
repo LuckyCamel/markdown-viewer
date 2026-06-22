@@ -3,6 +3,7 @@ import { BrowserWindow } from 'electron'
 import { readFile } from './files'
 import { logError } from './logger'
 import type { FileChangeEvent } from '../shared/types'
+import { IPC_CHANNELS } from '../shared/types'
 
 const watchers = new Map<string, FSWatcher>()
 
@@ -14,7 +15,7 @@ export function watchFile(filePath: string, window: BrowserWindow): void {
       try {
         const { content } = await readFile(filePath)
         const event: FileChangeEvent = { path: filePath, type: 'change' }
-        window.webContents.send('watcher:fileChanged', event, content)
+        window.webContents.send(IPC_CHANNELS.WATCHER_FILE_CHANGED, event, content)
       } catch {
         const event: FileChangeEvent = { path: filePath, type: 'delete' }
         window.webContents.send('watcher:fileChanged', event, null)

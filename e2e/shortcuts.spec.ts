@@ -15,16 +15,14 @@ test.describe('Keyboard Shortcuts', () => {
       const win = BrowserWindow.getAllWindows()[0]
       win.webContents.send('menu:toggleFileTree')
     })
-    await page.waitForTimeout(500)
-    await expect(page.getByText('doc.md')).not.toBeVisible()
+    await expect(page.getByText('doc.md')).not.toBeVisible({ timeout: 5000 })
 
     // Ctrl+B: toggle back on
     await electronApp.evaluate(({ BrowserWindow }) => {
       const win = BrowserWindow.getAllWindows()[0]
       win.webContents.send('menu:toggleFileTree')
     })
-    await page.waitForTimeout(500)
-    await expect(page.getByText('doc.md')).toBeVisible()
+    await expect(page.getByText('doc.md')).toBeVisible({ timeout: 5000 })
 
     dir.cleanup()
     await cleanup()
@@ -46,16 +44,14 @@ test.describe('Keyboard Shortcuts', () => {
       const win = BrowserWindow.getAllWindows()[0]
       win.webContents.send('menu:toggleOutline')
     })
-    await page.waitForTimeout(500)
-    await expect(outlineItem).not.toBeVisible()
+    await expect(outlineItem).not.toBeVisible({ timeout: 5000 })
 
     // Ctrl+T: toggle back on
     await electronApp.evaluate(({ BrowserWindow }) => {
       const win = BrowserWindow.getAllWindows()[0]
       win.webContents.send('menu:toggleOutline')
     })
-    await page.waitForTimeout(500)
-    await expect(outlineItem).toBeVisible()
+    await expect(outlineItem).toBeVisible({ timeout: 5000 })
 
     dir.cleanup()
     await cleanup()

@@ -96,6 +96,10 @@ export interface ElectronAPI {
   shell: {
     openExternal(url: string): Promise<void>
   }
+  ipc: {
+    on(channel: string, callback: (...args: unknown[]) => void): void
+    off(channel: string, callback: (...args: unknown[]) => void): void
+  }
 }
 
 declare global {

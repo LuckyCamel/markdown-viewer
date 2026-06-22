@@ -30,6 +30,7 @@
   "dependencies": {
     "electron": "^42.4.1",
     "electron-store": "^11.0.2",
+    "mermaid": "^11.15.0",
     "react": "^19.2.7",
     "react-dom": "^19.2.7",
     "react-markdown": "^10.1.0",

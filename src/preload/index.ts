@@ -1,6 +1,12 @@
 import { contextBridge, ipcRenderer } from 'electron'
 import type { ElectronAPI, FileContent, FileEntry, FileChangeEvent, SearchProgress } from '../shared/types'
 
+type ListenerKey = string
+const listenerMap = new Map<ListenerKey, (...args: unknown[]) => void>()
+function key(channel: string, callback: Function): ListenerKey {
+  return `${channel}\0${callback.name || callback.toString().slice(0, 40)}`
+}
+
 const api: ElectronAPI = {
   files: {
     listDirectory: (dirPath: string) =>
@@ -15,20 +21,35 @@ const api: ElectronAPI = {
       ipcRenderer.send('files:searchContent', dirPath, query)
     },
     onResult: (callback: (result: SearchProgress) => void) => {
-      ipcRenderer.on('search:result', (_event, result) => callback(result))
+      const handler = (_event: Electron.IpcRendererEvent, result: SearchProgress) => callback(result)
+      listenerMap.set(key('search:result', callback), handler)
+      ipcRenderer.on('search:result', handler as (...args: unknown[]) => void)
     },
     offResult: (callback: (result: SearchProgress) => void) => {
-      ipcRenderer.removeListener('search:result', (_event, result) => callback(result))
+      const k = key('search:result', callback)
+      const handler = listenerMap.get(k) as (...args: unknown[]) => void
+      if (handler) {
+        ipcRenderer.removeListener('search:result', handler)
+        listenerMap.delete(k)
+      }
     },
   },
   watcher: {
     watchFile: (filePath: string) => ipcRenderer.send('watcher:watchFile', filePath),
     unwatchFile: (filePath: string) => ipcRenderer.send('watcher:unwatchFile', filePath),
     onChange: (callback: (event: FileChangeEvent, content: string | null) => void) => {
-      ipcRenderer.on('watcher:fileChanged', (_event, event, content) => callback(event, content))
+      const handler = (_event: Electron.IpcRendererEvent, event: FileChangeEvent, content: string | null) =>
+        callback(event, content)
+      listenerMap.set(key('watcher:fileChanged', callback), handler)
+      ipcRenderer.on('watcher:fileChanged', handler as (...args: unknown[]) => void)
     },
     offChange: (callback: (event: FileChangeEvent, content: string | null) => void) => {
-      ipcRenderer.removeListener('watcher:fileChanged', (_event, event, content) => callback(event, content))
+      const k = key('watcher:fileChanged', callback)
+      const handler = listenerMap.get(k) as (...args: unknown[]) => void
+      if (handler) {
+        ipcRenderer.removeListener('watcher:fileChanged', handler)
+        listenerMap.delete(k)
+      }
     },
   },
   store: {
@@ -42,6 +63,21 @@ const api: ElectronAPI = {
   },
   shell: {
     openExternal: (url: string) => ipcRenderer.invoke('shell:openExternal', url) as Promise<void>,
+  },
+  ipc: {
+    on: (channel: string, callback: (...args: unknown[]) => void) => {
+      const handler = (_event: Electron.IpcRendererEvent, ...args: unknown[]) => callback(...args)
+      listenerMap.set(key(channel, callback), handler)
+      ipcRenderer.on(channel, handler as (...args: unknown[]) => void)
+    },
+    off: (channel: string, callback: (...args: unknown[]) => void) => {
+      const k = key(channel, callback)
+      const handler = listenerMap.get(k) as (...args: unknown[]) => void
+      if (handler) {
+        ipcRenderer.removeListener(channel, handler)
+        listenerMap.delete(k)
+      }
+    },
   },
 }
 

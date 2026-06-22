@@ -1,17 +1,8 @@
 import ElectronStore from 'electron-store'
 import { DEFAULT_IGNORE } from './files'
+import type { AppSettings } from '../shared/types'
 
-export interface StoreSchema {
-  theme: 'system' | 'light' | 'dark'
-  ignoreList: string[]
-  recentFiles: { path: string; name: string; timestamp: number }[]
-  recentDirs: { path: string; name: string; timestamp: number }[]
-  readingPositions: Record<string, number>
-  lastWorkspace: string | null
-  windowBounds: { x?: number; y?: number; width: number; height: number }
-  openFiles: string[]
-  activeFile: string | null
-}
+export type StoreSchema = AppSettings
 
 const defaults: StoreSchema = {
   theme: 'system',

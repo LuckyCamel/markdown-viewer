@@ -1,4 +1,4 @@
-import { useEffect } from 'react'
+import { useEffect, useRef } from 'react'
 import { ipc } from '../lib/ipc'
 import { useTabStore } from '../features/tabs/useTabStore'
 
@@ -12,6 +12,9 @@ interface MenuHandlers {
 }
 
 export function useMenuIpc(handlers: MenuHandlers) {
+  const handlersRef = useRef(handlers)
+  handlersRef.current = handlers
+
   useEffect(() => {
     const cleanup: Array<() => void> = []
     function onMenu(channel: string, cb: (...args: unknown[]) => void) {
@@ -19,12 +22,12 @@ export function useMenuIpc(handlers: MenuHandlers) {
       cleanup.push(() => ipc.ipc.off(channel, cb))
     }
 
-    onMenu('menu:openFolder', (path) => handlers.onOpenFolder(path as string))
-    onMenu('menu:toggleFileTree', () => handlers.onToggleSidebar())
-    onMenu('menu:toggleOutline', () => handlers.onToggleOutline())
-    onMenu('menu:fileSearch', () => handlers.onOpenFileSearch())
-    onMenu('menu:contentSearch', () => handlers.onOpenContentSearch())
-    onMenu('menu:openSettings', () => handlers.onToggleSettings())
+    onMenu('menu:openFolder', (path) => handlersRef.current.onOpenFolder(path as string))
+    onMenu('menu:toggleFileTree', () => handlersRef.current.onToggleSidebar())
+    onMenu('menu:toggleOutline', () => handlersRef.current.onToggleOutline())
+    onMenu('menu:fileSearch', () => handlersRef.current.onOpenFileSearch())
+    onMenu('menu:contentSearch', () => handlersRef.current.onOpenContentSearch())
+    onMenu('menu:openSettings', () => handlersRef.current.onToggleSettings())
     onMenu('menu:closeTab', () => {
       const state = useTabStore.getState()
       if (state.activeFile) state.closeFile(state.activeFile)
@@ -45,5 +48,5 @@ export function useMenuIpc(handlers: MenuHandlers) {
     })
 
     return () => cleanup.forEach((fn) => fn())
-  }, [handlers])
+  }, [])
 }

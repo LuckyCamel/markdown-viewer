@@ -76,6 +76,15 @@ function App() {
     }
   }, [initialized, openFiles])
 
+  useEffect(() => {
+    if (!showSettings) return
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setShowSettings(false)
+    }
+    window.addEventListener('keydown', handleKeyDown)
+    return () => window.removeEventListener('keydown', handleKeyDown)
+  }, [showSettings, setShowSettings])
+
   useFileWatcher(openFiles, initialized)
   useScrollRestore(activeFile, content)
   useMenuIpc({

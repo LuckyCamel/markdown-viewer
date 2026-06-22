@@ -15,7 +15,7 @@ export async function launchApp(): Promise<{
   })
   const page = await electronApp.firstWindow()
   const cleanup = async () => {
-    await electronApp.close()
+    try { await electronApp.close() } catch { /* already closed */ }
   }
   return { electronApp, page, cleanup }
 }

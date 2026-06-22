@@ -2,6 +2,7 @@
 - Create E2E tests for file-tree.spec.ts (3 tests) and tabs.spec.ts (3 tests) for the Electron markdown-viewer
 
 ## Constraints & Preferences
+- **工作语言：中文**。所有技术产出（规约、注释、提交信息、报告）默认使用中文。代码标识符、类型名、文件名保持英文。
 - Use Playwright E2E testing with Electron via `e2e/utils.ts` (launchApp, createTestDir, writeFixture)
 - App builds with `pnpm run build` to `out/`, test with `pnpm run test:e2e`
 - Cannot use `dialog.openDirectory()` in tests (blocks); must mock via `electronApp.evaluate` IPC handler replacement

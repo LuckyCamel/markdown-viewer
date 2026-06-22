@@ -36,7 +36,9 @@ export function WelcomePage({ onFolderOpen }: WelcomePageProps) {
   }
 
   const handleOpenFile = async () => {
-    await ipc.dialog.openFile()
+    await ipc.dialog.openFile().catch((err) =>
+      logError('WelcomePage:openFile', err)
+    )
   }
 
   return (

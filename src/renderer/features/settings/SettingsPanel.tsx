@@ -1,5 +1,5 @@
 import { useUIStore } from '../../stores/useUIStore'
-import { useSettingsStore } from '../../stores/useSettingsStore'
+import { useSettingsStore } from './useSettingsStore'
 import { useEffect } from 'react'
 import type { ThemeMode } from '../../../shared/types'
 

@@ -7,19 +7,21 @@ beforeEach(() => {
 })
 
 vi.mock('electron', () => {
-  const mockBrowserWindow = vi.fn().mockImplementation(() => ({
-    webContents: { send: vi.fn() },
-    loadURL: vi.fn(),
-    loadFile: vi.fn(),
-    on: vi.fn(),
-    close: vi.fn(),
-    getSize: vi.fn(() => [1200, 800]),
-    getPosition: vi.fn(() => [0, 0]),
-    setSize: vi.fn(),
-    setPosition: vi.fn(),
-    show: vi.fn(),
-    isDestroyed: vi.fn(() => false),
-  }))
+  const mockBrowserWindow = vi.fn(function () {
+    return {
+      webContents: { send: vi.fn() },
+      loadURL: vi.fn(),
+      loadFile: vi.fn(),
+      on: vi.fn(),
+      close: vi.fn(),
+      getSize: vi.fn(() => [1200, 800]),
+      getPosition: vi.fn(() => [0, 0]),
+      setSize: vi.fn(),
+      setPosition: vi.fn(),
+      show: vi.fn(),
+      isDestroyed: vi.fn(() => false),
+    }
+  })
 
   return {
     app: {

@@ -60,4 +60,99 @@ test.describe('Markdown Rendering', () => {
     dir.cleanup()
     await cleanup()
   })
+
+  test('should render headings at all levels', async () => {
+    const { electronApp, page, cleanup } = await launchApp()
+    const dir = createTestDir()
+    writeFixture(
+      dir.path,
+      'headings.md',
+      '# H1\n## H2\n### H3\n#### H4\n##### H5\n###### H6',
+    )
+    await openWorkspace(electronApp, page, dir.path)
+    await page.getByText('headings.md').first().click()
+    await expect(page.locator('h1')).toContainText('H1')
+    await expect(page.locator('h2')).toContainText('H2')
+    await expect(page.locator('h3')).toContainText('H3')
+    await expect(page.locator('h4')).toContainText('H4')
+    await expect(page.locator('h5')).toContainText('H5')
+    await expect(page.locator('h6')).toContainText('H6')
+    dir.cleanup()
+    await cleanup()
+  })
+
+  test('should render bold and italic', async () => {
+    const { electronApp, page, cleanup } = await launchApp()
+    const dir = createTestDir()
+    writeFixture(dir.path, 'format.md', '**bold** *italic* ***bold+italic***')
+    await openWorkspace(electronApp, page, dir.path)
+    await page.getByText('format.md').first().click()
+    await expect(page.locator('strong')).toHaveCount(2)
+    await expect(page.locator('em')).toHaveCount(2)
+    dir.cleanup()
+    await cleanup()
+  })
+
+  test('should render ordered and unordered lists', async () => {
+    const { electronApp, page, cleanup } = await launchApp()
+    const dir = createTestDir()
+    writeFixture(
+      dir.path,
+      'lists.md',
+      '- Item A\n- Item B\n\n1. First\n2. Second',
+    )
+    await openWorkspace(electronApp, page, dir.path)
+    await page.getByText('lists.md').first().click()
+    await expect(page.locator('ul')).toBeVisible()
+    await expect(page.locator('ul li')).toHaveCount(2)
+    await expect(page.locator('ol')).toBeVisible()
+    await expect(page.locator('ol li')).toHaveCount(2)
+    dir.cleanup()
+    await cleanup()
+  })
+
+  test('should render inline code', async () => {
+    const { electronApp, page, cleanup } = await launchApp()
+    const dir = createTestDir()
+    writeFixture(dir.path, 'inline-code.md', 'Use `code` inline')
+    await openWorkspace(electronApp, page, dir.path)
+    await page.getByText('inline-code.md').first().click()
+    await expect(page.locator('p > code')).toContainText('code')
+    dir.cleanup()
+    await cleanup()
+  })
+
+  test('should render blockquotes', async () => {
+    const { electronApp, page, cleanup } = await launchApp()
+    const dir = createTestDir()
+    writeFixture(dir.path, 'quote.md', '> Blockquote text')
+    await openWorkspace(electronApp, page, dir.path)
+    await page.getByText('quote.md').first().click()
+    await expect(page.locator('blockquote')).toContainText('Blockquote text')
+    dir.cleanup()
+    await cleanup()
+  })
+
+  test('should render horizontal rules', async () => {
+    const { electronApp, page, cleanup } = await launchApp()
+    const dir = createTestDir()
+    writeFixture(dir.path, 'hr.md', 'Above\n\n---\n\nBelow')
+    await openWorkspace(electronApp, page, dir.path)
+    await page.getByText('hr.md').first().click()
+    await expect(page.locator('hr')).toBeVisible()
+    dir.cleanup()
+    await cleanup()
+  })
+
+  test('should render inline HTML with rehype-raw', async () => {
+    const { electronApp, page, cleanup } = await launchApp()
+    const dir = createTestDir()
+    writeFixture(dir.path, 'html.md', '<u>underline</u>\n<kbd>Ctrl+S</kbd>')
+    await openWorkspace(electronApp, page, dir.path)
+    await page.getByText('html.md').first().click()
+    await expect(page.locator('u')).toContainText('underline')
+    await expect(page.locator('kbd')).toContainText('Ctrl+S')
+    dir.cleanup()
+    await cleanup()
+  })
 })

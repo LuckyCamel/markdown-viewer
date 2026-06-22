@@ -4,6 +4,10 @@ productName: Markdown Viewer
 directories:
   output: release
 
+files:
+  - out/**/*
+  - package.json
+
 win:
   target: nsis
 

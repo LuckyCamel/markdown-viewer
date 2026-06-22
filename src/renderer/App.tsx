@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState, useCallback } from 'react'
+import { ipc } from './lib/ipc'
 import { useUIStore } from './stores/useUIStore'
 import { useEditorStore } from './features/markdown-viewer/useEditorStore'
 import { useSettingsStore } from './features/settings/useSettingsStore'
@@ -54,13 +55,13 @@ function App() {
   const trackRecent = useCallback(async (path: string, isDir: boolean) => {
     const key = isDir ? 'recentDirs' : 'recentFiles'
     const items =
-      (await window.api.store.get<{ path: string; name: string; timestamp: number }[]>(key)) || []
+      (await ipc.store.get<{ path: string; name: string; timestamp: number }[]>(key)) || []
     const name = path.split(/[\\/]/).pop() || path
     const updated = [
       { path, name, timestamp: Date.now() },
       ...items.filter((i) => i.path !== path),
     ].slice(0, 20)
-    await window.api.store.set(key, updated)
+    await ipc.store.set(key, updated)
   }, [])
 
   const handleOpenFolder = useCallback(
@@ -69,7 +70,7 @@ function App() {
       useFileStore.getState().setRoot(path)
       useTabStore.getState().closeAll()
       useSearchStore.getState().reset()
-      window.api.store.set('lastWorkspace', path)
+      ipc.store.set('lastWorkspace', path)
       trackRecent(path, true)
     },
     [trackRecent],
@@ -87,11 +88,11 @@ function App() {
     async function init() {
       const [savedTheme, savedWorkspace, savedOpenFiles, savedActiveFile, savedIgnoreList] =
         await Promise.all([
-          window.api.store.get<ReturnType<typeof useUIStore.getState>['theme']>('theme'),
-          window.api.store.get<string | null>('lastWorkspace'),
-          window.api.store.get<string[]>('openFiles'),
-          window.api.store.get<string | null>('activeFile'),
-          window.api.store.get<string[]>('ignoreList'),
+          ipc.store.get<ReturnType<typeof useUIStore.getState>['theme']>('theme'),
+          ipc.store.get<string | null>('lastWorkspace'),
+          ipc.store.get<string[]>('openFiles'),
+          ipc.store.get<string | null>('activeFile'),
+          ipc.store.get<string[]>('ignoreList'),
         ])
 
       if (savedTheme) setTheme(savedTheme)
@@ -116,7 +117,7 @@ function App() {
   }, [activeFile, loadContent])
 
   useEffect(() => {
-    openFiles.forEach((p) => window.api.watcher.watchFile(p))
+    openFiles.forEach((p) => ipc.watcher.watchFile(p))
     const onChange = (event: FileChangeEvent, fileContent: string | null) => {
       if (event.type === 'change' && fileContent !== null) {
         useEditorStore.getState().setContent(event.path, fileContent)
@@ -124,22 +125,22 @@ function App() {
         setTimeout(() => useTabStore.getState().clearDirty(event.path), 2000)
       }
     }
-    window.api.watcher.onChange(onChange)
+    ipc.watcher.onChange(onChange)
     return () => {
-      openFiles.forEach((p) => window.api.watcher.unwatchFile(p))
-      window.api.watcher.offChange(onChange)
+      openFiles.forEach((p) => ipc.watcher.unwatchFile(p))
+      ipc.watcher.offChange(onChange)
     }
   }, [openFiles])
 
   useEffect(() => {
     if (initialized && activeFile) {
-      window.api.store.set('activeFile', activeFile)
+      ipc.store.set('activeFile', activeFile)
     }
   }, [initialized, activeFile])
 
   useEffect(() => {
     if (initialized) {
-      window.api.store.set('openFiles', openFiles)
+      ipc.store.set('openFiles', openFiles)
     }
   }, [initialized, openFiles])
 
@@ -148,7 +149,7 @@ function App() {
     const container = document.querySelector('main > div:first-child')
     if (!container) return
     const handleScroll = () => {
-      window.api.store.set('readingPositions', {
+      ipc.store.set('readingPositions', {
         [activeFile]: container.scrollTop,
       })
     }
@@ -159,7 +160,7 @@ function App() {
   useEffect(() => {
     if (!activeFile || !content) return
     ;(async () => {
-      const positions = await window.api.store.get<Record<string, number>>('readingPositions')
+      const positions = await ipc.store.get<Record<string, number>>('readingPositions')
       if (positions?.[activeFile]) {
         const container = document.querySelector('main > div:first-child')
         if (container) {
@@ -175,8 +176,8 @@ function App() {
     const handlers: Array<() => void> = []
 
     function onMenu(channel: string, cb: (...args: unknown[]) => void) {
-      window.api.ipc.on(channel, cb)
-      handlers.push(() => window.api.ipc.off(channel, cb))
+      ipc.ipc.on(channel, cb)
+      handlers.push(() => ipc.ipc.off(channel, cb))
     }
 
     onMenu('menu:openFolder', (path) => {

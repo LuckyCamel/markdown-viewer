@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { ipc } from '../../lib/ipc'
 import { useSearchStore } from './useSearchStore'
 import type { SearchProgress } from '../../../shared/types'
 
@@ -23,11 +24,11 @@ export function ContentSearch({ workspacePath, onSelect }: ContentSearchProps) {
       setResults(progress)
     }
 
-    window.api.search.onResult(onResult)
-    window.api.search.searchContent(workspacePath, query)
+    ipc.search.onResult(onResult)
+    ipc.search.searchContent(workspacePath, query)
 
     return () => {
-      window.api.search.offResult(onResult)
+      ipc.search.offResult(onResult)
     }
   }, [query, workspacePath, setResults, setIsSearching])
 

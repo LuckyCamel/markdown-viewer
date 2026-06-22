@@ -5,6 +5,7 @@ import rehypeKatex from 'rehype-katex'
 import rehypeHighlight from 'rehype-highlight'
 import rehypeRaw from 'rehype-raw'
 import { MermaidBlock } from './MermaidBlock'
+import { ipc } from '../../lib/ipc'
 import { useTabStore } from '../tabs/useTabStore'
 import { dirname, joinPaths } from '../../../shared/utils'
 
@@ -46,7 +47,7 @@ export function MarkdownViewer({ content, filePath }: MarkdownViewerProps) {
             rel="noopener noreferrer"
             onClick={(e) => {
               e.preventDefault()
-              window.api.shell.openExternal(href)
+              ipc.shell.openExternal(href)
             }}
           >
             {children}

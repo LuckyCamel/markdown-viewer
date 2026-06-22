@@ -1,4 +1,5 @@
 import { create } from 'zustand'
+import { ipc } from '../../lib/ipc'
 
 interface EditorState {
   contents: Record<string, string>
@@ -16,7 +17,7 @@ export const useEditorStore = create<EditorState>((set) => ({
   loadContent: async (filePath) => {
     set((s) => ({ loading: { ...s.loading, [filePath]: true } }))
     try {
-      const result = await window.api.files.readFile(filePath)
+      const result = await ipc.files.readFile(filePath)
       set((s) => ({
         contents: { ...s.contents, [filePath]: result.content },
         loading: { ...s.loading, [filePath]: false },

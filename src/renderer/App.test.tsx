@@ -3,11 +3,30 @@ import { render, screen, act } from '@testing-library/react'
 import App from './App'
 import { useTabStore } from './features/tabs/useTabStore'
 import { useUIStore } from './stores/useUIStore'
+import { useFileStore } from './features/file-tree/useFileStore'
+
+const mockIpc = vi.hoisted(() => ({
+  store: { get: vi.fn(), set: vi.fn(), del: vi.fn() },
+  files: { listDirectory: vi.fn(), readFile: vi.fn(), getFileInfo: vi.fn() },
+  search: { searchContent: vi.fn(), onResult: vi.fn(), offResult: vi.fn() },
+  watcher: { watchFile: vi.fn(), unwatchFile: vi.fn(), onChange: vi.fn(), offChange: vi.fn() },
+  dialog: { openDirectory: vi.fn(), openFile: vi.fn() },
+  shell: { openExternal: vi.fn() },
+  ipc: { on: vi.fn(), off: vi.fn() },
+}))
+
+vi.mock('./lib/ipc', () => ({ ipc: mockIpc }))
 
 describe('App', () => {
   beforeEach(() => {
     useTabStore.setState({ openFiles: [], activeFile: null })
     useUIStore.setState({ sidebarVisible: true, outlineVisible: true, searchPanel: 'none' })
+    useFileStore.setState({ entries: {}, expanded: new Set(), loading: new Set(), rootPath: null })
+    vi.clearAllMocks()
+    mockIpc.store.get.mockResolvedValue(undefined)
+    mockIpc.store.set.mockResolvedValue(undefined)
+    mockIpc.files.listDirectory.mockResolvedValue([])
+    mockIpc.files.readFile.mockResolvedValue({ path: '', content: '' })
   })
 
   it('should show WelcomePage when no workspace', () => {
@@ -16,7 +35,7 @@ describe('App', () => {
   })
 
   it('should restore workspace from electron-store on mount', async () => {
-    window.api.store.get = vi.fn(async (key: string) => {
+    mockIpc.store.get.mockImplementation(async (key: string) => {
       if (key === 'lastWorkspace') return '/test/workspace'
       return undefined
     })
@@ -30,10 +49,10 @@ describe('App', () => {
 
   it('should respond to menu IPC events', async () => {
     const handlers = new Map<string, (...args: unknown[]) => void>()
-    window.api.store.get = vi.fn(async () => undefined)
-    window.api.ipc.on = vi.fn((channel: string, cb: (...args: unknown[]) => void) => {
+    mockIpc.ipc.on.mockImplementation((channel: string, cb: (...args: unknown[]) => void) => {
       handlers.set(channel, cb)
     })
+    mockIpc.store.get.mockImplementation(async () => undefined)
 
     render(<App />)
 
@@ -59,14 +78,14 @@ describe('App', () => {
   })
 
   it('should handle menu:closeTab', async () => {
-    window.api.store.get = vi.fn(async () => undefined)
-    window.api.files.readFile = vi.fn(async () => ({ path: '/test/a.md', content: 'a' }))
-    window.api.files.listDirectory = vi.fn(async () => [
+    mockIpc.store.get.mockImplementation(async () => undefined)
+    mockIpc.files.readFile.mockImplementation(async () => ({ path: '/test/a.md', content: 'a' }))
+    mockIpc.files.listDirectory.mockImplementation(async () => [
       { name: 'a.md', path: '/test/a.md', isDirectory: false, isHidden: false },
     ])
 
     const handlers = new Map<string, (...args: unknown[]) => void>()
-    window.api.ipc.on = vi.fn((channel: string, cb: (...args: unknown[]) => void) => {
+    mockIpc.ipc.on.mockImplementation((channel: string, cb: (...args: unknown[]) => void) => {
       handlers.set(channel, cb)
     })
 

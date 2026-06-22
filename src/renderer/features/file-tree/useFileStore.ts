@@ -1,5 +1,6 @@
 import { create } from 'zustand'
 import type { FileEntry } from '../../../shared/types'
+import { ipc } from '../../lib/ipc'
 
 interface FileTreeState {
   entries: Record<string, FileEntry[]>
@@ -37,7 +38,7 @@ export const useFileStore = create<FileTreeState>((set, get) => ({
     const { loading } = get()
     if (loading.has(dirPath)) return
     set((s) => ({ loading: new Set(s.loading).add(dirPath) }))
-    const entries = await window.api.files.listDirectory(dirPath)
+    const entries = await ipc.files.listDirectory(dirPath)
     set((s) => {
       const next = new Set(s.loading)
       next.delete(dirPath)

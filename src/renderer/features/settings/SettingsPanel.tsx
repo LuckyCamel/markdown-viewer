@@ -1,6 +1,7 @@
 import { useUIStore } from '../../stores/useUIStore'
 import { useSettingsStore } from './useSettingsStore'
 import { useEffect } from 'react'
+import { ipc } from '../../lib/ipc'
 import type { ThemeMode } from '../../../shared/types'
 
 export function SettingsPanel() {
@@ -17,7 +18,7 @@ export function SettingsPanel() {
 
   const handleThemeChange = async (newTheme: ThemeMode) => {
     setTheme(newTheme)
-    await window.api.store.set('theme', newTheme)
+    await ipc.store.set('theme', newTheme)
   }
 
   const handleIgnoreChange = async (value: string) => {

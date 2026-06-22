@@ -3,3 +3,5 @@ out/
 release/
 *.tsbuildinfo
 .idea/
+coverage/
+playwright/

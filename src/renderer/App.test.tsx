@@ -21,7 +21,7 @@ describe('App', () => {
   beforeEach(() => {
     useTabStore.setState({ openFiles: [], activeFile: null })
     useUIStore.setState({ sidebarVisible: true, outlineVisible: true, searchPanel: 'none' })
-    useFileStore.setState({ entries: {}, expanded: new Set(), loading: new Set(), rootPath: null })
+    useFileStore.setState({ entries: {}, expanded: {}, loading: {}, rootPath: null })
     vi.clearAllMocks()
     mockIpc.store.get.mockResolvedValue(undefined)
     mockIpc.store.set.mockResolvedValue(undefined)

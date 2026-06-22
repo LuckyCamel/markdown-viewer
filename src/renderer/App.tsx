@@ -1,11 +1,8 @@
-import { useEffect, useMemo, useState, useCallback } from 'react'
-import { ipc } from './lib/ipc'
+import { useEffect, useMemo } from 'react'
 import { useUIStore } from './stores/useUIStore'
 import { useEditorStore } from './features/markdown-viewer/useEditorStore'
-import { useSettingsStore } from './features/settings/useSettingsStore'
 import { useTabStore } from './features/tabs/useTabStore'
 import { useFileStore } from './features/file-tree/useFileStore'
-import { useSearchStore } from './features/search/useSearchStore'
 import { ThemeProvider } from './components/ThemeProvider'
 import { Layout } from './components/Layout'
 import { WelcomePage } from './features/welcome/WelcomePage'
@@ -16,15 +13,22 @@ import { Outline } from './features/outline/Outline'
 import { FileSearch } from './features/search/FileSearch'
 import { ContentSearch } from './features/search/ContentSearch'
 import { SettingsPanel } from './features/settings/SettingsPanel'
-import type { FileChangeEvent } from '../shared/types'
+import { ipc } from './lib/ipc'
+import { useWorkspaceInit } from './hooks/useWorkspaceInit'
+import { useFileWatcher } from './hooks/useFileWatcher'
+import { useScrollRestore } from './hooks/useScrollRestore'
+import { useMenuIpc } from './hooks/useMenuIpc'
 
 function App() {
-  const [workspacePath, setWorkspacePath] = useState<string | null>(null)
-  const [showSettings, setShowSettings] = useState(false)
-  const [initialized, setInitialized] = useState(false)
+  const {
+    initialized,
+    workspacePath,
+    showSettings,
+    setShowSettings,
+    handleOpenFolder,
+    handleOpenFile,
+  } = useWorkspaceInit()
 
-  // theme not destructured — only setTheme is used
-  const setTheme = useUIStore((s) => s.setTheme)
   const sidebarVisible = useUIStore((s) => s.sidebarVisible)
   const outlineVisible = useUIStore((s) => s.outlineVisible)
   const searchPanel = useUIStore((s) => s.searchPanel)
@@ -39,6 +43,7 @@ function App() {
   const content = useEditorStore((s) => (activeFile ? s.contents[activeFile] : undefined))
   const loadContent = useEditorStore((s) => s.loadContent)
 
+  // Fix: compute allFiles from live entries (was useMemo with empty deps bug)
   const allFiles = useMemo(() => {
     const entries = useFileStore.getState().entries
     const files: { path: string; name: string }[] = []
@@ -50,87 +55,14 @@ function App() {
       }
     }
     return files
-  }, [])
-
-  const trackRecent = useCallback(async (path: string, isDir: boolean) => {
-    const key = isDir ? 'recentDirs' : 'recentFiles'
-    const items =
-      (await ipc.store.get<{ path: string; name: string; timestamp: number }[]>(key)) || []
-    const name = path.split(/[\\/]/).pop() || path
-    const updated = [
-      { path, name, timestamp: Date.now() },
-      ...items.filter((i) => i.path !== path),
-    ].slice(0, 20)
-    await ipc.store.set(key, updated)
-  }, [])
-
-  const handleOpenFolder = useCallback(
-    (path: string) => {
-      setWorkspacePath(path)
-      useFileStore.getState().setRoot(path)
-      useTabStore.getState().closeAll()
-      useSearchStore.getState().reset()
-      ipc.store.set('lastWorkspace', path)
-      trackRecent(path, true)
-    },
-    [trackRecent],
-  )
-
-  const handleOpenFile = useCallback(
-    (path: string) => {
-      useTabStore.getState().openFile(path)
-      trackRecent(path, false)
-    },
-    [trackRecent],
-  )
-
-  useEffect(() => {
-    async function init() {
-      const [savedTheme, savedWorkspace, savedOpenFiles, savedActiveFile, savedIgnoreList] =
-        await Promise.all([
-          ipc.store.get<ReturnType<typeof useUIStore.getState>['theme']>('theme'),
-          ipc.store.get<string | null>('lastWorkspace'),
-          ipc.store.get<string[]>('openFiles'),
-          ipc.store.get<string | null>('activeFile'),
-          ipc.store.get<string[]>('ignoreList'),
-        ])
-
-      if (savedTheme) setTheme(savedTheme)
-      if (savedIgnoreList) useSettingsStore.getState().setIgnoreList(savedIgnoreList)
-      if (savedWorkspace) {
-        setWorkspacePath(savedWorkspace)
-        useFileStore.getState().setRoot(savedWorkspace)
-      }
-      if (savedOpenFiles && savedOpenFiles.length > 0) {
-        for (const f of savedOpenFiles) useTabStore.getState().openFile(f)
-        if (savedActiveFile) useTabStore.getState().setActive(savedActiveFile)
-      }
-      setInitialized(true)
-    }
-    init()
-  }, [setTheme])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [initialized])
 
   useEffect(() => {
     if (activeFile) {
       loadContent(activeFile)
     }
   }, [activeFile, loadContent])
-
-  useEffect(() => {
-    openFiles.forEach((p) => ipc.watcher.watchFile(p))
-    const onChange = (event: FileChangeEvent, fileContent: string | null) => {
-      if (event.type === 'change' && fileContent !== null) {
-        useEditorStore.getState().setContent(event.path, fileContent)
-        useTabStore.getState().markDirty(event.path)
-        setTimeout(() => useTabStore.getState().clearDirty(event.path), 2000)
-      }
-    }
-    ipc.watcher.onChange(onChange)
-    return () => {
-      openFiles.forEach((p) => ipc.watcher.unwatchFile(p))
-      ipc.watcher.offChange(onChange)
-    }
-  }, [openFiles])
 
   useEffect(() => {
     if (initialized && activeFile) {
@@ -144,80 +76,16 @@ function App() {
     }
   }, [initialized, openFiles])
 
-  useEffect(() => {
-    if (!activeFile) return
-    const container = document.querySelector('main > div:first-child')
-    if (!container) return
-    const handleScroll = () => {
-      ipc.store.set('readingPositions', {
-        [activeFile]: container.scrollTop,
-      })
-    }
-    container.addEventListener('scroll', handleScroll)
-    return () => container.removeEventListener('scroll', handleScroll)
-  }, [activeFile])
-
-  useEffect(() => {
-    if (!activeFile || !content) return
-    ;(async () => {
-      const positions = await ipc.store.get<Record<string, number>>('readingPositions')
-      if (positions?.[activeFile]) {
-        const container = document.querySelector('main > div:first-child')
-        if (container) {
-          requestAnimationFrame(() => {
-            container.scrollTop = positions[activeFile]
-          })
-        }
-      }
-    })()
-  }, [activeFile, content])
-
-  useEffect(() => {
-    const handlers: Array<() => void> = []
-
-    function onMenu(channel: string, cb: (...args: unknown[]) => void) {
-      ipc.ipc.on(channel, cb)
-      handlers.push(() => ipc.ipc.off(channel, cb))
-    }
-
-    onMenu('menu:openFolder', (path) => {
-      handleOpenFolder(path as string)
-    })
-    onMenu('menu:toggleFileTree', () => toggleSidebar())
-    onMenu('menu:toggleOutline', () => toggleOutline())
-    onMenu('menu:fileSearch', () => openSearch('file'))
-    onMenu('menu:contentSearch', () => openSearch('content'))
-    onMenu('menu:openSettings', () => setShowSettings((v) => !v))
-    onMenu('menu:closeTab', () => {
-      const state = useTabStore.getState()
-      if (state.activeFile) state.closeFile(state.activeFile)
-    })
-    onMenu('menu:nextTab', () => {
-      const state = useTabStore.getState()
-      if (state.openFiles.length < 2) return
-      const idx = state.openFiles.indexOf(state.activeFile ?? '')
-      const next = (idx + 1) % state.openFiles.length
-      state.setActive(state.openFiles[next])
-    })
-    onMenu('menu:prevTab', () => {
-      const state = useTabStore.getState()
-      if (state.openFiles.length < 2) return
-      const idx = state.openFiles.indexOf(state.activeFile ?? '')
-      const prev = (idx - 1 + state.openFiles.length) % state.openFiles.length
-      state.setActive(state.openFiles[prev])
-    })
-
-    return () => handlers.forEach((h) => h())
-  }, [handleOpenFolder, toggleSidebar, toggleOutline, openSearch])
-
-  useEffect(() => {
-    if (!showSettings) return
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') setShowSettings(false)
-    }
-    window.addEventListener('keydown', handleKeyDown)
-    return () => window.removeEventListener('keydown', handleKeyDown)
-  }, [showSettings])
+  useFileWatcher(openFiles, initialized)
+  useScrollRestore(activeFile, content)
+  useMenuIpc({
+    onOpenFolder: handleOpenFolder,
+    onToggleSidebar: toggleSidebar,
+    onToggleOutline: toggleOutline,
+    onOpenFileSearch: () => openSearch('file'),
+    onOpenContentSearch: () => openSearch('content'),
+    onToggleSettings: () => setShowSettings((v) => !v),
+  })
 
   return (
     <ThemeProvider>

@@ -4,8 +4,8 @@ import { ipc } from '../../lib/ipc'
 
 interface FileTreeState {
   entries: Record<string, FileEntry[]>
-  expanded: Set<string>
-  loading: Set<string>
+  expanded: Record<string, boolean>
+  loading: Record<string, boolean>
   rootPath: string | null
   setRoot: (path: string) => void
   toggleExpand: (dirPath: string) => Promise<void>
@@ -14,8 +14,8 @@ interface FileTreeState {
 
 export const useFileStore = create<FileTreeState>((set, get) => ({
   entries: {},
-  expanded: new Set(),
-  loading: new Set(),
+  expanded: {},
+  loading: {},
   rootPath: null,
   setRoot: (path) => {
     set({ rootPath: path })
@@ -23,25 +23,24 @@ export const useFileStore = create<FileTreeState>((set, get) => ({
   },
   toggleExpand: async (dirPath) => {
     const { expanded } = get()
-    if (expanded.has(dirPath)) {
-      const next = new Set(expanded)
-      next.delete(dirPath)
+    if (expanded[dirPath]) {
+      const next = { ...expanded }
+      delete next[dirPath]
       set({ expanded: next })
     } else {
       await get().loadChildren(dirPath)
-      const next = new Set(get().expanded)
-      next.add(dirPath)
+      const next = { ...get().expanded, [dirPath]: true }
       set({ expanded: next })
     }
   },
   loadChildren: async (dirPath) => {
     const { loading } = get()
-    if (loading.has(dirPath)) return
-    set((s) => ({ loading: new Set(s.loading).add(dirPath) }))
+    if (loading[dirPath]) return
+    set((s) => ({ loading: { ...s.loading, [dirPath]: true } }))
     const entries = await ipc.files.listDirectory(dirPath)
     set((s) => {
-      const next = new Set(s.loading)
-      next.delete(dirPath)
+      const next = { ...s.loading }
+      delete next[dirPath]
       return {
         entries: { ...s.entries, [dirPath]: entries },
         loading: next,

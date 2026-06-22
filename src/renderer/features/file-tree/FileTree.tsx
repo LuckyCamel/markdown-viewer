@@ -3,12 +3,12 @@ import { useFileStore } from './useFileStore'
 import { useTabStore } from '../tabs/useTabStore'
 import type { FileEntry } from '../../../shared/types'
 
-function FileTreeNode({ entry, depth }: { entry: FileEntry; depth: number }) {
+function FileTreeNode({ entry, depth, allEntries }: { entry: FileEntry; depth: number; allEntries: Record<string, FileEntry[]> }) {
   const expanded = useFileStore((s) => s.expanded)
   const toggleExpand = useFileStore((s) => s.toggleExpand)
-  const children = useFileStore((s) => s.entries[entry.path])
+  const children = allEntries[entry.path]
 
-  const isExpanded = expanded.has(entry.path)
+  const isExpanded = expanded[entry.path] ?? false
 
   const handleClick = () => {
     if (entry.isDirectory) {
@@ -33,7 +33,7 @@ function FileTreeNode({ entry, depth }: { entry: FileEntry; depth: number }) {
       {entry.isDirectory && isExpanded && children && (
         <div>
           {children.map((child) => (
-            <FileTreeNode key={child.path} entry={child} depth={depth + 1} />
+            <FileTreeNode key={child.path} entry={child} depth={depth + 1} allEntries={allEntries} />
           ))}
         </div>
       )}
@@ -46,7 +46,8 @@ interface FileTreeProps {
 }
 
 export function FileTree({ rootPath }: FileTreeProps) {
-  const rootEntries = useFileStore((s) => s.entries[rootPath])
+  const entries = useFileStore((s) => s.entries)
+  const rootEntries = entries[rootPath]
 
   return (
     <div className="py-2">
@@ -54,7 +55,7 @@ export function FileTree({ rootPath }: FileTreeProps) {
         {basename(rootPath)}
       </div>
       {rootEntries?.map((entry) => (
-        <FileTreeNode key={entry.path} entry={entry} depth={0} />
+        <FileTreeNode key={entry.path} entry={entry} depth={0} allEntries={entries} />
       ))}
     </div>
   )

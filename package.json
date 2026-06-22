@@ -15,7 +15,8 @@
     "format:check": "prettier --check src/",
     "typecheck": "tsc --noEmit",
     "test:main": "vitest run --config vitest.config.main.ts",
-    "test:coverage": "vitest run --coverage && vitest run --coverage --config vitest.config.main.ts"
+    "test:coverage": "vitest run --coverage && vitest run --coverage --config vitest.config.main.ts",
+    "prepare": "husky"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
@@ -29,7 +30,9 @@
     "electron-vite": "^5.0.0",
     "eslint": "^10.5.0",
     "eslint-plugin-react-hooks": "^7.1.1",
+    "husky": "^9.1.7",
     "jsdom": "^29.1.1",
+    "lint-staged": "^17.0.7",
     "postcss": "^8.5.15",
     "prettier": "^3.8.4",
     "tailwindcss": "3",

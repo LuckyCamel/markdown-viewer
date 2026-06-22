@@ -1,0 +1,4 @@
+{
+  "src/**/*.{ts,tsx,js,jsx,json,css,md}": ["prettier --check"],
+  "src/**/*.{ts,tsx}": ["tsc --noEmit --pretty"]
+}

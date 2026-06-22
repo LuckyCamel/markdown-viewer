@@ -23,6 +23,9 @@ export async function launchApp(): Promise<{
   })
   const page = await electronApp.firstWindow()
   await clearStoredConfig(page)
+  await electronApp.evaluate(({ dialog }) => {
+    dialog.showErrorBox = () => {}
+  })
   const cleanup = async () => {
     try { await electronApp.close() } catch { /* already closed */ }
   }

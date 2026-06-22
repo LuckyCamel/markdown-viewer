@@ -1,6 +1,5 @@
-app:
-  icon: ./resources/icon.png
-  productName: Markdown Viewer
+appId: com.markdown-viewer.app
+productName: Markdown Viewer
 
 directories:
   output: release

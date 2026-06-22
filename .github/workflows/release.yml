@@ -20,6 +20,8 @@ jobs:
           cache: pnpm
       - run: pnpm install
       - run: pnpm run package:win
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       - uses: actions/upload-artifact@v4
         with:
           name: windows-installer
@@ -37,6 +39,8 @@ jobs:
       - run: sudo apt-get install -y ruby ruby-dev && sudo gem install fpm --no-document
       - run: pnpm install
       - run: pnpm exec electron-vite build && pnpm exec electron-builder --linux deb AppImage
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       - uses: actions/upload-artifact@v4
         with:
           name: linux-packages

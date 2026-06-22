@@ -27,7 +27,13 @@ export function createAppMenu(mainWindow: BrowserWindow): void {
         {
           label: 'Close Tab',
           accelerator: 'CmdOrCtrl+W',
-          click: () => mainWindow.webContents.send(IPC_CHANNELS.MENU_CLOSE_TAB),
+          click: () => {
+            try {
+              mainWindow.webContents.send(IPC_CHANNELS.MENU_CLOSE_TAB)
+            } catch (err) {
+              logError('menu:closeTab', err)
+            }
+          },
         },
         { type: 'separator' },
         { role: 'quit' },
@@ -51,29 +57,59 @@ export function createAppMenu(mainWindow: BrowserWindow): void {
         {
           label: 'Toggle File Tree',
           accelerator: 'CmdOrCtrl+B',
-          click: () => mainWindow.webContents.send(IPC_CHANNELS.MENU_TOGGLE_FILE_TREE),
+          click: () => {
+            try {
+              mainWindow.webContents.send(IPC_CHANNELS.MENU_TOGGLE_FILE_TREE)
+            } catch (err) {
+              logError('menu:toggleFileTree', err)
+            }
+          },
         },
         {
           label: 'Toggle Outline',
           accelerator: 'CmdOrCtrl+T',
-          click: () => mainWindow.webContents.send(IPC_CHANNELS.MENU_TOGGLE_OUTLINE),
+          click: () => {
+            try {
+              mainWindow.webContents.send(IPC_CHANNELS.MENU_TOGGLE_OUTLINE)
+            } catch (err) {
+              logError('menu:toggleOutline', err)
+            }
+          },
         },
         { type: 'separator' },
         {
           label: 'File Search',
           accelerator: 'CmdOrCtrl+P',
-          click: () => mainWindow.webContents.send(IPC_CHANNELS.MENU_FILE_SEARCH),
+          click: () => {
+            try {
+              mainWindow.webContents.send(IPC_CHANNELS.MENU_FILE_SEARCH)
+            } catch (err) {
+              logError('menu:fileSearch', err)
+            }
+          },
         },
         {
           label: 'Content Search',
           accelerator: 'CmdOrCtrl+Shift+F',
-          click: () => mainWindow.webContents.send(IPC_CHANNELS.MENU_CONTENT_SEARCH),
+          click: () => {
+            try {
+              mainWindow.webContents.send(IPC_CHANNELS.MENU_CONTENT_SEARCH)
+            } catch (err) {
+              logError('menu:contentSearch', err)
+            }
+          },
         },
         { type: 'separator' },
         {
           label: 'Settings',
           accelerator: 'CmdOrCtrl+,',
-          click: () => mainWindow.webContents.send(IPC_CHANNELS.MENU_OPEN_SETTINGS),
+          click: () => {
+            try {
+              mainWindow.webContents.send(IPC_CHANNELS.MENU_OPEN_SETTINGS)
+            } catch (err) {
+              logError('menu:openSettings', err)
+            }
+          },
         },
         { type: 'separator' },
         { role: 'toggleDevTools' },
@@ -89,12 +125,24 @@ export function createAppMenu(mainWindow: BrowserWindow): void {
         {
           label: 'Next Tab',
           accelerator: 'CmdOrCtrl+Tab',
-          click: () => mainWindow.webContents.send(IPC_CHANNELS.MENU_NEXT_TAB),
+          click: () => {
+            try {
+              mainWindow.webContents.send(IPC_CHANNELS.MENU_NEXT_TAB)
+            } catch (err) {
+              logError('menu:nextTab', err)
+            }
+          },
         },
         {
           label: 'Previous Tab',
           accelerator: 'CmdOrCtrl+Shift+Tab',
-          click: () => mainWindow.webContents.send(IPC_CHANNELS.MENU_PREV_TAB),
+          click: () => {
+            try {
+              mainWindow.webContents.send(IPC_CHANNELS.MENU_PREV_TAB)
+            } catch (err) {
+              logError('menu:prevTab', err)
+            }
+          },
         },
       ],
     },

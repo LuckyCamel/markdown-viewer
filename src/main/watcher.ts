@@ -1,6 +1,7 @@
 import { watch, FSWatcher } from 'fs'
 import { BrowserWindow } from 'electron'
 import { readFile } from './files'
+import { logError } from './logger'
 import type { FileChangeEvent } from '../shared/types'
 
 const watchers = new Map<string, FSWatcher>()
@@ -19,6 +20,10 @@ export function watchFile(filePath: string, window: BrowserWindow): void {
         window.webContents.send('watcher:fileChanged', event, null)
       }
     }
+  })
+
+  watcher.on('error', (err) => {
+    logError('watcher', err)
   })
 
   watchers.set(filePath, watcher)

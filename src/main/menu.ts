@@ -1,4 +1,5 @@
 import { Menu, BrowserWindow, shell, dialog, app } from 'electron'
+import { logError } from './logger'
 
 export function createAppMenu(mainWindow: BrowserWindow): void {
   const template: Electron.MenuItemConstructorOptions[] = [
@@ -9,11 +10,15 @@ export function createAppMenu(mainWindow: BrowserWindow): void {
           label: 'Open Folder...',
           accelerator: 'CmdOrCtrl+O',
           click: async () => {
-            const result = await dialog.showOpenDialog(mainWindow, {
-              properties: ['openDirectory'],
-            })
-            if (!result.canceled && result.filePaths[0]) {
-              mainWindow.webContents.send('menu:openFolder', result.filePaths[0])
+            try {
+              const result = await dialog.showOpenDialog(mainWindow, {
+                properties: ['openDirectory'],
+              })
+              if (!result.canceled && result.filePaths[0]) {
+                mainWindow.webContents.send('menu:openFolder', result.filePaths[0])
+              }
+            } catch (err) {
+              logError('menu:openFolder', err)
             }
           },
         },
@@ -98,11 +103,15 @@ export function createAppMenu(mainWindow: BrowserWindow): void {
         {
           label: 'About',
           click: () => {
-            dialog.showMessageBox(mainWindow, {
-              type: 'info',
-              title: 'Markdown Viewer',
-              message: `Markdown Viewer v${app.getVersion()}`,
-            })
+            try {
+              dialog.showMessageBox(mainWindow, {
+                type: 'info',
+                title: 'Markdown Viewer',
+                message: `Markdown Viewer v${app.getVersion()}`,
+              })
+            } catch (err) {
+              logError('menu:about', err)
+            }
           },
         },
       ],

@@ -1,6 +1,7 @@
 import { BrowserWindow } from 'electron'
 import { join } from 'path'
 import { appStore } from './store'
+import { logError } from './logger'
 
 let mainWindow: BrowserWindow | null = null
 
@@ -25,17 +26,25 @@ export function createWindow(): BrowserWindow {
   })
 
   mainWindow.on('resize', () => {
-    if (!mainWindow) return
-    const [width, height] = mainWindow.getSize()
-    const [x, y] = mainWindow.getPosition()
-    appStore.set('windowBounds', { x, y, width, height })
+    try {
+      if (!mainWindow) return
+      const [width, height] = mainWindow.getSize()
+      const [x, y] = mainWindow.getPosition()
+      appStore.set('windowBounds', { x, y, width, height })
+    } catch (err) {
+      logError('window:resize', err)
+    }
   })
 
   mainWindow.on('move', () => {
-    if (!mainWindow) return
-    const [x, y] = mainWindow.getPosition()
-    const [width, height] = mainWindow.getSize()
-    appStore.set('windowBounds', { x, y, width, height })
+    try {
+      if (!mainWindow) return
+      const [x, y] = mainWindow.getPosition()
+      const [width, height] = mainWindow.getSize()
+      appStore.set('windowBounds', { x, y, width, height })
+    } catch (err) {
+      logError('window:move', err)
+    }
   })
 
   if (process.env['ELECTRON_RENDERER_URL']) {

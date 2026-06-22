@@ -25,20 +25,45 @@ app.on('ready', () => {
     })
     ipcMain.handle('files:readFile', (_event, filePath: string) => readFile(filePath))
     ipcMain.handle('files:getFileInfo', (_event, filePath: string) => getFileInfo(filePath))
-    ipcMain.handle('store:get', (_event, key: string) => appStore.get(key as keyof StoreSchema))
-    ipcMain.handle('store:set', (_event, key: string, value: unknown) => {
-      appStore.set(key as keyof StoreSchema, value as any)
+    ipcMain.handle('store:get', (_event, key: string) => {
+      try {
+        return appStore.get(key as keyof StoreSchema)
+      } catch (err) {
+        logError('store:get', err)
+        throw err
+      }
     })
-    ipcMain.handle('store:delete', (_event, key: string) =>
-      appStore.delete(key as keyof StoreSchema),
-    )
+    ipcMain.handle('store:set', (_event, key: string, value: unknown) => {
+      try {
+        appStore.set(key as keyof StoreSchema, value as any)
+      } catch (err) {
+        logError('store:set', err)
+      }
+    })
+    ipcMain.handle('store:delete', (_event, key: string) => {
+      try {
+        appStore.delete(key as keyof StoreSchema)
+      } catch (err) {
+        logError('store:delete', err)
+      }
+    })
     ipcMain.handle('dialog:openDirectory', async () => {
-      const result = await dialog.showOpenDialog({ properties: ['openDirectory'] })
-      return result.canceled ? null : result.filePaths[0]
+      try {
+        const result = await dialog.showOpenDialog({ properties: ['openDirectory'] })
+        return result.canceled ? null : result.filePaths[0]
+      } catch (err) {
+        logError('dialog:openDirectory', err)
+        throw err
+      }
     })
     ipcMain.handle('dialog:openFile', async () => {
-      const result = await dialog.showOpenDialog({ properties: ['openFile'] })
-      return result.canceled ? null : result.filePaths[0]
+      try {
+        const result = await dialog.showOpenDialog({ properties: ['openFile'] })
+        return result.canceled ? null : result.filePaths[0]
+      } catch (err) {
+        logError('dialog:openFile', err)
+        throw err
+      }
     })
     ipcMain.handle('shell:openExternal', (_event, url: string) => shell.openExternal(url))
 
@@ -49,7 +74,11 @@ app.on('ready', () => {
       watchFile(filePath, win)
     })
     ipcMain.on('watcher:unwatchFile', (_event, filePath: string) => {
-      unwatchFile(filePath)
+      try {
+        unwatchFile(filePath)
+      } catch (err) {
+        logError('watcher:unwatchFile', err)
+      }
     })
 
     ipcMain.on('files:searchContent', (_event, dirPath: string, query: string) => {

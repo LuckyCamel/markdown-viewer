@@ -4,19 +4,15 @@ import type { FileEntry, FileContent } from '../shared/types'
 
 const SUPPORTED_EXTENSIONS = ['.md', '.markdown']
 
-export async function listDirectory(dirPath: string): Promise<FileEntry[]> {
+export const DEFAULT_IGNORE = ['.git', 'node_modules', '__pycache__', '.DS_Store']
+
+export async function listDirectory(dirPath: string, ignoreList: string[] = DEFAULT_IGNORE): Promise<FileEntry[]> {
   const entries = await readdir(dirPath, { withFileTypes: true })
+  const ignoreSet = new Set(ignoreList)
   const result: FileEntry[] = []
 
   for (const entry of entries) {
-    if (
-      entry.name === '.git' ||
-      entry.name === 'node_modules' ||
-      entry.name === '__pycache__' ||
-      entry.name === '.DS_Store'
-    ) {
-      continue
-    }
+    if (ignoreSet.has(entry.name)) continue
     result.push({
       name: entry.name,
       path: join(dirPath, entry.name),

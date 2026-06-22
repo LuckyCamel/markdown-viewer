@@ -69,4 +69,22 @@ describe('file system operations', () => {
       expect(files[i - 1].name.localeCompare(files[i].name)).toBeLessThanOrEqual(0)
     }
   })
+
+  it('should respect ignoreList parameter', async () => {
+    const { listDirectory } = await import('./files')
+    const entries = await listDirectory(tmpDir, ['sub', 'readme.txt'])
+    const names = entries.map((e) => e.name)
+    expect(names).not.toContain('sub')
+    expect(names).not.toContain('readme.txt')
+    expect(names).toContain('test.md')
+    expect(names).toContain('.hidden.md')
+    expect(names).toContain('node_modules')
+    expect(names).toContain('empty')
+  })
+
+  it('should use DEFAULT_IGNORE when no ignoreList passed', async () => {
+    const { listDirectory, DEFAULT_IGNORE } = await import('./files')
+    const entries = await listDirectory(tmpDir)
+    expect(entries.find((e) => e.name === 'node_modules')).toBeUndefined()
+  })
 })

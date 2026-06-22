@@ -1,17 +1,20 @@
 import { readdir, readFile as fsReadFile } from 'fs/promises'
 import { join, extname } from 'path'
 import type { SearchMatch, SearchProgress } from '../shared/types'
+import { DEFAULT_IGNORE } from './files'
 
 const TEXT_EXTENSIONS = new Set(['.md', '.markdown', '.txt', '.json', '.yaml', '.yml', '.toml'])
 
-async function walkDir(dirPath: string): Promise<string[]> {
+async function walkDir(dirPath: string, ignoreList: string[]): Promise<string[]> {
   const files: string[] = []
+  const ignoreSet = new Set(ignoreList)
   const entries = await readdir(dirPath, { withFileTypes: true })
   for (const entry of entries) {
-    if (entry.name.startsWith('.') || entry.name === 'node_modules') continue
+    if (ignoreSet.has(entry.name)) continue
+    if (entry.name.startsWith('.')) continue
     const fullPath = join(dirPath, entry.name)
     if (entry.isDirectory()) {
-      files.push(...(await walkDir(fullPath)))
+      files.push(...(await walkDir(fullPath, ignoreList)))
     } else if (TEXT_EXTENSIONS.has(extname(entry.name).toLowerCase())) {
       files.push(fullPath)
     }
@@ -51,8 +54,9 @@ export async function searchDirectory(
   dirPath: string,
   query: string,
   onProgress: (progress: SearchProgress) => void,
+  ignoreList: string[] = DEFAULT_IGNORE,
 ): Promise<void> {
-  const allFiles = await walkDir(dirPath)
+  const allFiles = await walkDir(dirPath, ignoreList)
   const allMatches: SearchMatch[] = []
 
   for (let i = 0; i < allFiles.length; i++) {

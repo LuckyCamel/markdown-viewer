@@ -10,7 +10,10 @@ import { searchDirectory } from './search'
 app.on('ready', () => {
   registerFileProtocol()
 
-  ipcMain.handle('files:listDirectory', (_event, dirPath: string) => listDirectory(dirPath))
+  ipcMain.handle('files:listDirectory', (_event, dirPath: string) => {
+    const ignoreList = appStore.get('ignoreList')
+    return listDirectory(dirPath, ignoreList)
+  })
   ipcMain.handle('files:readFile', (_event, filePath: string) => readFile(filePath))
   ipcMain.handle('files:getFileInfo', (_event, filePath: string) => getFileInfo(filePath))
   ipcMain.handle('store:get', (_event, key: string) => appStore.get(key as keyof StoreSchema))
@@ -41,9 +44,10 @@ app.on('ready', () => {
   ipcMain.on('files:searchContent', (_event, dirPath: string, query: string) => {
     const mainWin = getMainWindow()
     if (!mainWin) return
+    const ignoreList = appStore.get('ignoreList')
     searchDirectory(dirPath, query, (progress) => {
       mainWin.webContents.send('search:result', progress)
-    })
+    }, ignoreList)
   })
 })
 

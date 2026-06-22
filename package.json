@@ -2,7 +2,8 @@
   "name": "markdown-viewer",
   "version": "1.0.0",
   "description": "A cross-platform Markdown viewer built with Electron",
-  "author": "Markdown Viewer Team",
+  "author": "Markdown Viewer Team <team@markdown-viewer.local>",
+  "homepage": "https://github.com/anomalyco/markdown-viewer",
   "type": "module",
   "main": "./out/main/index.js",
   "scripts": {

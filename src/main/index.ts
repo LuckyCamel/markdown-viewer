@@ -1,19 +1,56 @@
-import { app, BrowserWindow } from 'electron'
+import { app, BrowserWindow, ipcMain, dialog, shell } from 'electron'
+import { createWindow, getMainWindow } from './window'
+import { registerFileProtocol } from './protocol'
+import { createAppMenu } from './menu'
+import { appStore } from './store'
+import { listDirectory, readFile, getFileInfo } from './files'
+import { watchFile, unwatchFile } from './watcher'
+import { searchDirectory } from './search'
 
 app.on('ready', () => {
-  const win = new BrowserWindow({
-    width: 1200,
-    height: 800,
-    webPreferences: {
-      preload: `${__dirname}/../preload/index.js`,
-      contextIsolation: true,
-      nodeIntegration: false,
-    },
+  registerFileProtocol()
+
+  ipcMain.handle('files:listDirectory', (_event, dirPath: string) => listDirectory(dirPath))
+  ipcMain.handle('files:readFile', (_event, filePath: string) => readFile(filePath))
+  ipcMain.handle('files:getFileInfo', (_event, filePath: string) => getFileInfo(filePath))
+  ipcMain.handle('store:get', (_event, key: string) => appStore.get(key))
+  ipcMain.handle('store:set', (_event, key: string, value: unknown) => {
+    appStore.set(key, value)
+  })
+  ipcMain.handle('store:delete', (_event, key: string) => appStore.delete(key))
+  ipcMain.handle('dialog:openDirectory', async () => {
+    const result = await dialog.showOpenDialog({ properties: ['openDirectory'] })
+    return result.canceled ? null : result.filePaths[0]
+  })
+  ipcMain.handle('dialog:openFile', async () => {
+    const result = await dialog.showOpenDialog({ properties: ['openFile'] })
+    return result.canceled ? null : result.filePaths[0]
+  })
+  ipcMain.handle('shell:openExternal', (_event, url: string) => shell.openExternal(url))
+
+  const win = createWindow()
+  createAppMenu(win)
+
+  ipcMain.on('watcher:watchFile', (_event, filePath: string) => {
+    watchFile(filePath, win)
+  })
+  ipcMain.on('watcher:unwatchFile', (_event, filePath: string) => {
+    unwatchFile(filePath)
   })
 
-  if (process.env['ELECTRON_RENDERER_URL']) {
-    win.loadURL(process.env['ELECTRON_RENDERER_URL'])
-  } else {
-    win.loadFile(`${__dirname}/../renderer/index.html`)
-  }
+  ipcMain.on('files:searchContent', (_event, dirPath: string, query: string) => {
+    const mainWin = getMainWindow()
+    if (!mainWin) return
+    searchDirectory(dirPath, query, (progress) => {
+      mainWin.webContents.send('search:result', progress)
+    })
+  })
+})
+
+app.on('window-all-closed', () => {
+  if (process.platform !== 'darwin') app.quit()
+})
+
+app.on('activate', () => {
+  if (BrowserWindow.getAllWindows().length === 0) createWindow()
 })

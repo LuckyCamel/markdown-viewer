@@ -25,10 +25,12 @@
   - P1：ErrorBoundary 测试 + ContentSearch deps 修复
   - P2：主进程 handler 抽取 + 测试（`src/main/handlers.ts`）
   - P3：DEFAULT_IGNORE 去重 + IPC_CHANNELS 常量迁移 + E2E waitForTimeout 替换 + dirtyFiles 防御封装
-- 全部 123 单元测试（主 36 + 渲染 87）+ 29 E2E 测试通过
-
-### Blocked
-- (none)
+- 架构加深第三轮（9 个 Task 全部完成）：2 Bug 修复 + 4 结构修复 + 2 防御缺口 + 1 测试补全
+  - Bug：allFiles 陈旧（FileSearch 结果不完整）、滚动位置覆写（数据丢失）
+  - 结构：StoreSchema/AppSettings 类型去重、Menu IPC 通道规范化、搜索取消机制、ThemeProvider OS 响应
+  - 防御：protocol.ts 错误处理、菜单 8 个 click 处理器 try/catch 补齐
+  - 测试：`src/main/index.spec.ts`（7 个测试用例，index.ts 抽取 `registerIpcHandlers()`）
+- 全部 131 单元测试（主 43 + 渲染 88）+ 29 E2E 测试通过
 
 ## Key Decisions
 - **两层模型**：纯函数自然抛出；边界层统一捕获
@@ -56,3 +58,5 @@
 - `docs/superpowers/specs/2026-06-21-architecture-review-solution.md`：架构加深方案
 - `docs/superpowers/plans/2026-06-21-architecture-deepening-round2.md`：架构加深执行计划
 - `src/main/handlers.ts` / `src/main/handlers.spec.ts`：IPC handler 纯函数 + 测试
+- `docs/superpowers/specs/2026-06-22-architecture-deepening-round3-design.md`：第三轮架构设计
+- `docs/superpowers/plans/2026-06-22-architecture-deepening-round3.md`：第三轮实现计划

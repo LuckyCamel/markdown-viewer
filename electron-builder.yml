@@ -1,0 +1,15 @@
+app:
+  icon: ./resources/icon.png
+  productName: Markdown Viewer
+
+directories:
+  output: release
+
+win:
+  target: nsis
+
+mac:
+  target: dmg
+
+linux:
+  target: AppImage

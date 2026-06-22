@@ -1,6 +1,6 @@
 # Markdown Viewer V1 Implementation Plan
 
-> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
+> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [x]`) syntax for tracking.
 
 **Goal:** Build a cross-platform Electron desktop markdown viewer with workspace-based file management, multi-tab rendering, search, and state persistence.
 
@@ -141,7 +141,7 @@ Key design decisions:
 **Dependencies:**
 - No prior modules to verify (this is the foundation)
 
-- [ ] **Step 1: Verify environment dependencies**
+- [x] **Step 1: Verify environment dependencies**
 
 ```bash
 node --version
@@ -152,7 +152,7 @@ pnpm --version
 
 If versions are too old, abort and upgrade.
 
-- [ ] **Step 2: Initialize electron-vite project**
+- [x] **Step 2: Initialize electron-vite project**
 
 ```bash
 pnpm create @electron-vite/app markdown-viewer -- --template react-ts
@@ -160,14 +160,14 @@ pnpm create @electron-vite/app markdown-viewer -- --template react-ts
 
 If the interactive CLI doesn't work (non-interactive env), manually create the project files.
 
-- [ ] **Step 3: Install project dependencies**
+- [x] **Step 3: Install project dependencies**
 
 ```bash
 pnpm add zustand react-markdown remark-gfm remark-math rehype-katex rehype-highlight mermaid electron-store
 pnpm add -D tailwindcss postcss autoprefixer @types/node vitest @testing-library/react @testing-library/jest-dom jsdom @testing-library/user-event
 ```
 
-- [ ] **Step 4: Configure Tailwind CSS**
+- [x] **Step 4: Configure Tailwind CSS**
 
 `tailwind.config.js`:
 ```javascript
@@ -190,7 +190,7 @@ export default {
 }
 ```
 
-- [ ] **Step 5: Create CSS entry point**
+- [x] **Step 5: Create CSS entry point**
 
 `src/renderer/styles/globals.css`:
 ```css
@@ -199,7 +199,7 @@ export default {
 @tailwind utilities;
 ```
 
-- [ ] **Step 6: Create renderer HTML entry**
+- [x] **Step 6: Create renderer HTML entry**
 
 `src/renderer/index.html`:
 ```html
@@ -217,7 +217,7 @@ export default {
 </html>
 ```
 
-- [ ] **Step 7: Create renderer entry**
+- [x] **Step 7: Create renderer entry**
 
 `src/renderer/main.tsx`:
 ```tsx
@@ -233,7 +233,7 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
 )
 ```
 
-- [ ] **Step 8: Create App placeholder**
+- [x] **Step 8: Create App placeholder**
 
 `src/renderer/App.tsx`:
 ```tsx
@@ -244,7 +244,7 @@ function App() {
 export default App
 ```
 
-- [ ] **Step 9: Create main process placeholder**
+- [x] **Step 9: Create main process placeholder**
 
 `src/main/index.ts`:
 ```typescript
@@ -264,7 +264,7 @@ app.on('ready', () => {
 })
 ```
 
-- [ ] **Step 10: Configure vitest**
+- [x] **Step 10: Configure vitest**
 
 `electron.vite.config.ts` (add test config):
 ```typescript
@@ -289,7 +289,7 @@ export default defineConfig({
 })
 ```
 
-- [ ] **Step 11: Verify the project builds**
+- [x] **Step 11: Verify the project builds**
 
 ```bash
 pnpm run dev
@@ -298,7 +298,7 @@ pnpm run build
 # Expected: build succeeds with no errors
 ```
 
-- [ ] **Step 12: Commit**
+- [x] **Step 12: Commit**
 
 ```bash
 git init
@@ -318,7 +318,7 @@ git commit -m "chore: scaffold project with electron-vite + React + Tailwind"
 - Verify: `pnpm --version`
 - Verify: `src/main/index.ts` exists (project scaffold done)
 
-- [ ] **Step 1: Define shared types**
+- [x] **Step 1: Define shared types**
 
 `src/shared/types.ts`:
 ```typescript
@@ -429,14 +429,14 @@ declare global {
 }
 ```
 
-- [ ] **Step 2: Verify TypeScript compilation**
+- [x] **Step 2: Verify TypeScript compilation**
 
 ```bash
 npx tsc --noEmit src/shared/types.ts
 # Expected: succeeds with no errors
 ```
 
-- [ ] **Step 3: Commit**
+- [x] **Step 3: Commit**
 
 ```bash
 git add src/shared/types.ts
@@ -455,7 +455,7 @@ git commit -m "feat: define shared types and IPC interfaces"
 - Verify: `src/shared/types.ts` exists
 - Verify: `node -e "require('electron-store')"` works (dependency installed)
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 `tests/main/store.spec.ts`:
 ```typescript
@@ -496,14 +496,14 @@ describe('AppStore', () => {
 })
 ```
 
-- [ ] **Step 2: Run test to verify it fails**
+- [x] **Step 2: Run test to verify it fails**
 
 ```bash
 npx vitest run tests/main/store.spec.ts --reporter=verbose
 # Expected: FAIL — module not found or import error
 ```
 
-- [ ] **Step 3: Write minimal implementation**
+- [x] **Step 3: Write minimal implementation**
 
 `src/main/store.ts`:
 ```typescript
@@ -554,14 +554,14 @@ export const appStore = {
 }
 ```
 
-- [ ] **Step 4: Run test to verify it passes**
+- [x] **Step 4: Run test to verify it passes**
 
 ```bash
 npx vitest run tests/main/store.spec.ts --reporter=verbose
 # Expected: PASS (all 4 tests)
 ```
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add src/main/store.ts tests/main/store.spec.ts
@@ -580,7 +580,7 @@ git commit -m "feat: add electron-store wrapper with typed defaults"
 **Dependencies:**
 - Verify: `src/main/store.ts` exists
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 `tests/main/window.spec.ts`:
 ```typescript
@@ -597,14 +597,14 @@ describe('createWindow', () => {
 })
 ```
 
-- [ ] **Step 2: Run test to verify it fails**
+- [x] **Step 2: Run test to verify it fails**
 
 ```bash
 npx vitest run tests/main/window.spec.ts --reporter=verbose
 # Expected: FAIL — module not found
 ```
 
-- [ ] **Step 3: Write implementation**
+- [x] **Step 3: Write implementation**
 
 `src/main/window.ts`:
 ```typescript
@@ -654,14 +654,14 @@ export async function createWindow(): Promise<BrowserWindow> {
 }
 ```
 
-- [ ] **Step 4: Run test to verify it passes**
+- [x] **Step 4: Run test to verify it passes**
 
 ```bash
 npx vitest run tests/main/window.spec.ts --reporter=verbose
 # Expected: PASS
 ```
 
-- [ ] **Step 5: Update main entry**
+- [x] **Step 5: Update main entry**
 
 `src/main/index.ts`:
 ```typescript
@@ -685,14 +685,14 @@ app.on('activate', () => {
 })
 ```
 
-- [ ] **Step 6: Verify build**
+- [x] **Step 6: Verify build**
 
 ```bash
 pnpm run build
 # Expected: succeeds
 ```
 
-- [ ] **Step 7: Commit**
+- [x] **Step 7: Commit**
 
 ```bash
 git add src/main/index.ts src/main/window.ts tests/main/window.spec.ts
@@ -711,7 +711,7 @@ git commit -m "feat: add window management with state persistence"
 **Dependencies:**
 - Verify: `src/main/index.ts` exists
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 `tests/main/protocol.spec.ts`:
 ```typescript
@@ -725,14 +725,14 @@ describe('registerFileProtocol', () => {
 })
 ```
 
-- [ ] **Step 2: Run test to verify it fails**
+- [x] **Step 2: Run test to verify it fails**
 
 ```bash
 npx vitest run tests/main/protocol.spec.ts --reporter=verbose
 # Expected: FAIL
 ```
 
-- [ ] **Step 3: Write implementation**
+- [x] **Step 3: Write implementation**
 
 `src/main/protocol.ts`:
 ```typescript
@@ -762,14 +762,14 @@ export function registerFileProtocol(): void {
 }
 ```
 
-- [ ] **Step 4: Run test to verify it passes**
+- [x] **Step 4: Run test to verify it passes**
 
 ```bash
 npx vitest run tests/main/protocol.spec.ts --reporter=verbose
 # Expected: PASS
 ```
 
-- [ ] **Step 5: Wire into main entry**
+- [x] **Step 5: Wire into main entry**
 
 `src/main/index.ts`:
 ```typescript
@@ -791,7 +791,7 @@ app.on('activate', () => {
 })
 ```
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add src/main/protocol.ts src/main/index.ts tests/main/protocol.spec.ts
@@ -809,7 +809,7 @@ git commit -m "feat: register local-file:// protocol for local images"
 **Dependencies:**
 - Verify: `src/shared/types.ts` exists
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 `tests/main/files.spec.ts`:
 ```typescript
@@ -861,14 +861,14 @@ describe('File system operations', () => {
 })
 ```
 
-- [ ] **Step 2: Run test to verify it fails**
+- [x] **Step 2: Run test to verify it fails**
 
 ```bash
 npx vitest run tests/main/files.spec.ts --reporter=verbose
 # Expected: FAIL
 ```
 
-- [ ] **Step 3: Write implementation**
+- [x] **Step 3: Write implementation**
 
 `src/main/files.ts`:
 ```typescript
@@ -922,14 +922,14 @@ export function hasSupportedFiles(entries: FileEntry[]): boolean {
 }
 ```
 
-- [ ] **Step 4: Run test to verify it passes**
+- [x] **Step 4: Run test to verify it passes**
 
 ```bash
 npx vitest run tests/main/files.spec.ts --reporter=verbose
 # Expected: PASS
 ```
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add src/main/files.ts tests/main/files.spec.ts
@@ -947,7 +947,7 @@ git commit -m "feat: implement file system operations (list, read, info)"
 **Dependencies:**
 - Verify: `src/shared/types.ts` exists
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 `tests/main/watcher.spec.ts`:
 ```typescript
@@ -962,14 +962,14 @@ describe('fileWatcher', () => {
 })
 ```
 
-- [ ] **Step 2: Run test to verify it fails**
+- [x] **Step 2: Run test to verify it fails**
 
 ```bash
 npx vitest run tests/main/watcher.spec.ts --reporter=verbose
 # Expected: FAIL
 ```
 
-- [ ] **Step 3: Write implementation**
+- [x] **Step 3: Write implementation**
 
 `src/main/watcher.ts`:
 ```typescript
@@ -1015,14 +1015,14 @@ export function unwatchAll(): void {
 }
 ```
 
-- [ ] **Step 4: Run test to verify it passes**
+- [x] **Step 4: Run test to verify it passes**
 
 ```bash
 npx vitest run tests/main/watcher.spec.ts --reporter=verbose
 # Expected: PASS
 ```
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add src/main/watcher.ts tests/main/watcher.spec.ts
@@ -1040,7 +1040,7 @@ git commit -m "feat: add fs.watch file monitoring"
 **Dependencies:**
 - Verify: `src/shared/types.ts` exists, `src/main/files.ts` exists
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 `tests/main/search.spec.ts`:
 ```typescript
@@ -1063,14 +1063,14 @@ describe('content search', () => {
 })
 ```
 
-- [ ] **Step 2: Run test to verify it fails**
+- [x] **Step 2: Run test to verify it fails**
 
 ```bash
 npx vitest run tests/main/search.spec.ts --reporter=verbose
 # Expected: FAIL
 ```
 
-- [ ] **Step 3: Write implementation**
+- [x] **Step 3: Write implementation**
 
 `src/main/search.ts`:
 ```typescript
@@ -1105,14 +1105,14 @@ export async function searchInFile(
 }
 ```
 
-- [ ] **Step 4: Run test to verify it passes**
+- [x] **Step 4: Run test to verify it passes**
 
 ```bash
 npx vitest run tests/main/search.spec.ts --reporter=verbose
 # Expected: PASS
 ```
 
-- [ ] **Step 5: Add file-system-level search function**
+- [x] **Step 5: Add file-system-level search function**
 
 Add to `src/main/search.ts`:
 ```typescript
@@ -1179,14 +1179,14 @@ Wait, this won't work with tmpDir since we need to set it up. Let me simplify an
 
 Actually, let me keep this simple and not test the file-scoped search in detail since it depends on the file system. The unit test for `searchInFile` is the core one.
 
-- [ ] **Step 6: Run tests**
+- [x] **Step 6: Run tests**
 
 ```bash
 npx vitest run tests/main/search.spec.ts --reporter=verbose
 # Expected: PASS
 ```
 
-- [ ] **Step 7: Commit**
+- [x] **Step 7: Commit**
 
 ```bash
 git add src/main/search.ts tests/main/search.spec.ts
@@ -1205,7 +1205,7 @@ git commit -m "feat: implement content search with streaming progress"
 **Dependencies:**
 - Verify: `src/main/index.ts` exists
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 `tests/main/menu.spec.ts`:
 ```typescript
@@ -1219,14 +1219,14 @@ describe('createAppMenu', () => {
 })
 ```
 
-- [ ] **Step 2: Run test to verify it fails**
+- [x] **Step 2: Run test to verify it fails**
 
 ```bash
 npx vitest run tests/main/menu.spec.ts --reporter=verbose
 # Expected: FAIL
 ```
 
-- [ ] **Step 3: Write implementation**
+- [x] **Step 3: Write implementation**
 
 `src/main/menu.ts`:
 ```typescript
@@ -1346,14 +1346,14 @@ export function createAppMenu(mainWindow: BrowserWindow): void {
 }
 ```
 
-- [ ] **Step 4: Run test to verify it passes**
+- [x] **Step 4: Run test to verify it passes**
 
 ```bash
 npx vitest run tests/main/menu.spec.ts --reporter=verbose
 # Expected: PASS
 ```
 
-- [ ] **Step 5: Wire into main entry**
+- [x] **Step 5: Wire into main entry**
 
 `src/main/index.ts`:
 ```typescript
@@ -1370,7 +1370,7 @@ app.on('ready', () => {
 // ... rest stays the same
 ```
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add src/main/menu.ts src/main/index.ts tests/main/menu.spec.ts
@@ -1390,7 +1390,7 @@ git commit -m "feat: add application menu with keyboard shortcuts"
 - Verify: `src/shared/types.ts` exists
 - Verify: All main process modules exist (store, files, watcher, search, menu)
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 `tests/preload/api.spec.ts`:
 ```typescript
@@ -1405,14 +1405,14 @@ describe('preload API shape', () => {
 })
 ```
 
-- [ ] **Step 2: Run test to verify it fails**
+- [x] **Step 2: Run test to verify it fails**
 
 ```bash
 npx vitest run tests/preload/api.spec.ts --reporter=verbose
 # Expected: FAIL
 ```
 
-- [ ] **Step 3: Write implementation**
+- [x] **Step 3: Write implementation**
 
 `src/preload/index.ts`:
 ```typescript
@@ -1477,14 +1477,14 @@ declare global {
 }
 ```
 
-- [ ] **Step 4: Run test to verify it passes**
+- [x] **Step 4: Run test to verify it passes**
 
 ```bash
 npx vitest run tests/preload/api.spec.ts --reporter=verbose
 # Expected: PASS
 ```
 
-- [ ] **Step 5: Register IPC handlers in main process**
+- [x] **Step 5: Register IPC handlers in main process**
 
 `src/main/index.ts`:
 ```typescript
@@ -1531,14 +1531,14 @@ app.on('ready', () => {
 })
 ```
 
-- [ ] **Step 6: Verify build**
+- [x] **Step 6: Verify build**
 
 ```bash
 pnpm run build
 # Expected: succeeds
 ```
 
-- [ ] **Step 7: Commit**
+- [x] **Step 7: Commit**
 
 ```bash
 git add src/preload/ src/main/index.ts tests/preload/
@@ -1558,7 +1558,7 @@ git commit -m "feat: implement preload bridge and wire IPC handlers"
 **Dependencies:**
 - Verify: `src/shared/types.ts` exists
 
-- [ ] **Step 1: Write the failing test for UI store**
+- [x] **Step 1: Write the failing test for UI store**
 
 `src/renderer/stores/useUIStore.test.ts`:
 ```typescript
@@ -1593,14 +1593,14 @@ describe('useUIStore', () => {
 })
 ```
 
-- [ ] **Step 2: Run test to verify it fails**
+- [x] **Step 2: Run test to verify it fails**
 
 ```bash
 npx vitest run src/renderer/stores/useUIStore.test.ts --reporter=verbose
 # Expected: FAIL
 ```
 
-- [ ] **Step 3: Write UI store**
+- [x] **Step 3: Write UI store**
 
 `src/renderer/stores/useUIStore.ts`:
 ```typescript
@@ -1638,14 +1638,14 @@ export const useUIStore = create<UIState>((set) => ({
 }))
 ```
 
-- [ ] **Step 4: Run test to verify it passes**
+- [x] **Step 4: Run test to verify it passes**
 
 ```bash
 npx vitest run src/renderer/stores/useUIStore.test.ts --reporter=verbose
 # Expected: PASS
 ```
 
-- [ ] **Step 5: Write Settings store**
+- [x] **Step 5: Write Settings store**
 
 `src/renderer/stores/useSettingsStore.ts`:
 ```typescript
@@ -1672,7 +1672,7 @@ export const useSettingsStore = create<SettingsState>((set) => ({
 }))
 ```
 
-- [ ] **Step 6: Write Editor store (lazy loading)**
+- [x] **Step 6: Write Editor store (lazy loading)**
 
 `src/renderer/stores/useEditorStore.ts`:
 ```typescript
@@ -1718,14 +1718,14 @@ export const useEditorStore = create<EditorState>((set) => ({
 }))
 ```
 
-- [ ] **Step 7: Run all store tests**
+- [x] **Step 7: Run all store tests**
 
 ```bash
 npx vitest run src/renderer/stores/ --reporter=verbose
 # Expected: PASS
 ```
 
-- [ ] **Step 8: Commit**
+- [x] **Step 8: Commit**
 
 ```bash
 git add src/renderer/stores/ && git commit -m "feat: add zustand stores (UI, Settings, Editor)"
@@ -1744,7 +1744,7 @@ git add src/renderer/stores/ && git commit -m "feat: add zustand stores (UI, Set
 **Dependencies:**
 - Verify: stores exist
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 `src/renderer/components/ThemeProvider.test.tsx`:
 ```typescript
@@ -1764,14 +1764,14 @@ describe('ThemeProvider', () => {
 })
 ```
 
-- [ ] **Step 2: Run test to verify it fails**
+- [x] **Step 2: Run test to verify it fails**
 
 ```bash
 npx vitest run src/renderer/components/ThemeProvider.test.tsx --reporter=verbose
 # Expected: FAIL
 ```
 
-- [ ] **Step 3: Write components**
+- [x] **Step 3: Write components**
 
 `src/renderer/components/ThemeProvider.tsx`:
 ```tsx
@@ -1833,14 +1833,14 @@ export function Layout({ sidebar, main, outline, sidebarVisible, outlineVisible 
 }
 ```
 
-- [ ] **Step 4: Run test to verify it passes**
+- [x] **Step 4: Run test to verify it passes**
 
 ```bash
 npx vitest run src/renderer/components/ThemeProvider.test.tsx --reporter=verbose
 # Expected: PASS
 ```
 
-- [ ] **Step 5: Update App.tsx**
+- [x] **Step 5: Update App.tsx**
 
 `src/renderer/App.tsx`:
 ```tsx
@@ -1868,7 +1868,7 @@ function App() {
 export default App
 ```
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add src/renderer/components/ src/renderer/App.tsx
@@ -1886,7 +1886,7 @@ git commit -m "feat: add app layout with theme provider"
 **Dependencies:**
 - Verify: stores exist
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 `src/renderer/features/welcome/WelcomePage.test.tsx`:
 ```typescript
@@ -1907,14 +1907,14 @@ describe('WelcomePage', () => {
 })
 ```
 
-- [ ] **Step 2: Run test to verify it fails**
+- [x] **Step 2: Run test to verify it fails**
 
 ```bash
 npx vitest run src/renderer/features/welcome/WelcomePage.test.tsx --reporter=verbose
 # Expected: FAIL
 ```
 
-- [ ] **Step 3: Write component**
+- [x] **Step 3: Write component**
 
 `src/renderer/features/welcome/WelcomePage.tsx`:
 ```tsx
@@ -1986,14 +1986,14 @@ export function WelcomePage() {
 }
 ```
 
-- [ ] **Step 4: Run test to verify it passes**
+- [x] **Step 4: Run test to verify it passes**
 
 ```bash
 npx vitest run src/renderer/features/welcome/WelcomePage.test.tsx --reporter=verbose
 # Expected: PASS
 ```
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add src/renderer/features/welcome/
@@ -2012,7 +2012,7 @@ git commit -m "feat: add welcome page with recent files and folder open"
 **Dependencies:**
 - Verify: main process `files` module exists, preload exposes `files` API
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 `src/renderer/features/file-tree/FileTree.test.tsx`:
 ```typescript
@@ -2028,14 +2028,14 @@ describe('FileTree', () => {
 })
 ```
 
-- [ ] **Step 2: Run test to verify it fails**
+- [x] **Step 2: Run test to verify it fails**
 
 ```bash
 npx vitest run src/renderer/features/file-tree/FileTree.test.tsx --reporter=verbose
 # Expected: FAIL
 ```
 
-- [ ] **Step 3: Write store and component**
+- [x] **Step 3: Write store and component**
 
 `src/renderer/features/file-tree/useFileStore.ts`:
 ```typescript
@@ -2160,14 +2160,14 @@ export function FileTree({ rootPath }: FileTreeProps) {
 }
 ```
 
-- [ ] **Step 4: Run test to verify it passes**
+- [x] **Step 4: Run test to verify it passes**
 
 ```bash
 npx vitest run src/renderer/features/file-tree/FileTree.test.tsx --reporter=verbose
 # Expected: PASS
 ```
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add src/renderer/features/file-tree/
@@ -2186,7 +2186,7 @@ git commit -m "feat: add recursive file tree with expand/collapse"
 **Dependencies:**
 - Verify: `src/renderer/stores/useEditorStore.ts` exists
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 `src/renderer/features/tabs/TabBar.test.tsx`:
 ```typescript
@@ -2203,14 +2203,14 @@ describe('TabBar', () => {
 })
 ```
 
-- [ ] **Step 2: Run test to verify it fails**
+- [x] **Step 2: Run test to verify it fails**
 
 ```bash
 npx vitest run src/renderer/features/tabs/TabBar.test.tsx --reporter=verbose
 # Expected: FAIL
 ```
 
-- [ ] **Step 3: Write store and component**
+- [x] **Step 3: Write store and component**
 
 `src/renderer/features/tabs/useTabStore.ts`:
 ```typescript
@@ -2343,14 +2343,14 @@ export function joinPaths(...parts: string[]): string {
 }
 ```
 
-- [ ] **Step 4: Run test to verify it passes**
+- [x] **Step 4: Run test to verify it passes**
 
 ```bash
 npx vitest run src/renderer/features/tabs/TabBar.test.tsx --reporter=verbose
 # Expected: PASS
 ```
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add src/renderer/features/tabs/ src/shared/utils.ts
@@ -2370,7 +2370,7 @@ git commit -m "feat: add tab bar with open/close/switch support"
 **Dependencies:**
 - Verify: `useEditorStore` exists, `useTabStore` exists
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 `src/renderer/features/markdown-viewer/MarkdownViewer.test.tsx`:
 ```typescript
@@ -2397,14 +2397,14 @@ describe('MarkdownViewer', () => {
 })
 ```
 
-- [ ] **Step 2: Run test to verify it fails**
+- [x] **Step 2: Run test to verify it fails**
 
 ```bash
 npx vitest run src/renderer/features/markdown-viewer/MarkdownViewer.test.tsx --reporter=verbose
 # Expected: FAIL
 ```
 
-- [ ] **Step 3: Write components**
+- [x] **Step 3: Write components**
 
 `src/renderer/features/markdown-viewer/mermaid.ts`:
 ```typescript
@@ -2549,14 +2549,14 @@ export function MarkdownViewer({ content, filePath }: MarkdownViewerProps) {
 }
 ```
 
-- [ ] **Step 4: Run test to verify it passes**
+- [x] **Step 4: Run test to verify it passes**
 
 ```bash
 npx vitest run src/renderer/features/markdown-viewer/MarkdownViewer.test.tsx --reporter=verbose
 # Expected: PASS
 ```
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add src/renderer/features/markdown-viewer/
@@ -2574,7 +2574,7 @@ git commit -m "feat: implement markdown renderer with GFM, KaTeX, Mermaid, highl
 **Dependencies:**
 - Verify: `useEditorStore` exists
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 `src/renderer/features/outline/Outline.test.tsx`:
 ```typescript
@@ -2600,14 +2600,14 @@ describe('Outline', () => {
 })
 ```
 
-- [ ] **Step 2: Run test to verify it fails**
+- [x] **Step 2: Run test to verify it fails**
 
 ```bash
 npx vitest run src/renderer/features/outline/Outline.test.tsx --reporter=verbose
 # Expected: FAIL
 ```
 
-- [ ] **Step 3: Write component**
+- [x] **Step 3: Write component**
 
 `src/renderer/features/outline/Outline.tsx`:
 ```tsx
@@ -2670,14 +2670,14 @@ export function Outline({ content }: OutlineProps) {
 }
 ```
 
-- [ ] **Step 4: Run test to verify it passes**
+- [x] **Step 4: Run test to verify it passes**
 
 ```bash
 npx vitest run src/renderer/features/outline/Outline.test.tsx --reporter=verbose
 # Expected: PASS
 ```
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add src/renderer/features/outline/
@@ -2697,7 +2697,7 @@ git commit -m "feat: add outline panel with heading extraction and scroll-to"
 **Dependencies:**
 - Verify: preload exposes search API
 
-- [ ] **Step 1: Write the failing test for FileSearch**
+- [x] **Step 1: Write the failing test for FileSearch**
 
 `src/renderer/features/search/FileSearch.test.tsx`:
 ```typescript
@@ -2724,14 +2724,14 @@ describe('FileSearch', () => {
 })
 ```
 
-- [ ] **Step 2: Run test to verify it fails**
+- [x] **Step 2: Run test to verify it fails**
 
 ```bash
 npx vitest run src/renderer/features/search/FileSearch.test.tsx --reporter=verbose
 # Expected: FAIL
 ```
 
-- [ ] **Step 3: Write stores and components**
+- [x] **Step 3: Write stores and components**
 
 `src/renderer/features/search/useSearchStore.ts`:
 ```typescript
@@ -2874,14 +2874,14 @@ export function ContentSearch({ workspacePath, onSelect }: ContentSearchProps) {
 }
 ```
 
-- [ ] **Step 4: Run test to verify it passes**
+- [x] **Step 4: Run test to verify it passes**
 
 ```bash
 npx vitest run src/renderer/features/search/FileSearch.test.tsx --reporter=verbose
 # Expected: PASS
 ```
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add src/renderer/features/search/
@@ -2899,7 +2899,7 @@ git commit -m "feat: add file search and content search panels"
 **Dependencies:**
 - Verify: `useSettingsStore` exists
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 `src/renderer/features/settings/SettingsPanel.test.tsx`:
 ```typescript
@@ -2915,14 +2915,14 @@ describe('SettingsPanel', () => {
 })
 ```
 
-- [ ] **Step 2: Run test to verify it fails**
+- [x] **Step 2: Run test to verify it fails**
 
 ```bash
 npx vitest run src/renderer/features/settings/SettingsPanel.test.tsx --reporter=verbose
 # Expected: FAIL
 ```
 
-- [ ] **Step 3: Write component**
+- [x] **Step 3: Write component**
 
 `src/renderer/features/settings/SettingsPanel.tsx`:
 ```tsx
@@ -2997,14 +2997,14 @@ export function SettingsPanel() {
 }
 ```
 
-- [ ] **Step 4: Run test to verify it passes**
+- [x] **Step 4: Run test to verify it passes**
 
 ```bash
 npx vitest run src/renderer/features/settings/SettingsPanel.test.tsx --reporter=verbose
 # Expected: PASS
 ```
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add src/renderer/features/settings/
@@ -3022,7 +3022,7 @@ git commit -m "feat: add settings panel with theme and ignore list"
 **Dependencies:**
 - Verify: All feature modules exist
 
-- [ ] **Step 1: Verify dependencies**
+- [x] **Step 1: Verify dependencies**
 
 ```bash
 Test-Path src/renderer/features/welcome/WelcomePage.tsx
@@ -3036,7 +3036,7 @@ Test-Path src/renderer/features/settings/SettingsPanel.tsx
 Test-Path src/renderer/stores/useEditorStore.ts
 ```
 
-- [ ] **Step 2: Write the failing integration test**
+- [x] **Step 2: Write the failing integration test**
 
 `src/renderer/App.test.tsx`:
 ```typescript
@@ -3052,14 +3052,14 @@ describe('App', () => {
 })
 ```
 
-- [ ] **Step 3: Run test to verify it fails**
+- [x] **Step 3: Run test to verify it fails**
 
 ```bash
 npx vitest run src/renderer/App.test.tsx --reporter=verbose
 # Expected: FAIL (current App is placeholder)
 ```
 
-- [ ] **Step 4: Wire full App**
+- [x] **Step 4: Wire full App**
 
 `src/renderer/App.tsx`:
 ```tsx
@@ -3218,21 +3218,21 @@ function App() {
 export default App
 ```
 
-- [ ] **Step 5: Run test to verify it passes**
+- [x] **Step 5: Run test to verify it passes**
 
 ```bash
 npx vitest run src/renderer/App.test.tsx --reporter=verbose
 # Expected: PASS
 ```
 
-- [ ] **Step 6: Verify build**
+- [x] **Step 6: Verify build**
 
 ```bash
 pnpm run build
 # Expected: succeeds
 ```
 
-- [ ] **Step 7: Commit**
+- [x] **Step 7: Commit**
 
 ```bash
 git add src/renderer/App.tsx src/renderer/App.test.tsx
@@ -3250,13 +3250,13 @@ git commit -m "feat: wire full app with all features integrated"
 **Dependencies:**
 - Verify: All previous tasks completed
 
-- [ ] **Step 1: Verify all previous modules exist**
+- [x] **Step 1: Verify all previous modules exist**
 
 ```bash
 Test-Path src/main/index.ts, src/main/window.ts, src/main/store.ts, src/main/files.ts, src/main/watcher.ts, src/main/search.ts, src/main/menu.ts, src/preload/index.ts, src/renderer/App.tsx
 ```
 
-- [ ] **Step 2: Add file monitoring integration**
+- [x] **Step 2: Add file monitoring integration**
 
 In `src/renderer/App.tsx`, add watcher effect:
 ```typescript
@@ -3280,7 +3280,7 @@ useEffect(() => {
 }, [openFiles])
 ```
 
-- [ ] **Step 3: Save reading positions on scroll**
+- [x] **Step 3: Save reading positions on scroll**
 
 Add to `src/renderer/App.tsx`:
 ```typescript
@@ -3302,7 +3302,7 @@ useEffect(() => {
 }, [activeFile])
 ```
 
-- [ ] **Step 4: Restore reading positions**
+- [x] **Step 4: Restore reading positions**
 
 After loading content, restore scroll:
 ```typescript
@@ -3323,7 +3323,7 @@ useEffect(() => {
 }, [activeFile, activeContent])
 ```
 
-- [ ] **Step 5: Save recent files and dirs on open**
+- [x] **Step 5: Save recent files and dirs on open**
 
 ```typescript
 // Track recent items
@@ -3339,21 +3339,21 @@ const trackRecent = async (path: string, isDir: boolean) => {
 }
 ```
 
-- [ ] **Step 6: Run full test suite**
+- [x] **Step 6: Run full test suite**
 
 ```bash
 npx vitest run --reporter=verbose
 # Expected: all tests pass
 ```
 
-- [ ] **Step 7: Verify final build**
+- [x] **Step 7: Verify final build**
 
 ```bash
 pnpm run build
 # Expected: succeeds with no errors
 ```
 
-- [ ] **Step 8: Commit**
+- [x] **Step 8: Commit**
 
 ```bash
 git add -A

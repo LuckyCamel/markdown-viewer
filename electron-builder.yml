@@ -17,9 +17,11 @@ win:
 mac:
   target: dmg
   icon: build/icon.png
+  artifactName: 'Markdown-Viewer-${version}.${ext}'
 
 linux:
   icon: build/icon.png
+  artifactName: 'Markdown-Viewer-${version}.${ext}'
   target: 
     - target: AppImage
     - target: deb

@@ -15,14 +15,14 @@ import { Outline } from './features/outline/Outline'
 import { FileSearch } from './features/search/FileSearch'
 import { ContentSearch } from './features/search/ContentSearch'
 import { SettingsPanel } from './features/settings/SettingsPanel'
-import type { FileChangeEvent, FileEntry } from '../shared/types'
+import type { FileChangeEvent } from '../shared/types'
 
 function App() {
   const [workspacePath, setWorkspacePath] = useState<string | null>(null)
   const [showSettings, setShowSettings] = useState(false)
   const [initialized, setInitialized] = useState(false)
 
-  const theme = useUIStore((s) => s.theme)
+  // theme not destructured — only setTheme is used
   const setTheme = useUIStore((s) => s.setTheme)
   const sidebarVisible = useUIStore((s) => s.sidebarVisible)
   const outlineVisible = useUIStore((s) => s.outlineVisible)
@@ -34,16 +34,27 @@ function App() {
 
   const openFiles = useTabStore((s) => s.openFiles)
   const activeFile = useTabStore((s) => s.activeFile)
-  const openFile = useTabStore((s) => s.openFile)
-  const closeFile = useTabStore((s) => s.closeFile)
-  const setActive = useTabStore((s) => s.setActive)
 
-  const content = useEditorStore((s) => activeFile ? s.contents[activeFile] : undefined)
+  const content = useEditorStore((s) => (activeFile ? s.contents[activeFile] : undefined))
   const loadContent = useEditorStore((s) => s.loadContent)
+
+  const allFiles = useMemo(() => {
+    const entries = useFileStore.getState().entries
+    const files: { path: string; name: string }[] = []
+    for (const dir of Object.values(entries)) {
+      for (const entry of dir) {
+        if (!entry.isDirectory) {
+          files.push({ path: entry.path, name: entry.name })
+        }
+      }
+    }
+    return files
+  }, [])
 
   const trackRecent = useCallback(async (path: string, isDir: boolean) => {
     const key = isDir ? 'recentDirs' : 'recentFiles'
-    const items = (await window.api.store.get<{ path: string; name: string; timestamp: number }[]>(key)) || []
+    const items =
+      (await window.api.store.get<{ path: string; name: string; timestamp: number }[]>(key)) || []
     const name = path.split(/[\\/]/).pop() || path
     const updated = [
       { path, name, timestamp: Date.now() },
@@ -52,25 +63,31 @@ function App() {
     await window.api.store.set(key, updated)
   }, [])
 
-  const handleOpenFolder = useCallback((path: string) => {
-    setWorkspacePath(path)
-    useFileStore.getState().setRoot(path)
-    useTabStore.getState().closeAll()
-    useSearchStore.getState().reset()
-    window.api.store.set('lastWorkspace', path)
-    trackRecent(path, true)
-  }, [trackRecent])
+  const handleOpenFolder = useCallback(
+    (path: string) => {
+      setWorkspacePath(path)
+      useFileStore.getState().setRoot(path)
+      useTabStore.getState().closeAll()
+      useSearchStore.getState().reset()
+      window.api.store.set('lastWorkspace', path)
+      trackRecent(path, true)
+    },
+    [trackRecent],
+  )
 
-  const handleOpenFile = useCallback((path: string) => {
-    useTabStore.getState().openFile(path)
-    trackRecent(path, false)
-  }, [trackRecent])
+  const handleOpenFile = useCallback(
+    (path: string) => {
+      useTabStore.getState().openFile(path)
+      trackRecent(path, false)
+    },
+    [trackRecent],
+  )
 
   useEffect(() => {
     async function init() {
       const [savedTheme, savedWorkspace, savedOpenFiles, savedActiveFile, savedIgnoreList] =
         await Promise.all([
-          window.api.store.get<typeof theme>('theme'),
+          window.api.store.get<ReturnType<typeof useUIStore.getState>['theme']>('theme'),
           window.api.store.get<string | null>('lastWorkspace'),
           window.api.store.get<string[]>('openFiles'),
           window.api.store.get<string | null>('activeFile'),
@@ -130,7 +147,6 @@ function App() {
     if (!activeFile) return
     const container = document.querySelector('main > div:first-child')
     if (!container) return
-
     const handleScroll = () => {
       window.api.store.set('readingPositions', {
         [activeFile]: container.scrollTop,
@@ -147,7 +163,9 @@ function App() {
       if (positions?.[activeFile]) {
         const container = document.querySelector('main > div:first-child')
         if (container) {
-          requestAnimationFrame(() => { container.scrollTop = positions[activeFile] })
+          requestAnimationFrame(() => {
+            container.scrollTop = positions[activeFile]
+          })
         }
       }
     })()
@@ -191,71 +209,71 @@ function App() {
     return () => handlers.forEach((h) => h())
   }, [handleOpenFolder, toggleSidebar, toggleOutline, openSearch])
 
-  const allFiles = useMemo(() => {
-    const entries = useFileStore.getState().entries
-    const files: { path: string; name: string }[] = []
-    for (const dir of Object.values(entries)) {
-      for (const entry of dir) {
-        if (!entry.isDirectory) {
-          files.push({ path: entry.path, name: entry.name })
-        }
-      }
+  useEffect(() => {
+    if (!showSettings) return
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setShowSettings(false)
     }
-    return files
-  }, [workspacePath])
-
-  if (!workspacePath) {
-    return (
-      <ThemeProvider>
-        <WelcomePage onFolderOpen={handleOpenFolder} />
-      </ThemeProvider>
-    )
-  }
-
-  const sidebarContent = (
-    <div>
-      <FileTree rootPath={workspacePath} />
-      <div className="border-t border-gray-200 dark:border-gray-700">
-        {searchPanel === 'file' && (
-          <FileSearch files={allFiles} onSelect={(p) => { handleOpenFile(p); closeSearch() }} />
-        )}
-        {searchPanel === 'content' && (
-          <ContentSearch workspacePath={workspacePath} onSelect={(p) => { handleOpenFile(p); closeSearch() }} />
-        )}
-      </div>
-    </div>
-  )
-
-  const mainContent = showSettings ? (
-    <SettingsPanel />
-  ) : openFiles.length > 0 ? (
-    <div className="h-full flex flex-col">
-      <TabBar />
-      <div className="flex-1 overflow-y-auto">
-        {content !== undefined ? (
-          <MarkdownViewer content={content} filePath={activeFile ?? undefined} />
-        ) : (
-          <div className="flex items-center justify-center h-full text-gray-500">Loading...</div>
-        )}
-      </div>
-    </div>
-  ) : (
-    <WelcomePage onFolderOpen={handleOpenFolder} />
-  )
-
-  const outlineContent = content ? (
-    <Outline content={content} />
-  ) : null
+    window.addEventListener('keydown', handleKeyDown)
+    return () => window.removeEventListener('keydown', handleKeyDown)
+  }, [showSettings])
 
   return (
     <ThemeProvider>
-      <Layout
-        sidebar={sidebarContent}
-        main={mainContent}
-        outline={outlineContent}
-        sidebarVisible={sidebarVisible}
-        outlineVisible={outlineVisible}
-      />
+      {!workspacePath ? (
+        <WelcomePage onFolderOpen={handleOpenFolder} />
+      ) : (
+        <Layout
+          sidebar={
+            <div>
+              <FileTree rootPath={workspacePath} />
+              <div className="border-t border-gray-200 dark:border-gray-700">
+                {searchPanel === 'file' && (
+                  <FileSearch
+                    files={allFiles}
+                    onSelect={(p) => {
+                      handleOpenFile(p)
+                      closeSearch()
+                    }}
+                  />
+                )}
+                {searchPanel === 'content' && (
+                  <ContentSearch
+                    workspacePath={workspacePath}
+                    onSelect={(p) => {
+                      handleOpenFile(p)
+                      closeSearch()
+                    }}
+                  />
+                )}
+              </div>
+            </div>
+          }
+          main={
+            showSettings ? (
+              <SettingsPanel />
+            ) : openFiles.length > 0 ? (
+              <div className="h-full flex flex-col">
+                <TabBar />
+                <div className="flex-1 overflow-y-auto">
+                  {content !== undefined ? (
+                    <MarkdownViewer content={content} filePath={activeFile ?? undefined} />
+                  ) : (
+                    <div className="flex items-center justify-center h-full text-gray-500">
+                      Loading...
+                    </div>
+                  )}
+                </div>
+              </div>
+            ) : (
+              <WelcomePage onFolderOpen={handleOpenFolder} />
+            )
+          }
+          outline={content ? <Outline content={content} /> : null}
+          sidebarVisible={sidebarVisible}
+          outlineVisible={outlineVisible}
+        />
+      )}
     </ThemeProvider>
   )
 }

@@ -43,9 +43,8 @@ function App() {
   const content = useEditorStore((s) => (activeFile ? s.contents[activeFile] : undefined))
   const loadContent = useEditorStore((s) => s.loadContent)
 
-  // Fix: compute allFiles from live entries (was useMemo with empty deps bug)
+  const entries = useFileStore((s) => s.entries)
   const allFiles = useMemo(() => {
-    const entries = useFileStore.getState().entries
     const files: { path: string; name: string }[] = []
     for (const dir of Object.values(entries)) {
       for (const entry of dir) {
@@ -55,8 +54,7 @@ function App() {
       }
     }
     return files
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [initialized])
+  }, [entries])
 
   useEffect(() => {
     if (activeFile) {

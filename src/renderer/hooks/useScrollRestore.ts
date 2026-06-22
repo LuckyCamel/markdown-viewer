@@ -8,10 +8,11 @@ export function useScrollRestore(activeFile: string | null, content: string | un
     const container = document.querySelector('main > div:first-child')
     if (!container) return
     const handleScroll = () => {
+      const top = container.scrollTop
       ipc.store
-        .set('readingPositions', {
-          [activeFile]: container.scrollTop,
-        })
+        .get<Record<string, number>>('readingPositions')
+        .then((saved) => ({ ...saved, [activeFile]: top }))
+        .then((merged) => ipc.store.set('readingPositions', merged))
         .catch((err) => logError('useScrollRestore:save', err))
     }
     container.addEventListener('scroll', handleScroll)

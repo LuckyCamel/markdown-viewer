@@ -47,21 +47,38 @@ describe('useScrollRestore', () => {
     }).not.toThrow()
   })
 
-  it('scroll 事件保存位置到 store', () => {
+  it('scroll 事件保存位置到 store', async () => {
     setupDOM()
     renderHook(() => useScrollRestore('/a.md', 'content'))
     fireScroll(250)
-    expect(mockStoreSet).toHaveBeenCalledWith('readingPositions', { '/a.md': 250 })
+    await vi.waitFor(() => {
+      expect(mockStoreSet).toHaveBeenCalledWith('readingPositions', { '/a.md': 250 })
+    })
   })
 
-  it('activeFile 变化时更新保存的路径', () => {
+  it('activeFile 变化时更新保存的路径', async () => {
     setupDOM()
     const { rerender } = renderHook(({ file }) => useScrollRestore(file, 'content'), {
       initialProps: { file: '/a.md' },
     })
     rerender({ file: '/b.md' })
     fireScroll(300)
-    expect(mockStoreSet).toHaveBeenCalledWith('readingPositions', { '/b.md': 300 })
+    await vi.waitFor(() => {
+      expect(mockStoreSet).toHaveBeenCalledWith('readingPositions', { '/b.md': 300 })
+    })
+  })
+
+  it('合并已有位置，不覆写其他文件的滚动位置', async () => {
+    setupDOM()
+    mockStoreGet.mockResolvedValue({ '/other.md': 100 })
+    renderHook(() => useScrollRestore('/a.md', 'content'))
+    fireScroll(250)
+    await vi.waitFor(() => {
+      expect(mockStoreSet).toHaveBeenCalledWith('readingPositions', {
+        '/other.md': 100,
+        '/a.md': 250,
+      })
+    })
   })
 
   it('store.set 异常时调用 logError', async () => {

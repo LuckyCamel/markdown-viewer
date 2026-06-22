@@ -19,7 +19,7 @@
     "test:e2e": "playwright test --config e2e/playwright.config.ts",
     "test:coverage": "vitest run --coverage && vitest run --coverage --config vitest.config.main.ts",
     "package": "electron-vite build && electron-builder",
-    "package:win": "electron-vite build && electron-builder --win",
+    "package:win": "electron-vite build && electron-builder --win && powershell Remove-Item -Recurse -Force release/win-unpacked",
     "prepare": "husky"
   },
   "devDependencies": {

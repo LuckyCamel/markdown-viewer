@@ -7,16 +7,22 @@ directories:
 files:
   - out/**/*
   - package.json
+  - build/**/*
 
 win:
   target: nsis
   artifactName: 'Markdown-Viewer-Setup-${version}.${ext}'
+  icon: build/icon.png
 
 mac:
   target: dmg
+  icon: build/icon.png
 
 linux:
+  icon: build/icon.png
   target: 
     - target: AppImage
     - target: deb
   maintainer: "Markdown Viewer Team <team@markdown-viewer.local>"
+  category: "Office"
+  syncDesktopName: true

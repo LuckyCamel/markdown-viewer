@@ -1,8 +1,9 @@
 {
   "name": "markdown-viewer",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "packageManager": "pnpm@9.15.9",
   "description": "A cross-platform Markdown viewer built with Electron",
+  "desktopName": "markdown-viewer",
   "author": "Markdown Viewer Team <team@markdown-viewer.local>",
   "homepage": "https://github.com/anomalyco/markdown-viewer",
   "type": "module",

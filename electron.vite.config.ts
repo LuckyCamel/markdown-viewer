@@ -7,18 +7,27 @@ export default defineConfig({
   },
   preload: {
     plugins: [externalizeDepsPlugin()],
+    build: {
+      rollupOptions: {
+        output: {
+          format: 'cjs',
+        },
+      },
+    },
   },
   renderer: {
     plugins: [react()],
-    test: {
-      environment: 'jsdom',
-      globals: true,
-      setupFiles: ['src/renderer/test/setup.ts'],
-      coverage: {
-        provider: 'v8',
-        include: ['src/renderer/**'],
-        exclude: ['**/*.test.*', '**/test/**', '**/*.d.ts'],
+    ...({
+      test: {
+        environment: 'jsdom',
+        globals: true,
+        setupFiles: ['src/renderer/test/setup.ts'],
+        coverage: {
+          provider: 'v8',
+          include: ['src/renderer/**'],
+          exclude: ['**/*.test.*', '**/test/**', '**/*.d.ts'],
+        },
       },
-    },
+    } as any),
   },
 })

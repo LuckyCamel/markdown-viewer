@@ -1,9 +1,15 @@
 import { contextBridge, ipcRenderer } from 'electron'
-import type { ElectronAPI, FileContent, FileEntry, FileChangeEvent, SearchProgress } from '../shared/types'
+import type {
+  ElectronAPI,
+  FileContent,
+  FileEntry,
+  FileChangeEvent,
+  SearchProgress,
+} from '../shared/types'
 
 type ListenerKey = string
 const listenerMap = new Map<ListenerKey, (...args: unknown[]) => void>()
-function key(channel: string, callback: Function): ListenerKey {
+function key(channel: string, callback: (...args: unknown[]) => void): ListenerKey {
   return `${channel}\0${callback.name || callback.toString().slice(0, 40)}`
 }
 
@@ -21,7 +27,8 @@ const api: ElectronAPI = {
       ipcRenderer.send('files:searchContent', dirPath, query)
     },
     onResult: (callback: (result: SearchProgress) => void) => {
-      const handler = (_event: Electron.IpcRendererEvent, result: SearchProgress) => callback(result)
+      const handler = (_event: Electron.IpcRendererEvent, result: SearchProgress) =>
+        callback(result)
       listenerMap.set(key('search:result', callback), handler)
       ipcRenderer.on('search:result', handler as (...args: unknown[]) => void)
     },
@@ -38,8 +45,11 @@ const api: ElectronAPI = {
     watchFile: (filePath: string) => ipcRenderer.send('watcher:watchFile', filePath),
     unwatchFile: (filePath: string) => ipcRenderer.send('watcher:unwatchFile', filePath),
     onChange: (callback: (event: FileChangeEvent, content: string | null) => void) => {
-      const handler = (_event: Electron.IpcRendererEvent, event: FileChangeEvent, content: string | null) =>
-        callback(event, content)
+      const handler = (
+        _event: Electron.IpcRendererEvent,
+        event: FileChangeEvent,
+        content: string | null,
+      ) => callback(event, content)
       listenerMap.set(key('watcher:fileChanged', callback), handler)
       ipcRenderer.on('watcher:fileChanged', handler as (...args: unknown[]) => void)
     },
@@ -54,7 +64,8 @@ const api: ElectronAPI = {
   },
   store: {
     get: <T>(key: string) => ipcRenderer.invoke('store:get', key) as Promise<T | undefined>,
-    set: (key: string, value: unknown) => ipcRenderer.invoke('store:set', key, value) as Promise<void>,
+    set: (key: string, value: unknown) =>
+      ipcRenderer.invoke('store:set', key, value) as Promise<void>,
     delete: (key: string) => ipcRenderer.invoke('store:delete', key) as Promise<void>,
   },
   dialog: {

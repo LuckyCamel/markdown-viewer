@@ -11,8 +11,11 @@ function extractHeadings(markdown: string): HeadingItem[] {
     const match = line.match(/^(#{1,6})\s+(.+)$/)
     if (match) {
       const level = match[1].length
-      const text = match[2].replace(/[`*_~\[\]]/g, '')
-      const id = text.toLowerCase().replace(/\s+/g, '-').replace(/[^\w-]/g, '')
+      const text = match[2].replace(/[`*_~[\]]/g, '')
+      const id = text
+        .toLowerCase()
+        .replace(/\s+/g, '-')
+        .replace(/[^\w-]/g, '')
       headings.push({ level, text, id })
     }
   }
@@ -32,11 +35,7 @@ export function Outline({ content }: OutlineProps) {
   }
 
   if (headings.length === 0) {
-    return (
-      <div className="p-4 text-sm text-gray-500">
-        No headings found
-      </div>
-    )
+    return <div className="p-4 text-sm text-gray-500">No headings found</div>
   }
 
   return (

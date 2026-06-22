@@ -2,6 +2,7 @@ import { useUIStore } from '../../stores/useUIStore'
 import { useSettingsStore } from './useSettingsStore'
 import { useEffect } from 'react'
 import { ipc } from '../../lib/ipc'
+import { logError } from '../../logger'
 import type { ThemeMode } from '../../../shared/types'
 
 export function SettingsPanel() {
@@ -13,12 +14,12 @@ export function SettingsPanel() {
   const saveToDisk = useSettingsStore((s) => s.saveToDisk)
 
   useEffect(() => {
-    loadFromDisk()
+    loadFromDisk().catch((err) => logError('SettingsPanel:loadFromDisk', err))
   }, [loadFromDisk])
 
   const handleThemeChange = async (newTheme: ThemeMode) => {
     setTheme(newTheme)
-    await ipc.store.set('theme', newTheme)
+    await ipc.store.set('theme', newTheme).catch((err) => logError('SettingsPanel:setTheme', err))
   }
 
   const handleIgnoreChange = async (value: string) => {
@@ -27,7 +28,7 @@ export function SettingsPanel() {
       .map((s) => s.trim())
       .filter(Boolean)
     setIgnoreList(list)
-    await saveToDisk()
+    await saveToDisk().catch((err) => logError('SettingsPanel:saveToDisk', err))
   }
 
   return (

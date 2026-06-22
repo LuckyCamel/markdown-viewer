@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { ipc } from '../../lib/ipc'
+import { logError } from '../../logger'
 
 interface WelcomePageProps {
   onFolderOpen?: (path: string) => void
@@ -10,18 +11,26 @@ export function WelcomePage({ onFolderOpen }: WelcomePageProps) {
   const [recentDirs, setRecentDirs] = useState<{ path: string; name: string }[]>([])
 
   useEffect(() => {
-    ipc.store.get<any[]>('recentFiles').then((files) => {
-      if (files) setRecentFiles(files.slice(0, 10))
-    })
-    ipc.store.get<any[]>('recentDirs').then((dirs) => {
-      if (dirs) setRecentDirs(dirs.slice(0, 10))
-    })
+    ipc.store
+      .get<any[]>('recentFiles')
+      .then((files) => {
+        if (files) setRecentFiles(files.slice(0, 10))
+      })
+      .catch((err) => logError('WelcomePage:loadRecentFiles', err))
+    ipc.store
+      .get<any[]>('recentDirs')
+      .then((dirs) => {
+        if (dirs) setRecentDirs(dirs.slice(0, 10))
+      })
+      .catch((err) => logError('WelcomePage:loadRecentDirs', err))
   }, [])
 
   const handleOpenFolder = async () => {
     const dir = await ipc.dialog.openDirectory()
     if (dir) {
-      ipc.store.set('lastWorkspace', dir)
+      ipc.store
+        .set('lastWorkspace', dir)
+        .catch((err) => logError('WelcomePage:setLastWorkspace', err))
       onFolderOpen?.(dir)
     }
   }
@@ -58,7 +67,9 @@ export function WelcomePage({ onFolderOpen }: WelcomePageProps) {
               <li key={dir.path}>
                 <button
                   onClick={() => {
-                    ipc.store.set('lastWorkspace', dir.path)
+                    ipc.store
+                      .set('lastWorkspace', dir.path)
+                      .catch((err) => logError('WelcomePage:setLastWorkspace', err))
                     onFolderOpen?.(dir.path)
                   }}
                   className="text-sm text-blue-600 dark:text-blue-400 hover:underline"

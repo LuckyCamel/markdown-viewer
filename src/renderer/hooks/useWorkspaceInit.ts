@@ -5,6 +5,7 @@ import { useTabStore } from '../features/tabs/useTabStore'
 import { useFileStore } from '../features/file-tree/useFileStore'
 import { useSearchStore } from '../features/search/useSearchStore'
 import { ipc } from '../lib/ipc'
+import { logError } from '../logger'
 
 export function useWorkspaceInit() {
   const [workspacePath, setWorkspacePath] = useState<string | null>(null)
@@ -30,8 +31,10 @@ export function useWorkspaceInit() {
       useFileStore.getState().setRoot(path)
       useTabStore.getState().closeAll()
       useSearchStore.getState().reset()
-      ipc.store.set('lastWorkspace', path)
-      trackRecent(path, true)
+      ipc.store
+        .set('lastWorkspace', path)
+        .catch((err) => logError('useWorkspaceInit:setLastWorkspace', err))
+      trackRecent(path, true).catch((err) => logError('useWorkspaceInit:trackRecent', err))
     },
     [trackRecent],
   )
@@ -39,7 +42,7 @@ export function useWorkspaceInit() {
   const handleOpenFile = useCallback(
     (path: string) => {
       useTabStore.getState().openFile(path)
-      trackRecent(path, false)
+      trackRecent(path, false).catch((err) => logError('useWorkspaceInit:trackRecent', err))
     },
     [trackRecent],
   )
@@ -67,7 +70,7 @@ export function useWorkspaceInit() {
       }
       setInitialized(true)
     }
-    init()
+    init().catch((err) => logError('useWorkspaceInit:init', err))
   }, [setTheme])
 
   return {

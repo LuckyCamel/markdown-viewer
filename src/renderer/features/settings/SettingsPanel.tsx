@@ -21,7 +21,10 @@ export function SettingsPanel() {
   }
 
   const handleIgnoreChange = async (value: string) => {
-    const list = value.split('\n').map((s) => s.trim()).filter(Boolean)
+    const list = value
+      .split('\n')
+      .map((s) => s.trim())
+      .filter(Boolean)
     setIgnoreList(list)
     await saveToDisk()
   }

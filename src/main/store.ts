@@ -1,6 +1,6 @@
 import ElectronStore from 'electron-store'
 
-interface StoreSchema {
+export interface StoreSchema {
   theme: 'system' | 'light' | 'dark'
   ignoreList: string[]
   recentFiles: { path: string; name: string; timestamp: number }[]

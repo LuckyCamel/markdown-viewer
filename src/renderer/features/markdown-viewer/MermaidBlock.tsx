@@ -25,7 +25,9 @@ export function MermaidBlock({ chart }: MermaidBlockProps) {
         if (!cancelled) setError(String(e))
       }
     })()
-    return () => { cancelled = true }
+    return () => {
+      cancelled = true
+    }
   }, [chart, id])
 
   if (error) {

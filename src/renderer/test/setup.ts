@@ -18,7 +18,8 @@ Object.defineProperty(window, 'api', {
     files: {
       listDirectory: () => Promise.resolve([]),
       readFile: () => Promise.resolve({ path: '', content: '' }),
-      getFileInfo: () => Promise.resolve({ name: '', path: '', isDirectory: false, isHidden: false }),
+      getFileInfo: () =>
+        Promise.resolve({ name: '', path: '', isDirectory: false, isHidden: false }),
     },
     search: {
       searchContent: () => {},

@@ -1,10 +1,10 @@
 {
   "compilerOptions": {
-    "composite": true,
     "module": "ESNext",
     "moduleResolution": "bundler",
     "allowSyntheticDefaultImports": true,
-    "outDir": "./out"
+    "skipLibCheck": true
   },
-  "include": ["src/main/**/*", "src/preload/**/*", "electron.vite.config.ts"]
+  "include": ["src/main/**/*", "src/preload/**/*", "src/shared/**/*", "electron.vite.config.ts"],
+  "exclude": ["**/*.spec.ts", "**/*.test.*"]
 }

@@ -5,3 +5,6 @@ release/
 .idea/
 coverage/
 playwright/
+playwright-report/
+test-results/
+\.sdd/

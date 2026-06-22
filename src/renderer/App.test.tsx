@@ -37,16 +37,24 @@ describe('App', () => {
 
     render(<App />)
 
-    act(() => { handlers.get('menu:toggleFileTree')!() })
+    act(() => {
+      handlers.get('menu:toggleFileTree')!()
+    })
     expect(useUIStore.getState().sidebarVisible).toBe(false)
 
-    act(() => { handlers.get('menu:toggleOutline')!() })
+    act(() => {
+      handlers.get('menu:toggleOutline')!()
+    })
     expect(useUIStore.getState().outlineVisible).toBe(false)
 
-    act(() => { handlers.get('menu:fileSearch')!() })
+    act(() => {
+      handlers.get('menu:fileSearch')!()
+    })
     expect(useUIStore.getState().searchPanel).toBe('file')
 
-    act(() => { handlers.get('menu:contentSearch')!() })
+    act(() => {
+      handlers.get('menu:contentSearch')!()
+    })
     expect(useUIStore.getState().searchPanel).toBe('content')
   })
 
@@ -71,7 +79,9 @@ describe('App', () => {
     })
     expect(useTabStore.getState().openFiles).toHaveLength(1)
 
-    act(() => { handlers.get('menu:closeTab')!() })
+    act(() => {
+      handlers.get('menu:closeTab')!()
+    })
     expect(useTabStore.getState().openFiles).toHaveLength(0)
   })
 })

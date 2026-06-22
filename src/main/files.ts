@@ -9,7 +9,12 @@ export async function listDirectory(dirPath: string): Promise<FileEntry[]> {
   const result: FileEntry[] = []
 
   for (const entry of entries) {
-    if (entry.name === '.git' || entry.name === 'node_modules' || entry.name === '__pycache__' || entry.name === '.DS_Store') {
+    if (
+      entry.name === '.git' ||
+      entry.name === 'node_modules' ||
+      entry.name === '__pycache__' ||
+      entry.name === '.DS_Store'
+    ) {
       continue
     }
     result.push({
@@ -42,7 +47,7 @@ export async function getFileInfo(filePath: string): Promise<FileEntry> {
 }
 
 export function hasSupportedFiles(entries: FileEntry[]): boolean {
-  return entries.some(e =>
-    !e.isDirectory && SUPPORTED_EXTENSIONS.some(ext => e.name.endsWith(ext))
+  return entries.some(
+    (e) => !e.isDirectory && SUPPORTED_EXTENSIONS.some((ext) => e.name.endsWith(ext)),
   )
 }

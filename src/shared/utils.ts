@@ -12,7 +12,5 @@ export function dirname(path: string): string {
 
 export function joinPaths(...parts: string[]): string {
   const sep = parts[0]?.includes('\\') ? '\\' : '/'
-  return parts.join(sep)
-    .replace(/\\+/g, '\\')
-    .replace(/\/+/g, '/')
+  return parts.join(sep).replace(/\\+/g, '\\').replace(/\/+/g, '/')
 }

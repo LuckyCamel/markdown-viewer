@@ -11,7 +11,7 @@ async function walkDir(dirPath: string): Promise<string[]> {
     if (entry.name.startsWith('.') || entry.name === 'node_modules') continue
     const fullPath = join(dirPath, entry.name)
     if (entry.isDirectory()) {
-      files.push(...await walkDir(fullPath))
+      files.push(...(await walkDir(fullPath)))
     } else if (TEXT_EXTENSIONS.has(extname(entry.name).toLowerCase())) {
       files.push(fullPath)
     }
@@ -22,7 +22,7 @@ async function walkDir(dirPath: string): Promise<string[]> {
 export async function searchInFile(
   _filePath: string,
   query: string,
-  content: string
+  content: string,
 ): Promise<SearchMatch[]> {
   const matches: SearchMatch[] = []
   const lines = content.split('\n')
@@ -50,10 +50,10 @@ export async function searchInFile(
 export async function searchDirectory(
   dirPath: string,
   query: string,
-  onProgress: (progress: SearchProgress) => void
+  onProgress: (progress: SearchProgress) => void,
 ): Promise<void> {
   const allFiles = await walkDir(dirPath)
-  let allMatches: SearchMatch[] = []
+  const allMatches: SearchMatch[] = []
 
   for (let i = 0; i < allFiles.length; i++) {
     const content = await fsReadFile(allFiles[i], 'utf-8')

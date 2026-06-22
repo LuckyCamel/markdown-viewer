@@ -1,11 +1,11 @@
 {
   "compilerOptions": {
-    "composite": true,
     "module": "ESNext",
     "moduleResolution": "bundler",
     "allowSyntheticDefaultImports": true,
-    "outDir": "./out",
+    "skipLibCheck": true,
     "jsx": "react-jsx"
   },
-  "include": ["src/renderer/**/*"]
+  "include": ["src/renderer/**/*", "src/shared/**/*"],
+  "exclude": ["**/*.test.*"]
 }

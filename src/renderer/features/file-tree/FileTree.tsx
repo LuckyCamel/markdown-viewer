@@ -6,7 +6,7 @@ import type { FileEntry } from '../../../shared/types'
 function FileTreeNode({ entry, depth }: { entry: FileEntry; depth: number }) {
   const expanded = useFileStore((s) => s.expanded)
   const toggleExpand = useFileStore((s) => s.toggleExpand)
-  const children = useFileStore((s) => s.entries[entry.path] || [])
+  const children = useFileStore((s) => s.entries[entry.path])
 
   const isExpanded = expanded.has(entry.path)
 
@@ -30,7 +30,7 @@ function FileTreeNode({ entry, depth }: { entry: FileEntry; depth: number }) {
         {entry.isDirectory ? (isExpanded ? '▼' : '▶') : ' '}
         <span>{entry.name}</span>
       </button>
-      {entry.isDirectory && isExpanded && (
+      {entry.isDirectory && isExpanded && children && (
         <div>
           {children.map((child) => (
             <FileTreeNode key={child.path} entry={child} depth={depth + 1} />
@@ -46,14 +46,14 @@ interface FileTreeProps {
 }
 
 export function FileTree({ rootPath }: FileTreeProps) {
-  const rootEntries = useFileStore((s) => s.entries[rootPath] || [])
+  const rootEntries = useFileStore((s) => s.entries[rootPath])
 
   return (
     <div className="py-2">
       <div className="px-3 py-1 text-xs font-semibold text-gray-500 uppercase tracking-wider">
         {basename(rootPath)}
       </div>
-      {rootEntries.map((entry) => (
+      {rootEntries?.map((entry) => (
         <FileTreeNode key={entry.path} entry={entry} depth={0} />
       ))}
     </div>

@@ -4,7 +4,9 @@ import { useUIStore } from './useUIStore'
 
 describe('useUIStore', () => {
   beforeEach(() => {
-    act(() => { useUIStore.getState().reset() })
+    act(() => {
+      useUIStore.getState().reset()
+    })
   })
 
   it('should have sidebar visible by default', () => {

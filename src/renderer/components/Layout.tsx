@@ -17,9 +17,7 @@ export function Layout({ sidebar, main, outline, sidebarVisible, outlineVisible 
             {sidebar}
           </aside>
         )}
-        <main className="flex-1 overflow-y-auto">
-          {main}
-        </main>
+        <main className="flex-1 overflow-y-auto">{main}</main>
         {outlineVisible && (
           <aside className="w-56 border-l border-gray-200 dark:border-gray-700 overflow-y-auto flex-shrink-0">
             {outline}

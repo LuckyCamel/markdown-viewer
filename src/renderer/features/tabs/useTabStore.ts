@@ -32,9 +32,7 @@ export const useTabStore = create<TabState>((set, get) => ({
     const nextDirty = new Set(dirtyFiles)
     nextDirty.delete(filePath)
     const nextActive =
-      activeFile === filePath
-        ? next[Math.min(idx, next.length - 1)] || null
-        : activeFile
+      activeFile === filePath ? next[Math.min(idx, next.length - 1)] || null : activeFile
     set({ openFiles: next, activeFile: nextActive, dirtyFiles: nextDirty })
   },
   setActive: (filePath) => set({ activeFile: filePath }),

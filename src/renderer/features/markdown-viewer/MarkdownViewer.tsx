@@ -4,6 +4,7 @@ import remarkMath from 'remark-math'
 import rehypeKatex from 'rehype-katex'
 import rehypeHighlight from 'rehype-highlight'
 import { MermaidBlock } from './MermaidBlock'
+import { useTabStore } from '../tabs/useTabStore'
 import { dirname, joinPaths } from '../../../shared/utils'
 
 interface MarkdownViewerProps {
@@ -15,13 +16,16 @@ export function MarkdownViewer({ content, filePath }: MarkdownViewerProps) {
   const components = {
     code({ className, children, ...props }: any) {
       const text = String(children)
-      const isMermaid = text.startsWith('mermaid\n')
+      const isMermaid = className?.includes('language-mermaid')
       if (isMermaid) {
-        const chart = text.replace(/^mermaid\n/, '')
-        return <MermaidBlock chart={chart} />
+        return <MermaidBlock chart={text} />
       }
       if (className) {
-        return <code className={className} {...props}>{children}</code>
+        return (
+          <code className={className} {...props}>
+            {children}
+          </code>
+        )
       }
       return <code {...props}>{children}</code>
     },
@@ -32,7 +36,7 @@ export function MarkdownViewer({ content, filePath }: MarkdownViewerProps) {
       }
       return <img src={src} alt={alt || ''} />
     },
-    a({ href, children }: { href?: string; children: React.ReactNode }) {
+    a({ href, children }: { href?: string; children?: React.ReactNode }) {
       if (href?.startsWith('http')) {
         return (
           <a
@@ -56,7 +60,7 @@ export function MarkdownViewer({ content, filePath }: MarkdownViewerProps) {
               e.preventDefault()
               if (filePath) {
                 const resolved = joinPaths(dirname(filePath), href)
-                window.api.store.set('activeFile', resolved)
+                useTabStore.getState().openFile(resolved)
               }
             }}
           >

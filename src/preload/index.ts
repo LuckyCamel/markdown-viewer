@@ -29,11 +29,14 @@ const api: ElectronAPI = {
     onResult: (callback: (result: SearchProgress) => void) => {
       const handler = (_event: Electron.IpcRendererEvent, result: SearchProgress) =>
         callback(result)
-      listenerMap.set(key('search:result', callback), handler)
+      listenerMap.set(
+        key('search:result', callback as (...args: unknown[]) => void),
+        handler as (...args: unknown[]) => void,
+      )
       ipcRenderer.on('search:result', handler as (...args: unknown[]) => void)
     },
     offResult: (callback: (result: SearchProgress) => void) => {
-      const k = key('search:result', callback)
+      const k = key('search:result', callback as (...args: unknown[]) => void)
       const handler = listenerMap.get(k) as (...args: unknown[]) => void
       if (handler) {
         ipcRenderer.removeListener('search:result', handler)
@@ -50,11 +53,14 @@ const api: ElectronAPI = {
         event: FileChangeEvent,
         content: string | null,
       ) => callback(event, content)
-      listenerMap.set(key('watcher:fileChanged', callback), handler)
+      listenerMap.set(
+        key('watcher:fileChanged', callback as (...args: unknown[]) => void),
+        handler as (...args: unknown[]) => void,
+      )
       ipcRenderer.on('watcher:fileChanged', handler as (...args: unknown[]) => void)
     },
     offChange: (callback: (event: FileChangeEvent, content: string | null) => void) => {
-      const k = key('watcher:fileChanged', callback)
+      const k = key('watcher:fileChanged', callback as (...args: unknown[]) => void)
       const handler = listenerMap.get(k) as (...args: unknown[]) => void
       if (handler) {
         ipcRenderer.removeListener('watcher:fileChanged', handler)
@@ -78,7 +84,7 @@ const api: ElectronAPI = {
   ipc: {
     on: (channel: string, callback: (...args: unknown[]) => void) => {
       const handler = (_event: Electron.IpcRendererEvent, ...args: unknown[]) => callback(...args)
-      listenerMap.set(key(channel, callback), handler)
+      listenerMap.set(key(channel, callback), handler as (...args: unknown[]) => void)
       ipcRenderer.on(channel, handler as (...args: unknown[]) => void)
     },
     off: (channel: string, callback: (...args: unknown[]) => void) => {

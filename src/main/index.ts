@@ -94,12 +94,17 @@ app.on('ready', () => {
       }
     })
 
+    let activeSearchId = 0
+
     ipcMain.on(IPC_CHANNELS.FILES_SEARCH_CONTENT, (_event, dirPath: string, query: string) => {
+      const searchId = ++activeSearchId
       const mainWin = getMainWindow()
       if (!mainWin) return
       const ignoreList = appStore.get('ignoreList')
       handleSearchContent(dirPath, query, ignoreList, (progress) => {
-        mainWin.webContents.send(IPC_CHANNELS.SEARCH_RESULT, progress)
+        if (searchId === activeSearchId) {
+          mainWin.webContents.send(IPC_CHANNELS.SEARCH_RESULT, progress)
+        }
       })
     })
   } catch (err) {

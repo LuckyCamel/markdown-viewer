@@ -1,6 +1,7 @@
 import { useEffect, useRef } from 'react'
 import { ipc } from '../lib/ipc'
 import { useTabStore } from '../features/tabs/useTabStore'
+import { IPC_CHANNELS } from '../../shared/types'
 
 interface MenuHandlers {
   onOpenFolder: (path: string) => void
@@ -22,24 +23,26 @@ export function useMenuIpc(handlers: MenuHandlers) {
       cleanup.push(() => ipc.ipc.off(channel, cb))
     }
 
-    onMenu('menu:openFolder', (path) => handlersRef.current.onOpenFolder(path as string))
-    onMenu('menu:toggleFileTree', () => handlersRef.current.onToggleSidebar())
-    onMenu('menu:toggleOutline', () => handlersRef.current.onToggleOutline())
-    onMenu('menu:fileSearch', () => handlersRef.current.onOpenFileSearch())
-    onMenu('menu:contentSearch', () => handlersRef.current.onOpenContentSearch())
-    onMenu('menu:openSettings', () => handlersRef.current.onToggleSettings())
-    onMenu('menu:closeTab', () => {
+    onMenu(IPC_CHANNELS.MENU_OPEN_FOLDER, (path) =>
+      handlersRef.current.onOpenFolder(path as string),
+    )
+    onMenu(IPC_CHANNELS.MENU_TOGGLE_FILE_TREE, () => handlersRef.current.onToggleSidebar())
+    onMenu(IPC_CHANNELS.MENU_TOGGLE_OUTLINE, () => handlersRef.current.onToggleOutline())
+    onMenu(IPC_CHANNELS.MENU_FILE_SEARCH, () => handlersRef.current.onOpenFileSearch())
+    onMenu(IPC_CHANNELS.MENU_CONTENT_SEARCH, () => handlersRef.current.onOpenContentSearch())
+    onMenu(IPC_CHANNELS.MENU_OPEN_SETTINGS, () => handlersRef.current.onToggleSettings())
+    onMenu(IPC_CHANNELS.MENU_CLOSE_TAB, () => {
       const state = useTabStore.getState()
       if (state.activeFile) state.closeFile(state.activeFile)
     })
-    onMenu('menu:nextTab', () => {
+    onMenu(IPC_CHANNELS.MENU_NEXT_TAB, () => {
       const state = useTabStore.getState()
       if (state.openFiles.length < 2) return
       const idx = state.openFiles.indexOf(state.activeFile ?? '')
       const next = (idx + 1) % state.openFiles.length
       state.setActive(state.openFiles[next])
     })
-    onMenu('menu:prevTab', () => {
+    onMenu(IPC_CHANNELS.MENU_PREV_TAB, () => {
       const state = useTabStore.getState()
       if (state.openFiles.length < 2) return
       const idx = state.openFiles.indexOf(state.activeFile ?? '')

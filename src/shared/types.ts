@@ -13,6 +13,15 @@ export const IPC_CHANNELS = {
   DIALOG_OPEN_DIRECTORY: 'dialog:openDirectory',
   DIALOG_OPEN_FILE: 'dialog:openFile',
   SHELL_OPEN_EXTERNAL: 'shell:openExternal',
+  MENU_OPEN_FOLDER: 'menu:openFolder',
+  MENU_CLOSE_TAB: 'menu:closeTab',
+  MENU_TOGGLE_FILE_TREE: 'menu:toggleFileTree',
+  MENU_TOGGLE_OUTLINE: 'menu:toggleOutline',
+  MENU_FILE_SEARCH: 'menu:fileSearch',
+  MENU_CONTENT_SEARCH: 'menu:contentSearch',
+  MENU_OPEN_SETTINGS: 'menu:openSettings',
+  MENU_NEXT_TAB: 'menu:nextTab',
+  MENU_PREV_TAB: 'menu:prevTab',
 } as const
 
 export interface FileEntry {

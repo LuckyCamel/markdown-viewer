@@ -18,7 +18,7 @@ export function watchFile(filePath: string, window: BrowserWindow): void {
         window.webContents.send(IPC_CHANNELS.WATCHER_FILE_CHANGED, event, content)
       } catch {
         const event: FileChangeEvent = { path: filePath, type: 'delete' }
-        window.webContents.send('watcher:fileChanged', event, null)
+        window.webContents.send(IPC_CHANNELS.WATCHER_FILE_CHANGED, event, null)
       }
     }
   })

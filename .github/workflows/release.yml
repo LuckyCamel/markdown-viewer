@@ -1,9 +1,12 @@
-name: Build
+name: Release
 
 on:
   push:
-    branches: [main]
-  workflow_dispatch:
+    tags:
+      - 'v*'
+
+permissions:
+  contents: write
 
 jobs:
   build-windows:
@@ -38,3 +41,20 @@ jobs:
         with:
           name: linux-packages
           path: release/*.{deb,AppImage}
+
+  release:
+    needs: [build-windows, build-linux]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: windows-installer
+          path: artifacts
+      - uses: actions/download-artifact@v4
+        with:
+          name: linux-packages
+          path: artifacts
+      - uses: softprops/action-gh-release@v2
+        with:
+          files: artifacts/*
+          generate_release_notes: true

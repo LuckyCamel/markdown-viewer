@@ -6,15 +6,26 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     const root = document.documentElement
-    if (theme === 'dark') {
-      root.classList.add('dark')
-    } else if (theme === 'light') {
-      root.classList.remove('dark')
-    } else {
-      const mq = window.matchMedia('(prefers-color-scheme: dark)')
-      if (mq.matches) root.classList.add('dark')
-      else root.classList.remove('dark')
+
+    const applyTheme = (isDark: boolean) => {
+      root.classList.toggle('dark', isDark)
     }
+
+    if (theme === 'dark') {
+      applyTheme(true)
+      return
+    } else if (theme === 'light') {
+      applyTheme(false)
+      return
+    }
+
+    // system 模式：监听 OS 主题变更
+    const mq = window.matchMedia('(prefers-color-scheme: dark)')
+    applyTheme(mq.matches)
+
+    const handleChange = (e: MediaQueryListEvent) => applyTheme(e.matches)
+    mq.addEventListener('change', handleChange)
+    return () => mq.removeEventListener('change', handleChange)
   }, [theme])
 
   return <>{children}</>

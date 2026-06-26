@@ -82,6 +82,7 @@ export interface ElectronAPI {
     listDirectory(dirPath: string): Promise<FileEntry[]>
     readFile(filePath: string): Promise<FileContent>
     getFileInfo(filePath: string): Promise<FileEntry>
+    invalidateFilter(): Promise<void>
   }
   search: {
     searchContent(dirPath: string, query: string): void

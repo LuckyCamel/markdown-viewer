@@ -6,6 +6,7 @@ export const ipc = {
       window.api.files.listDirectory(dirPath),
     readFile: (filePath: string): Promise<FileContent> => window.api.files.readFile(filePath),
     getFileInfo: (filePath: string): Promise<FileEntry> => window.api.files.getFileInfo(filePath),
+    invalidateFilter: (): Promise<void> => window.api.files.invalidateFilter(),
   },
   search: {
     searchContent: (dirPath: string, query: string): void =>

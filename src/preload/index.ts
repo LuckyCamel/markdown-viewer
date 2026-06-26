@@ -22,6 +22,8 @@ const api: ElectronAPI = {
       ipcRenderer.invoke(IPC_CHANNELS.FILES_READ_FILE, filePath) as Promise<FileContent>,
     getFileInfo: (filePath: string) =>
       ipcRenderer.invoke(IPC_CHANNELS.FILES_GET_FILE_INFO, filePath) as Promise<FileEntry>,
+    invalidateFilter: () =>
+      ipcRenderer.invoke(IPC_CHANNELS.FILE_FILTER_INVALIDATE) as Promise<void>,
   },
   search: {
     searchContent: (dirPath: string, query: string) => {

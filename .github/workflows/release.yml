@@ -44,7 +44,9 @@ jobs:
       - uses: actions/upload-artifact@v4
         with:
           name: linux-packages
-          path: release/*.{deb,AppImage}
+          path: |
+            release/*.deb
+            release/*.AppImage
 
   release:
     needs: [build-windows, build-linux]

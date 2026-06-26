@@ -20,7 +20,13 @@ vi.mock('./lib/ipc', () => ({ ipc: mockIpc }))
 describe('App', () => {
   beforeEach(() => {
     useTabStore.setState({ openFiles: [], activeFile: null })
-    useUIStore.setState({ sidebarVisible: true, outlineVisible: true, searchPanel: 'none' })
+    useUIStore.setState({
+      sidebarVisible: true,
+      outlineVisible: true,
+      sidebarWidth: 256,
+      outlineWidth: 224,
+      searchPanel: 'none',
+    })
     useFileStore.setState({ entries: {}, expanded: {}, loading: {}, rootPath: null })
     vi.clearAllMocks()
     mockIpc.store.get.mockResolvedValue(undefined)
@@ -102,5 +108,20 @@ describe('App', () => {
       handlers.get('menu:closeTab')!()
     })
     expect(useTabStore.getState().openFiles).toHaveLength(0)
+  })
+
+  it('should restore panel widths from IPC store on mount', async () => {
+    mockIpc.store.get.mockImplementation(async (key: string) => {
+      if (key === 'sidebarWidth') return 300
+      if (key === 'outlineWidth') return 350
+      return undefined
+    })
+
+    await act(async () => {
+      render(<App />)
+    })
+
+    expect(useUIStore.getState().sidebarWidth).toBe(300)
+    expect(useUIStore.getState().outlineWidth).toBe(350)
   })
 })

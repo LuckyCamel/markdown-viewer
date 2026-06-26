@@ -83,6 +83,15 @@ function App() {
     return () => window.removeEventListener('keydown', handleKeyDown)
   }, [showSettings, setShowSettings])
 
+  useEffect(() => {
+    ipc.store.get<number>('sidebarWidth').then((w) => {
+      if (typeof w === 'number') useUIStore.getState().setSidebarWidth(w)
+    })
+    ipc.store.get<number>('outlineWidth').then((w) => {
+      if (typeof w === 'number') useUIStore.getState().setOutlineWidth(w)
+    })
+  }, [])
+
   useFileWatcher(openFiles, initialized)
   useScrollRestore(activeFile, content)
   useMenuIpc({

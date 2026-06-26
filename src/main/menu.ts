@@ -155,8 +155,8 @@ export function createAppMenu(mainWindow: BrowserWindow): void {
             try {
               dialog.showMessageBox(mainWindow, {
                 type: 'info',
-                title: 'Markdown Viewer',
-                message: `Markdown Viewer v${app.getVersion()}`,
+                title: 'Markdown-Viewer',
+                message: `Markdown-Viewer v${app.getVersion()}`,
               })
             } catch (err) {
               logError('menu:about', err)

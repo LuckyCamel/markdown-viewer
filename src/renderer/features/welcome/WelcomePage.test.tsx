@@ -5,7 +5,7 @@ import { WelcomePage } from './WelcomePage'
 describe('WelcomePage', () => {
   it('should render welcome message', () => {
     render(<WelcomePage />)
-    expect(screen.getByText('Markdown Viewer')).toBeDefined()
+    expect(screen.getByText('Markdown-Viewer')).toBeDefined()
   })
 
   it('should show open folder button', () => {

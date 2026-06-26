@@ -6,7 +6,10 @@ const SUPPORTED_EXTENSIONS = ['.md', '.markdown']
 
 export const DEFAULT_IGNORE = ['.git', 'node_modules', '__pycache__', '.DS_Store']
 
-export async function listDirectory(dirPath: string, ignoreList: string[] = DEFAULT_IGNORE): Promise<FileEntry[]> {
+export async function listDirectory(
+  dirPath: string,
+  ignoreList: string[] = DEFAULT_IGNORE,
+): Promise<FileEntry[]> {
   const entries = await readdir(dirPath, { withFileTypes: true })
   const ignoreSet = new Set(ignoreList)
   const result: FileEntry[] = []

@@ -36,14 +36,12 @@ export function WelcomePage({ onFolderOpen }: WelcomePageProps) {
   }
 
   const handleOpenFile = async () => {
-    await ipc.dialog.openFile().catch((err) =>
-      logError('WelcomePage:openFile', err)
-    )
+    await ipc.dialog.openFile().catch((err) => logError('WelcomePage:openFile', err))
   }
 
   return (
     <div className="h-full flex flex-col items-center justify-center gap-6 p-8">
-      <h1 className="text-3xl font-bold">Markdown Viewer</h1>
+      <h1 className="text-3xl font-bold">Markdown-Viewer</h1>
       <p className="text-gray-500 dark:text-gray-400">
         Open a folder to browse and preview markdown files
       </p>

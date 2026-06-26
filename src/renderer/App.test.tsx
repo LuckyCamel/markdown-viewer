@@ -31,7 +31,7 @@ describe('App', () => {
 
   it('should show WelcomePage when no workspace', () => {
     render(<App />)
-    expect(screen.getByText('Markdown Viewer')).toBeDefined()
+    expect(screen.getByText('Markdown-Viewer')).toBeDefined()
   })
 
   it('should restore workspace from electron-store on mount', async () => {

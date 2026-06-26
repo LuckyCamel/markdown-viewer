@@ -1,5 +1,5 @@
 appId: com.markdown-viewer.app
-productName: Markdown Viewer
+productName: Markdown-Viewer
 
 directories:
   output: release
@@ -25,6 +25,6 @@ linux:
   target: 
     - target: AppImage
     - target: deb
-  maintainer: "Markdown Viewer Team <team@markdown-viewer.local>"
+  maintainer: "Markdown-Viewer Team <team@markdown-viewer.local>"
   category: "Office"
   syncDesktopName: true

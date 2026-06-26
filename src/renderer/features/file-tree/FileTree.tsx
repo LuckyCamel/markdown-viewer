@@ -3,7 +3,15 @@ import { useFileStore } from './useFileStore'
 import { useTabStore } from '../tabs/useTabStore'
 import type { FileEntry } from '../../../shared/types'
 
-function FileTreeNode({ entry, depth, allEntries }: { entry: FileEntry; depth: number; allEntries: Record<string, FileEntry[]> }) {
+function FileTreeNode({
+  entry,
+  depth,
+  allEntries,
+}: {
+  entry: FileEntry
+  depth: number
+  allEntries: Record<string, FileEntry[]>
+}) {
   const expanded = useFileStore((s) => s.expanded)
   const toggleExpand = useFileStore((s) => s.toggleExpand)
   const children = allEntries[entry.path]
@@ -33,7 +41,12 @@ function FileTreeNode({ entry, depth, allEntries }: { entry: FileEntry; depth: n
       {entry.isDirectory && isExpanded && children && (
         <div>
           {children.map((child) => (
-            <FileTreeNode key={child.path} entry={child} depth={depth + 1} allEntries={allEntries} />
+            <FileTreeNode
+              key={child.path}
+              entry={child}
+              depth={depth + 1}
+              allEntries={allEntries}
+            />
           ))}
         </div>
       )}

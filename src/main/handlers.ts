@@ -1,10 +1,11 @@
 import type { StoreSchema } from './store'
-import { listDirectory, readFile, getFileInfo } from './files'
+import { readFile, getFileInfo } from './files'
+import { getFilteredEntries } from './file-filter'
 import { searchDirectory } from './search'
 import type { SearchProgress } from '../shared/types'
 
-export function handleListDirectory(dirPath: string, ignoreList: string[]) {
-  return listDirectory(dirPath, ignoreList)
+export function handleListDirectory(dirPath: string, ignoreList: string[], extensions: string[]) {
+  return getFilteredEntries(dirPath, ignoreList, extensions)
 }
 
 export function handleReadFile(filePath: string) {

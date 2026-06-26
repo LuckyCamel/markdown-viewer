@@ -5,6 +5,7 @@ import { createAppMenu } from './menu'
 import { appStore, type StoreSchema } from './store'
 import { watchFile, unwatchFile } from './watcher'
 import { logError } from './logger'
+import { invalidateAll } from './file-filter'
 import { IPC_CHANNELS } from '../shared/types'
 import {
   handleListDirectory,
@@ -25,7 +26,7 @@ process.on('unhandledRejection', (err) => {
 
 export function registerIpcHandlers(): void {
   ipcMain.handle(IPC_CHANNELS.FILES_LIST_DIRECTORY, (_event, dirPath: string) =>
-    handleListDirectory(dirPath, appStore.get('ignoreList')),
+    handleListDirectory(dirPath, appStore.get('ignoreList'), appStore.get('markdownExtensions')),
   )
   ipcMain.handle(IPC_CHANNELS.FILES_READ_FILE, (_event, filePath: string) =>
     handleReadFile(filePath),
@@ -74,6 +75,10 @@ export function registerIpcHandlers(): void {
     }
   })
   ipcMain.handle(IPC_CHANNELS.SHELL_OPEN_EXTERNAL, (_event, url: string) => shell.openExternal(url))
+
+  ipcMain.handle(IPC_CHANNELS.FILE_FILTER_INVALIDATE, async () => {
+    invalidateAll()
+  })
 
   ipcMain.on(IPC_CHANNELS.WATCHER_WATCH_FILE, (_event, filePath: string) => {
     const mainWin = getMainWindow()

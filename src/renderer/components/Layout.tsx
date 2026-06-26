@@ -1,4 +1,4 @@
-import { useRef, useCallback, useEffect } from 'react'
+import { useRef, useCallback, useEffect, useState } from 'react'
 import type { ReactNode } from 'react'
 import { useUIStore } from '../stores/useUIStore'
 import { ipc } from '../lib/ipc'
@@ -20,6 +20,7 @@ export function Layout({ sidebar, main, outline, sidebarVisible, outlineVisible 
 
   const containerRef = useRef<HTMLDivElement>(null)
   const draggingRef = useRef<'sidebar' | 'outline' | null>(null)
+  const [dragging, setDragging] = useState<'sidebar' | 'outline' | null>(null)
   const startXRef = useRef(0)
   const startWidthRef = useRef(0)
 
@@ -27,6 +28,7 @@ export function Layout({ sidebar, main, outline, sidebarVisible, outlineVisible 
     (panel: 'sidebar' | 'outline') => (e: React.MouseEvent) => {
       e.preventDefault()
       draggingRef.current = panel
+      setDragging(panel)
       startXRef.current = e.clientX
       startWidthRef.current = panel === 'sidebar' ? sidebarWidth : outlineWidth
       document.body.classList.add('select-none')
@@ -52,6 +54,7 @@ export function Layout({ sidebar, main, outline, sidebarVisible, outlineVisible 
       if (!draggingRef.current) return
       const panel = draggingRef.current
       draggingRef.current = null
+      setDragging(null)
       document.body.classList.remove('select-none')
       document.body.style.cursor = ''
       const width =
@@ -66,6 +69,8 @@ export function Layout({ sidebar, main, outline, sidebarVisible, outlineVisible 
     window.addEventListener('mousemove', handleMouseMove)
     window.addEventListener('mouseup', handleMouseUp)
     return () => {
+      document.body.classList.remove('select-none')
+      document.body.style.cursor = ''
       window.removeEventListener('mousemove', handleMouseMove)
       window.removeEventListener('mouseup', handleMouseUp)
     }
@@ -83,18 +88,26 @@ export function Layout({ sidebar, main, outline, sidebarVisible, outlineVisible 
               {sidebar}
             </aside>
             <div
-              className="w-1 cursor-col-resize bg-transparent hover:bg-blue-400 flex-shrink-0"
+              className="w-3 flex-shrink-0 flex justify-center cursor-col-resize"
               onMouseDown={handleMouseDown('sidebar')}
-            />
+            >
+              <div
+                className={`w-px h-full transition-colors ${dragging === 'sidebar' ? 'bg-blue-500' : 'bg-transparent hover:bg-blue-400'}`}
+              />
+            </div>
           </>
         )}
         <main className="flex-1 overflow-y-auto">{main}</main>
         {outlineVisible && (
           <>
             <div
-              className="w-1 cursor-col-resize bg-transparent hover:bg-blue-400 flex-shrink-0"
+              className="w-3 flex-shrink-0 flex justify-center cursor-col-resize"
               onMouseDown={handleMouseDown('outline')}
-            />
+            >
+              <div
+                className={`w-px h-full transition-colors ${dragging === 'outline' ? 'bg-blue-500' : 'bg-transparent hover:bg-blue-400'}`}
+              />
+            </div>
             <aside
               style={{ width: outlineWidth }}
               className="border-l border-gray-200 dark:border-gray-700 overflow-y-auto flex-shrink-0"

@@ -49,17 +49,25 @@ export function useWorkspaceInit() {
 
   useEffect(() => {
     async function init() {
-      const [savedTheme, savedWorkspace, savedOpenFiles, savedActiveFile, savedIgnoreList] =
-        await Promise.all([
-          ipc.store.get<ReturnType<typeof useUIStore.getState>['theme']>('theme'),
-          ipc.store.get<string | null>('lastWorkspace'),
-          ipc.store.get<string[]>('openFiles'),
-          ipc.store.get<string | null>('activeFile'),
-          ipc.store.get<string[]>('ignoreList'),
-        ])
+      const [
+        savedTheme,
+        savedWorkspace,
+        savedOpenFiles,
+        savedActiveFile,
+        savedIgnoreList,
+        savedExtensions,
+      ] = await Promise.all([
+        ipc.store.get<ReturnType<typeof useUIStore.getState>['theme']>('theme'),
+        ipc.store.get<string | null>('lastWorkspace'),
+        ipc.store.get<string[]>('openFiles'),
+        ipc.store.get<string | null>('activeFile'),
+        ipc.store.get<string[]>('ignoreList'),
+        ipc.store.get<string[]>('markdownExtensions'),
+      ])
 
       if (savedTheme) setTheme(savedTheme)
       if (savedIgnoreList) useSettingsStore.getState().setIgnoreList(savedIgnoreList)
+      if (savedExtensions) useSettingsStore.getState().setMarkdownExtensions(savedExtensions)
       if (savedWorkspace) {
         setWorkspacePath(savedWorkspace)
         useFileStore.getState().setRoot(savedWorkspace)

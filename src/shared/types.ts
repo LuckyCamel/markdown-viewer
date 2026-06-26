@@ -22,6 +22,7 @@ export const IPC_CHANNELS = {
   MENU_OPEN_SETTINGS: 'menu:openSettings',
   MENU_NEXT_TAB: 'menu:nextTab',
   MENU_PREV_TAB: 'menu:prevTab',
+  FILE_FILTER_INVALIDATE: 'file-filter:invalidateAll',
 } as const
 
 export interface FileEntry {
@@ -53,6 +54,7 @@ export interface SearchProgress {
 export interface AppSettings {
   theme: 'system' | 'light' | 'dark'
   ignoreList: string[]
+  markdownExtensions: string[]
   recentFiles: RecentEntry[]
   recentDirs: RecentEntry[]
   readingPositions: Record<string, number>

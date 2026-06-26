@@ -2,7 +2,7 @@ import { readdir, readFile as fsReadFile, stat } from 'fs/promises'
 import { basename, join } from 'path'
 import type { FileEntry, FileContent } from '../shared/types'
 
-const SUPPORTED_EXTENSIONS = ['.md', '.markdown']
+export const SUPPORTED_EXTENSIONS = ['.md', '.markdown']
 
 export const DEFAULT_IGNORE = ['.git', 'node_modules', '__pycache__', '.DS_Store']
 

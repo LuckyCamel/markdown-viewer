@@ -1,5 +1,5 @@
 import ElectronStore from 'electron-store'
-import { DEFAULT_IGNORE } from './files'
+import { DEFAULT_IGNORE, SUPPORTED_EXTENSIONS } from './files'
 import type { AppSettings } from '../shared/types'
 
 export type StoreSchema = AppSettings
@@ -7,6 +7,7 @@ export type StoreSchema = AppSettings
 const defaults: StoreSchema = {
   theme: 'system',
   ignoreList: [...DEFAULT_IGNORE],
+  markdownExtensions: [...SUPPORTED_EXTENSIONS],
   recentFiles: [],
   recentDirs: [],
   readingPositions: {},

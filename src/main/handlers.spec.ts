@@ -8,18 +8,21 @@ import {
 } from './handlers'
 
 vi.mock('./files', () => ({
-  listDirectory: vi.fn(),
   readFile: vi.fn(),
   getFileInfo: vi.fn(),
+}))
+vi.mock('./file-filter', () => ({
+  getFilteredEntries: vi.fn(),
+  invalidateAll: vi.fn(),
 }))
 vi.mock('./search', () => ({ searchDirectory: vi.fn() }))
 
 describe('handlers', () => {
-  it('handleListDirectory 注入 ignoreList', async () => {
-    const { listDirectory } = await import('./files')
-    vi.mocked(listDirectory).mockResolvedValue([])
-    await handleListDirectory('/test', ['.git'])
-    expect(listDirectory).toHaveBeenCalledWith('/test', ['.git'])
+  it('handleListDirectory 注入 ignoreList 和 extensions', async () => {
+    const { getFilteredEntries } = await import('./file-filter')
+    vi.mocked(getFilteredEntries).mockResolvedValue([])
+    await handleListDirectory('/test', ['.git'], ['.md'])
+    expect(getFilteredEntries).toHaveBeenCalledWith('/test', ['.git'], ['.md'])
   })
 
   it('handleStoreGet 调用 getter', () => {

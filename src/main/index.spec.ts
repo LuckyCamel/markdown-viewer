@@ -55,11 +55,11 @@ describe('registerIpcHandlers', () => {
     return ipcMain.on.mock.calls.map((c: any[]) => c[0])
   }
 
-  it('注册 9 个 ipcMain.handle 调用', async () => {
+  it('注册 10 个 ipcMain.handle 调用', async () => {
     const { ipcMain } = await import('electron')
     const { registerIpcHandlers } = await import('./index')
     registerIpcHandlers()
-    expect(ipcMain.handle).toHaveBeenCalledTimes(9)
+    expect(ipcMain.handle).toHaveBeenCalledTimes(10)
   })
 
   it('注册 3 个 ipcMain.on 调用', async () => {

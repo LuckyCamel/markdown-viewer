@@ -62,6 +62,8 @@ export interface AppSettings {
   windowBounds: { x?: number; y?: number; width: number; height: number }
   openFiles: string[]
   activeFile: string | null
+  sidebarWidth: number
+  outlineWidth: number
 }
 
 export interface RecentEntry {

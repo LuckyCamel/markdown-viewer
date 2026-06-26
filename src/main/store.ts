@@ -15,6 +15,8 @@ const defaults: StoreSchema = {
   windowBounds: { width: 1200, height: 800 },
   openFiles: [],
   activeFile: null,
+  sidebarWidth: 256,
+  outlineWidth: 224,
 }
 
 const store = new ElectronStore<StoreSchema>({ defaults })

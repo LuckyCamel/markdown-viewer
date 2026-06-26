@@ -1,17 +1,28 @@
 import { useUIStore } from '../../stores/useUIStore'
 import { useSettingsStore } from './useSettingsStore'
+import { useFileStore } from '../file-tree/useFileStore'
 import { useEffect } from 'react'
 import { ipc } from '../../lib/ipc'
 import { logError } from '../../logger'
 import type { ThemeMode } from '../../../shared/types'
+
+function parseLines(value: string): string[] {
+  return value
+    .split('\n')
+    .map((s) => s.trim())
+    .filter(Boolean)
+}
 
 export function SettingsPanel() {
   const theme = useUIStore((s) => s.theme)
   const setTheme = useUIStore((s) => s.setTheme)
   const ignoreList = useSettingsStore((s) => s.ignoreList)
   const setIgnoreList = useSettingsStore((s) => s.setIgnoreList)
+  const markdownExtensions = useSettingsStore((s) => s.markdownExtensions)
+  const setMarkdownExtensions = useSettingsStore((s) => s.setMarkdownExtensions)
   const loadFromDisk = useSettingsStore((s) => s.loadFromDisk)
   const saveToDisk = useSettingsStore((s) => s.saveToDisk)
+  const rootPath = useFileStore((s) => s.rootPath)
 
   useEffect(() => {
     loadFromDisk().catch((err) => logError('SettingsPanel:loadFromDisk', err))
@@ -22,13 +33,20 @@ export function SettingsPanel() {
     await ipc.store.set('theme', newTheme).catch((err) => logError('SettingsPanel:setTheme', err))
   }
 
-  const handleIgnoreChange = async (value: string) => {
-    const list = value
-      .split('\n')
-      .map((s) => s.trim())
-      .filter(Boolean)
-    setIgnoreList(list)
+  const handleSettingsChange = async (type: 'ignoreList' | 'extensions', value: string) => {
+    const list = parseLines(value)
+    if (type === 'ignoreList') {
+      setIgnoreList(list)
+    } else {
+      setMarkdownExtensions(list)
+    }
     await saveToDisk().catch((err) => logError('SettingsPanel:saveToDisk', err))
+    await ipc.files
+      .invalidateFilter()
+      .catch((err) => logError('SettingsPanel:invalidateFilter', err))
+    if (rootPath) {
+      useFileStore.getState().setRoot(rootPath)
+    }
   }
 
   return (
@@ -56,10 +74,25 @@ export function SettingsPanel() {
         </div>
 
         <div>
+          <label className="block text-sm font-medium mb-2">Markdown Extensions</label>
+          <textarea
+            value={markdownExtensions.join('\n')}
+            onChange={(e) => handleSettingsChange('extensions', e.target.value)}
+            rows={3}
+            className="w-full px-3 py-1.5 text-sm border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-800"
+            placeholder={'.md\n.markdown'}
+          />
+          <p className="text-xs text-gray-500 mt-1">
+            File extensions to show in the file tree. Use an empty line for no-extension text files
+            (e.g., README, LICENSE).
+          </p>
+        </div>
+
+        <div>
           <label className="block text-sm font-medium mb-2">Ignore List</label>
           <textarea
             value={ignoreList.join('\n')}
-            onChange={(e) => handleIgnoreChange(e.target.value)}
+            onChange={(e) => handleSettingsChange('ignoreList', e.target.value)}
             rows={4}
             className="w-full px-3 py-1.5 text-sm border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-800"
             placeholder="Enter directory/file names to ignore (one per line)"

@@ -48,12 +48,6 @@ describe('file system operations', () => {
     expect(info.isDirectory).toBe(true)
   })
 
-  it('should detect supported files', async () => {
-    const { hasSupportedFiles, listDirectory } = await import('./files')
-    const entries = await listDirectory(tmpDir)
-    expect(hasSupportedFiles(entries)).toBe(true)
-  })
-
   it('should sort directories first then alphabetically', async () => {
     const { listDirectory } = await import('./files')
     const entries = await listDirectory(tmpDir)

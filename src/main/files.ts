@@ -44,9 +44,3 @@ export async function getFileInfo(filePath: string): Promise<FileEntry> {
     isHidden: basename(filePath).startsWith('.'),
   }
 }
-
-export function hasSupportedFiles(entries: FileEntry[]): boolean {
-  return entries.some(
-    (e) => !e.isDirectory && SUPPORTED_EXTENSIONS.some((ext) => e.name.endsWith(ext)),
-  )
-}

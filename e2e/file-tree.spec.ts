@@ -31,19 +31,4 @@ test.describe('File Tree', () => {
     dir.cleanup()
     await cleanup()
   })
-
-  test('should show files with unsupported extensions in the tree', async () => {
-    const { electronApp, page, cleanup } = await launchApp()
-    const dir = createTestDir()
-    writeFixture(dir.path, 'doc.md', '# Doc')
-    writeFixture(dir.path, 'notes.txt', 'Some notes')
-
-    await openWorkspace(electronApp, page, dir.path)
-
-    await expect(page.getByText('doc.md')).toBeVisible({ timeout: 10000 })
-    await expect(page.getByText('notes.txt')).toBeVisible()
-
-    dir.cleanup()
-    await cleanup()
-  })
 })

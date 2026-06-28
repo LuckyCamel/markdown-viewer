@@ -1,15 +1,16 @@
 import { test, expect } from '@playwright/test'
-import { launchApp, createTestDir, openWorkspace } from './utils'
+import { launchApp, createTestDir, writeFixture, openWorkspace } from './utils'
 
 test.describe('Theme Switching', () => {
   test('should toggle between light and dark themes', async () => {
     const { electronApp, page, cleanup } = await launchApp()
     const dir = createTestDir()
+    writeFixture(dir.path, 'test.md', '# Test')
     const html = page.locator('html')
 
     // Need a workspace so Layout renders (SettingsPanel is inside Layout)
     await openWorkspace(electronApp, page, dir.path)
-    await expect(page.getByText('File Tree')).toBeVisible({ timeout: 10000 })
+    await expect(page.getByText('test.md')).toBeVisible({ timeout: 10000 })
 
     // Open settings panel via IPC (simulating menu click)
     await electronApp.evaluate(({ BrowserWindow }) => {

@@ -7,6 +7,7 @@ import { watchFile, unwatchFile } from './watcher'
 import { logError } from './logger'
 import { invalidateAll } from './file-filter'
 import { IPC_CHANNELS } from '../shared/types'
+import { parseCliArgs } from './cli'
 import {
   handleListDirectory,
   handleReadFile,
@@ -110,6 +111,7 @@ app.on('ready', () => {
   try {
     registerFileProtocol()
     registerIpcHandlers()
+    parseCliArgs()
     const win = createWindow()
     createAppMenu(win)
   } catch (err) {

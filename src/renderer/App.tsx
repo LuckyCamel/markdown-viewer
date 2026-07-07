@@ -17,7 +17,7 @@ import { ipc } from './lib/ipc'
 import { useWorkspaceInit } from './hooks/useWorkspaceInit'
 import { useFileWatcher } from './hooks/useFileWatcher'
 import { useScrollRestore } from './hooks/useScrollRestore'
-import { useMenuIpc } from './hooks/useMenuIpc'
+import { useKeyboardShortcuts } from './hooks/useKeyboardShortcuts'
 
 function App() {
   const {
@@ -94,8 +94,11 @@ function App() {
 
   useFileWatcher(openFiles, initialized)
   useScrollRestore(activeFile, content)
-  useMenuIpc({
-    onOpenFolder: handleOpenFolder,
+  useKeyboardShortcuts({
+    onOpenFolder: async () => {
+      const path = await ipc.dialog.openDirectory()
+      if (path) handleOpenFolder(path)
+    },
     onToggleSidebar: toggleSidebar,
     onToggleOutline: toggleOutline,
     onOpenFileSearch: () => openSearch('file'),

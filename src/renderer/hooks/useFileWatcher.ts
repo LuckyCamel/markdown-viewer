@@ -21,7 +21,7 @@ export function useFileWatcher(openFiles: string[], enabled: boolean) {
 
     return () => {
       openFiles.forEach((p) => ipc.watcher.unwatchFile(p))
-      ipc.watcher.offChange(onChange)
+      ipc.watcher.offChange()
     }
   }, [openFiles, enabled])
 }

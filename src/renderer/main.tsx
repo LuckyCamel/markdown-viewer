@@ -6,6 +6,7 @@ import { logError } from './logger'
 import './styles/globals.css'
 import 'katex/dist/katex.min.css'
 import 'highlight.js/styles/github-dark.css'
+import './lib/highlight'
 
 window.addEventListener('error', (event) => {
   logError('window:error', event.error ?? event.message)

@@ -2,24 +2,29 @@
 
 架构设计见 [`docs/architecture.md`](docs/architecture.md)，架构决策见 [`docs/adr/`](docs/adr/)。
 
-## 深化机会
+## 架构演进
 
-### 已完成 (2026-06-20 ~ 2026-06-22)
+### Electron 时代 (2026-06-20 ~ 2026-07-07)
 
 - App.tsx 拆分：提取 4 个 hook，281→159 行
-- 死代码清理：`createStore.ts` 删除
 - 集中式 IPC 适配器：`lib/ipc.ts` 封装所有 `window.api.*` 调用
-- Store 搬迁集中 + 单元测试
-- 忽略列表注入修复 + DEFAULT_IGNORE 去重
-- IPC 通道常量规范化
-- 错误处理全面硬化：主进程 + 渲染进程 + ErrorBoundary + E2E 拦截
-- 主进程 handler 纯函数抽取 + 测试
-- 全部 131 单元测试 + 29 E2E 测试通过
+- 错误处理全面硬化：主进程 + 渲染进程 + ErrorBoundary
+- CLI 参数解析、文件树类型过滤、可拖拽面板分隔条
+- CI/CD 流水线搭建
 
-### 活跃
+### Tauri 迁移 (2026-07-08)
 
-| # | 候选 | 优先级 | 问题 |
-|---|------|--------|------|
-| 1 | ContentSearch deps | 中 | useEffect 依赖数组不完整，过时闭包风险 |
-| 2 | dirtyFiles 防御 | 低 | `getState().dirtyFiles` 返回可变 Set 引用 |
-| 3 | E2E waitForTimeout 替换 | 低 | 固定等待替代基于断言的 `waitFor`，CI 下脆弱 |
+- 框架从 Electron 迁移到 Tauri v2，安装包体积从 119MB 降至 ~4MB
+- Rust 后端实现文件系统操作、内容搜索、文件监听（notify crate）
+- 前端 IPC 层适配 Tauri API（invoke / event / plugin-fs / plugin-dialog / plugin-shell）
+- 菜单功能改为键盘快捷键（useKeyboardShortcuts）
+- mermaid 图表渲染支持完整保留
+- GitHub Actions workflow 适配 Tauri 构建流程
+
+### 活跃（截至 2026-07-08）
+
+| # | 候选 | 优先级 | 问题 | 状态 |
+|---|------|--------|------|------|
+| 1 | ContentSearch deps | 中 | useEffect 依赖数组不完整，过时闭包风险 | 待修复 |
+| 2 | dirtyFiles 防御 | 低 | `getState().dirtyFiles` 返回可变 Set 引用 | 待修复 |
+| 3 | E2E 测试重写 | 中 | 旧 E2E 基于 Electron API，需用 Tauri WebDriver 重写 | 待评估 |

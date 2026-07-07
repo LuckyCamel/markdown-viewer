@@ -12,7 +12,6 @@ const mockIpc = vi.hoisted(() => ({
   watcher: { watchFile: vi.fn(), unwatchFile: vi.fn(), onChange: vi.fn(), offChange: vi.fn() },
   dialog: { openDirectory: vi.fn(), openFile: vi.fn() },
   shell: { openExternal: vi.fn() },
-  ipc: { on: vi.fn(), off: vi.fn() },
 }))
 
 vi.mock('./lib/ipc', () => ({ ipc: mockIpc }))
@@ -40,7 +39,7 @@ describe('App', () => {
     expect(screen.getByText('Markdown-Viewer')).toBeDefined()
   })
 
-  it('should restore workspace from electron-store on mount', async () => {
+  it('should restore workspace from store on mount', async () => {
     mockIpc.store.get.mockImplementation(async (key: string) => {
       if (key === 'lastWorkspace') return '/test/workspace'
       return undefined
@@ -53,64 +52,7 @@ describe('App', () => {
     expect(screen.getByText('workspace')).toBeDefined()
   })
 
-  it('should respond to menu IPC events', async () => {
-    const handlers = new Map<string, (...args: unknown[]) => void>()
-    mockIpc.ipc.on.mockImplementation((channel: string, cb: (...args: unknown[]) => void) => {
-      handlers.set(channel, cb)
-    })
-    mockIpc.store.get.mockImplementation(async () => undefined)
-
-    render(<App />)
-
-    act(() => {
-      handlers.get('menu:toggleFileTree')!()
-    })
-    expect(useUIStore.getState().sidebarVisible).toBe(false)
-
-    act(() => {
-      handlers.get('menu:toggleOutline')!()
-    })
-    expect(useUIStore.getState().outlineVisible).toBe(false)
-
-    act(() => {
-      handlers.get('menu:fileSearch')!()
-    })
-    expect(useUIStore.getState().searchPanel).toBe('file')
-
-    act(() => {
-      handlers.get('menu:contentSearch')!()
-    })
-    expect(useUIStore.getState().searchPanel).toBe('content')
-  })
-
-  it('should handle menu:closeTab', async () => {
-    mockIpc.store.get.mockImplementation(async () => undefined)
-    mockIpc.files.readFile.mockImplementation(async () => ({ path: '/test/a.md', content: 'a' }))
-    mockIpc.files.listDirectory.mockImplementation(async () => [
-      { name: 'a.md', path: '/test/a.md', isDirectory: false, isHidden: false },
-    ])
-
-    const handlers = new Map<string, (...args: unknown[]) => void>()
-    mockIpc.ipc.on.mockImplementation((channel: string, cb: (...args: unknown[]) => void) => {
-      handlers.set(channel, cb)
-    })
-
-    await act(async () => {
-      render(<App />)
-    })
-
-    await act(async () => {
-      useTabStore.getState().openFile('/test/a.md')
-    })
-    expect(useTabStore.getState().openFiles).toHaveLength(1)
-
-    act(() => {
-      handlers.get('menu:closeTab')!()
-    })
-    expect(useTabStore.getState().openFiles).toHaveLength(0)
-  })
-
-  it('should restore panel widths from IPC store on mount', async () => {
+  it('should restore panel widths from store on mount', async () => {
     mockIpc.store.get.mockImplementation(async (key: string) => {
       if (key === 'sidebarWidth') return 300
       if (key === 'outlineWidth') return 350

@@ -1,36 +1,33 @@
 import { test, expect } from '@playwright/test'
-import { launchApp, createTestDir, writeFixture, openWorkspace } from './utils'
+import { createTestWorkspace, launchApp, openWorkspace } from './utils'
 
 test.describe('Settings Panel', () => {
-  test('should open settings panel', async () => {
-    const { electronApp, page, cleanup } = await launchApp()
-    const dir = createTestDir()
-    writeFixture(dir.path, 'test.md', '# Test')
+  test('should open settings panel with Ctrl+,', async ({ page }) => {
+    const ws = createTestWorkspace({
+      'test.md': '# Test',
+    })
 
-    await openWorkspace(electronApp, page, dir.path)
+    await launchApp(page, ws)
+    await openWorkspace(page, ws.dirPath)
     await expect(page.getByText('test.md')).toBeVisible({ timeout: 10000 })
 
-    await electronApp.evaluate(({ BrowserWindow }) => {
-      BrowserWindow.getAllWindows()[0]?.webContents.send('menu:openSettings')
-    })
+    await page.keyboard.press('Control+,')
 
     await expect(page.getByText('Settings').first()).toBeVisible({ timeout: 10000 })
 
-    dir.cleanup()
-    await cleanup()
+    ws.cleanup()
   })
 
-  test('should close settings panel on Escape', async () => {
-    const { electronApp, page, cleanup } = await launchApp()
-    const dir = createTestDir()
-    writeFixture(dir.path, 'test.md', '# Test')
+  test('should close settings panel on Escape', async ({ page }) => {
+    const ws = createTestWorkspace({
+      'test.md': '# Test',
+    })
 
-    await openWorkspace(electronApp, page, dir.path)
+    await launchApp(page, ws)
+    await openWorkspace(page, ws.dirPath)
     await expect(page.getByText('test.md')).toBeVisible({ timeout: 10000 })
 
-    await electronApp.evaluate(({ BrowserWindow }) => {
-      BrowserWindow.getAllWindows()[0]?.webContents.send('menu:openSettings')
-    })
+    await page.keyboard.press('Control+,')
 
     await expect(page.getByText('Settings').first()).toBeVisible({ timeout: 10000 })
 
@@ -38,7 +35,6 @@ test.describe('Settings Panel', () => {
 
     await expect(page.getByText('Settings').first()).not.toBeVisible({ timeout: 10000 })
 
-    dir.cleanup()
-    await cleanup()
+    ws.cleanup()
   })
 })

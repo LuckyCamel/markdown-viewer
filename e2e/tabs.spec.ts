@@ -1,29 +1,30 @@
 import { test, expect } from '@playwright/test'
-import { launchApp, createTestDir, writeFixture, openWorkspace } from './utils'
+import { createTestWorkspace, launchApp, openWorkspace } from './utils'
 
 test.describe('Tab Management', () => {
-  test('should create a tab with filename when opening a file', async () => {
-    const { electronApp, page, cleanup } = await launchApp()
-    const dir = createTestDir()
-    writeFixture(dir.path, 'hello.md', '# Hello')
+  test('should create a tab with filename when opening a file', async ({ page }) => {
+    const ws = createTestWorkspace({
+      'hello.md': '# Hello',
+    })
 
-    await openWorkspace(electronApp, page, dir.path)
+    await launchApp(page, ws)
+    await openWorkspace(page, ws.dirPath)
 
     await page.getByText('hello.md').first().click()
     const tab = page.getByRole('tab', { name: /hello\.md/ })
     await expect(tab).toBeVisible({ timeout: 10000 })
 
-    dir.cleanup()
-    await cleanup()
+    ws.cleanup()
   })
 
-  test('should switch content when switching tabs', async () => {
-    const { electronApp, page, cleanup } = await launchApp()
-    const dir = createTestDir()
-    writeFixture(dir.path, 'a.md', '# File A')
-    writeFixture(dir.path, 'b.md', '# File B')
+  test('should switch content when switching tabs', async ({ page }) => {
+    const ws = createTestWorkspace({
+      'a.md': '# File A',
+      'b.md': '# File B',
+    })
 
-    await openWorkspace(electronApp, page, dir.path)
+    await launchApp(page, ws)
+    await openWorkspace(page, ws.dirPath)
 
     await page.getByText('a.md').first().click()
     await page.getByText('b.md').first().click()
@@ -38,16 +39,16 @@ test.describe('Tab Management', () => {
     await expect(tabA).toHaveAttribute('aria-selected', 'true')
     await expect(tabB).toHaveAttribute('aria-selected', 'false')
 
-    dir.cleanup()
-    await cleanup()
+    ws.cleanup()
   })
 
-  test('should remove tab when closing a tab', async () => {
-    const { electronApp, page, cleanup } = await launchApp()
-    const dir = createTestDir()
-    writeFixture(dir.path, 'close-me.md', '# Close me')
+  test('should remove tab when closing a tab', async ({ page }) => {
+    const ws = createTestWorkspace({
+      'close-me.md': '# Close me',
+    })
 
-    await openWorkspace(electronApp, page, dir.path)
+    await launchApp(page, ws)
+    await openWorkspace(page, ws.dirPath)
 
     await page.getByText('close-me.md').first().click()
     const tab = page.getByRole('tab', { name: /close-me\.md/ })
@@ -56,7 +57,6 @@ test.describe('Tab Management', () => {
     await tab.locator('button').click()
     await expect(tab).not.toBeVisible()
 
-    dir.cleanup()
-    await cleanup()
+    ws.cleanup()
   })
 })

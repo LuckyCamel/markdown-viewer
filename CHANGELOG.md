@@ -12,6 +12,9 @@
 
 ### 新增
 
+- **大纲可视区域高亮**：滚动正文时 Outline 自动高亮当前节（scroll-spy）
+- **大纲标题提取**：跳过围栏代码块内的伪 `# 标题` 行
+- **欢迎页 Recent Files**：展示最近打开的文件列表，点击即可打开
 - **搜索可取消**：`cancel_search` command + 前端 `searchId` 会话
 - **搜索结果行号跳转**：点击匹配项打开文件并滚动到对应行
 - **CI `tauri build --no-bundle`**：PR 验证 Tauri 编译与插件链接

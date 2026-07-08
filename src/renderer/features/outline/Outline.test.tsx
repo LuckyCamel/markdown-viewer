@@ -17,6 +17,23 @@ describe('Outline', () => {
     expect(screen.getByText('No headings found')).toBeDefined()
   })
 
+  it('不应把代码块内的 # 标题识别为大纲条目', () => {
+    const markdown = `# Title
+
+\`\`\`markdown
+# Code Example
+## Nested Fake
+\`\`\`
+
+## Section
+`
+    render(<Outline content={markdown} />)
+    expect(screen.getByText('Title')).toBeDefined()
+    expect(screen.getByText('Section')).toBeDefined()
+    expect(screen.queryByText('Code Example')).toBeNull()
+    expect(screen.queryByText('Nested Fake')).toBeNull()
+  })
+
   it('点击大纲条目应滚动正文容器到对应标题', () => {
     document.body.innerHTML = `
       <div data-scroll-container style="height:200px;overflow:auto">
@@ -31,5 +48,8 @@ describe('Outline', () => {
     fireEvent.click(screen.getByRole('button', { name: '简介' }))
 
     expect(scrollToSpy).toHaveBeenCalled()
+    expect(screen.getByRole('button', { name: '简介' }).getAttribute('aria-current')).toBe(
+      'location',
+    )
   })
 })

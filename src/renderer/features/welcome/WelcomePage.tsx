@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { ipc } from '../../lib/ipc'
 import { logError } from '../../logger'
+import type { RecentEntry } from '../../../shared/types'
 
 interface WelcomePageProps {
   onFolderOpen?: (path: string) => void
@@ -8,18 +9,18 @@ interface WelcomePageProps {
 }
 
 export function WelcomePage({ onFolderOpen, onFileOpen }: WelcomePageProps) {
-  const [recentFiles, setRecentFiles] = useState<{ path: string; name: string }[]>([])
-  const [recentDirs, setRecentDirs] = useState<{ path: string; name: string }[]>([])
+  const [recentFiles, setRecentFiles] = useState<RecentEntry[]>([])
+  const [recentDirs, setRecentDirs] = useState<RecentEntry[]>([])
 
   useEffect(() => {
     ipc.store
-      .get<any[]>('recentFiles')
+      .get<RecentEntry[]>('recentFiles')
       .then((files) => {
         if (files) setRecentFiles(files.slice(0, 10))
       })
       .catch((err) => logError('WelcomePage:loadRecentFiles', err))
     ipc.store
-      .get<any[]>('recentDirs')
+      .get<RecentEntry[]>('recentDirs')
       .then((dirs) => {
         if (dirs) setRecentDirs(dirs.slice(0, 10))
       })
@@ -63,26 +64,49 @@ export function WelcomePage({ onFolderOpen, onFileOpen }: WelcomePageProps) {
           Open File
         </button>
       </div>
-      {recentDirs.length > 0 && (
-        <div className="w-full max-w-md">
-          <h2 className="text-sm font-medium text-gray-500 mb-2">Recent Folders</h2>
-          <ul className="space-y-1">
-            {recentDirs.map((dir) => (
-              <li key={dir.path}>
-                <button
-                  onClick={() => {
-                    ipc.store
-                      .set('lastWorkspace', dir.path)
-                      .catch((err) => logError('WelcomePage:setLastWorkspace', err))
-                    onFolderOpen?.(dir.path)
-                  }}
-                  className="text-sm text-blue-600 dark:text-blue-400 hover:underline"
-                >
-                  {dir.name}
-                </button>
-              </li>
-            ))}
-          </ul>
+      {(recentFiles.length > 0 || recentDirs.length > 0) && (
+        <div className="w-full max-w-md space-y-4">
+          {recentFiles.length > 0 && (
+            <div>
+              <h2 className="text-sm font-medium text-gray-500 mb-2">Recent Files</h2>
+              <ul className="space-y-1">
+                {recentFiles.map((file) => (
+                  <li key={file.path}>
+                    <button
+                      onClick={() => onFileOpen?.(file.path)}
+                      className="text-sm text-blue-600 dark:text-blue-400 hover:underline truncate max-w-full block text-left"
+                      title={file.path}
+                    >
+                      {file.name}
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+          {recentDirs.length > 0 && (
+            <div>
+              <h2 className="text-sm font-medium text-gray-500 mb-2">Recent Folders</h2>
+              <ul className="space-y-1">
+                {recentDirs.map((dir) => (
+                  <li key={dir.path}>
+                    <button
+                      onClick={() => {
+                        ipc.store
+                          .set('lastWorkspace', dir.path)
+                          .catch((err) => logError('WelcomePage:setLastWorkspace', err))
+                        onFolderOpen?.(dir.path)
+                      }}
+                      className="text-sm text-blue-600 dark:text-blue-400 hover:underline truncate max-w-full block text-left"
+                      title={dir.path}
+                    >
+                      {dir.name}
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
         </div>
       )}
     </div>

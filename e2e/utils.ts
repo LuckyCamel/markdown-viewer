@@ -89,6 +89,8 @@ export async function launchApp(
           openExternalCalls: [],
           searchResults: null,
           fileChangeListeners: new Map(),
+          searchResultListeners: new Set(),
+          fileChangeCallbacks: new Set(),
           eventListeners: new Map(),
         }
       },
@@ -107,6 +109,8 @@ export async function launchApp(
         openExternalCalls: [],
         searchResults: null,
         fileChangeListeners: new Map(),
+        searchResultListeners: new Set(),
+        fileChangeCallbacks: new Set(),
         eventListeners: new Map(),
       }
     })

@@ -71,6 +71,7 @@ describe('useWorkspaceInit', () => {
     vi.clearAllMocks()
     mockStoreGet.mockResolvedValue(undefined)
     mockStoreSet.mockResolvedValue(undefined)
+    mockUpdateSettings.mockResolvedValue(undefined)
   })
 
   describe('初始化', () => {
@@ -107,6 +108,7 @@ describe('useWorkspaceInit', () => {
       expect(mockSetTheme).not.toHaveBeenCalled()
       expect(mockSetIgnoreList).not.toHaveBeenCalled()
       expect(mockSetRoot).not.toHaveBeenCalled()
+      expect(mockUpdateSettings).toHaveBeenCalledWith([], [])
     })
 
     it('init 异常时调用 logError', async () => {

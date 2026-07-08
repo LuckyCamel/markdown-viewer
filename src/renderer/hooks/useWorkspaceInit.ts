@@ -71,11 +71,9 @@ export function useWorkspaceInit() {
 
       const ignoreList = useSettingsStore.getState().ignoreList
       const markdownExtensions = useSettingsStore.getState().markdownExtensions
-      if (ignoreList.length > 0 || markdownExtensions.length > 0) {
-        ipc.files
-          .updateSettings(ignoreList, markdownExtensions)
-          .catch((err) => logError('useWorkspaceInit:updateSettings', err))
-      }
+      ipc.files
+        .updateSettings(ignoreList, markdownExtensions)
+        .catch((err) => logError('useWorkspaceInit:updateSettings', err))
 
       if (savedWorkspace) {
         setWorkspacePath(savedWorkspace)

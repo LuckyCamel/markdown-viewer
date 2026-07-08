@@ -4,9 +4,10 @@ import { logError } from '../../logger'
 
 interface WelcomePageProps {
   onFolderOpen?: (path: string) => void
+  onFileOpen?: (path: string) => void
 }
 
-export function WelcomePage({ onFolderOpen }: WelcomePageProps) {
+export function WelcomePage({ onFolderOpen, onFileOpen }: WelcomePageProps) {
   const [recentFiles, setRecentFiles] = useState<{ path: string; name: string }[]>([])
   const [recentDirs, setRecentDirs] = useState<{ path: string; name: string }[]>([])
 
@@ -36,7 +37,10 @@ export function WelcomePage({ onFolderOpen }: WelcomePageProps) {
   }
 
   const handleOpenFile = async () => {
-    await ipc.dialog.openFile().catch((err) => logError('WelcomePage:openFile', err))
+    const file = await ipc.dialog.openFile().catch((err) => logError('WelcomePage:openFile', err))
+    if (file) {
+      onFileOpen?.(file)
+    }
   }
 
   return (

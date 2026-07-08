@@ -7,9 +7,19 @@ import { useFileStore } from './features/file-tree/useFileStore'
 
 const mockIpc = vi.hoisted(() => ({
   store: { get: vi.fn(), set: vi.fn(), del: vi.fn() },
-  files: { listDirectory: vi.fn(), readFile: vi.fn(), getFileInfo: vi.fn() },
+  files: {
+    listDirectory: vi.fn(),
+    readFile: vi.fn(),
+    getFileInfo: vi.fn(),
+    updateSettings: vi.fn(),
+  },
   search: { searchContent: vi.fn(), onResult: vi.fn(), offResult: vi.fn() },
-  watcher: { watchFile: vi.fn(), unwatchFile: vi.fn(), onChange: vi.fn(), offChange: vi.fn() },
+  watcher: {
+    watchFile: vi.fn(),
+    unwatchFile: vi.fn(),
+    onChange: vi.fn(() => vi.fn()),
+    offChange: vi.fn(),
+  },
   dialog: { openDirectory: vi.fn(), openFile: vi.fn() },
   shell: { openExternal: vi.fn() },
 }))
@@ -32,6 +42,7 @@ describe('App', () => {
     mockIpc.store.set.mockResolvedValue(undefined)
     mockIpc.files.listDirectory.mockResolvedValue([])
     mockIpc.files.readFile.mockResolvedValue({ path: '', content: '' })
+    mockIpc.files.updateSettings.mockResolvedValue(undefined)
   })
 
   it('should show WelcomePage when no workspace', () => {

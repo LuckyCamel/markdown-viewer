@@ -1,6 +1,7 @@
 import { create } from 'zustand'
 import { ipc } from '../../lib/ipc'
 import { logError } from '../../logger'
+import { DEFAULT_IGNORE_LIST, DEFAULT_MARKDOWN_EXTENSIONS } from '../../../shared/settingsDefaults'
 
 interface SettingsState {
   ignoreList: string[]
@@ -12,8 +13,8 @@ interface SettingsState {
 }
 
 export const useSettingsStore = create<SettingsState>((set) => ({
-  ignoreList: [],
-  markdownExtensions: [],
+  ignoreList: DEFAULT_IGNORE_LIST,
+  markdownExtensions: DEFAULT_MARKDOWN_EXTENSIONS,
   setIgnoreList: (list) => set({ ignoreList: list }),
   setMarkdownExtensions: (list) => set({ markdownExtensions: list }),
   loadFromDisk: async () => {

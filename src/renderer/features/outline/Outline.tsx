@@ -1,9 +1,14 @@
+import { headingToId } from '../../../shared/headingId'
+
 interface HeadingItem {
   level: number
   text: string
   id: string
 }
 
+/**
+ * 从 Markdown 源码提取标题列表
+ */
 function extractHeadings(markdown: string): HeadingItem[] {
   const headings: HeadingItem[] = []
   const lines = markdown.split('\n')
@@ -12,11 +17,7 @@ function extractHeadings(markdown: string): HeadingItem[] {
     if (match) {
       const level = match[1].length
       const text = match[2].replace(/[`*_~[\]]/g, '')
-      const id = text
-        .toLowerCase()
-        .replace(/\s+/g, '-')
-        .replace(/[^\w-]/g, '')
-      headings.push({ level, text, id })
+      headings.push({ level, text, id: headingToId(text) })
     }
   }
   return headings

@@ -5,6 +5,7 @@ import rehypeKatex from 'rehype-katex'
 import rehypeHighlight from 'rehype-highlight'
 import rehypeRaw from 'rehype-raw'
 import { MermaidBlock } from './MermaidBlock'
+import { rehypeHeadingIds } from './rehypeHeadingIds'
 import { ipc } from '../../lib/ipc'
 import { useTabStore } from '../tabs/useTabStore'
 import { dirname, joinPaths } from '../../../shared/utils'
@@ -80,7 +81,7 @@ export function MarkdownViewer({ content, filePath }: MarkdownViewerProps) {
     <div className="prose dark:prose-invert max-w-none p-6">
       <ReactMarkdown
         remarkPlugins={[remarkGfm, remarkMath]}
-        rehypePlugins={[rehypeRaw, rehypeKatex, rehypeHighlight]}
+        rehypePlugins={[rehypeRaw, rehypeHeadingIds, rehypeKatex, rehypeHighlight]}
         components={components}
       >
         {content}

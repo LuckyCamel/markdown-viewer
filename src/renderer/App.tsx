@@ -18,6 +18,7 @@ import { useWorkspaceInit } from './hooks/useWorkspaceInit'
 import { useFileWatcher } from './hooks/useFileWatcher'
 import { useScrollRestore } from './hooks/useScrollRestore'
 import { useKeyboardShortcuts } from './hooks/useKeyboardShortcuts'
+import { isVisibleFileEntry } from '../shared/settingsDefaults'
 
 function App() {
   const {
@@ -48,7 +49,7 @@ function App() {
     const files: { path: string; name: string }[] = []
     for (const dir of Object.values(entries)) {
       for (const entry of dir) {
-        if (!entry.isDirectory) {
+        if (!entry.isDirectory && entry.isMarkdown) {
           files.push({ path: entry.path, name: entry.name })
         }
       }
@@ -109,7 +110,7 @@ function App() {
   return (
     <ThemeProvider>
       {!workspacePath ? (
-        <WelcomePage onFolderOpen={handleOpenFolder} />
+        <WelcomePage onFolderOpen={handleOpenFolder} onFileOpen={handleOpenFile} />
       ) : (
         <Layout
           sidebar={
@@ -143,7 +144,7 @@ function App() {
             ) : openFiles.length > 0 ? (
               <div className="h-full flex flex-col">
                 <TabBar />
-                <div className="flex-1 overflow-y-auto">
+                <div className="flex-1 overflow-y-auto" data-scroll-container>
                   {content !== undefined ? (
                     <MarkdownViewer content={content} filePath={activeFile ?? undefined} />
                   ) : (
@@ -154,7 +155,7 @@ function App() {
                 </div>
               </div>
             ) : (
-              <WelcomePage onFolderOpen={handleOpenFolder} />
+              <WelcomePage onFolderOpen={handleOpenFolder} onFileOpen={handleOpenFile} />
             )
           }
           outline={content ? <Outline content={content} /> : null}

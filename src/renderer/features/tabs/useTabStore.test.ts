@@ -1,8 +1,17 @@
-import { describe, it, expect, beforeEach } from 'vitest'
+import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { useTabStore } from './useTabStore'
+
+const mockRemoveContent = vi.fn()
+
+vi.mock('../markdown-viewer/useEditorStore', () => ({
+  useEditorStore: {
+    getState: () => ({ removeContent: mockRemoveContent }),
+  },
+}))
 
 describe('useTabStore', () => {
   beforeEach(() => {
+    mockRemoveContent.mockClear()
     useTabStore.setState({ openFiles: [], activeFile: null, dirtyFiles: new Set() })
   })
 
@@ -56,6 +65,7 @@ describe('useTabStore', () => {
       useTabStore.getState().closeFile('/b.md')
       expect(useTabStore.getState().isDirty('/b.md')).toBe(false)
       expect(useTabStore.getState().isDirty('/a.md')).toBe(true)
+      expect(mockRemoveContent).toHaveBeenCalledWith('/b.md')
     })
   })
 
@@ -64,11 +74,16 @@ describe('useTabStore', () => {
       useTabStore.setState({
         openFiles: ['/a.md', '/b.md', '/c.md'],
         activeFile: '/a.md',
+        dirtyFiles: new Set(['/a.md', '/b.md']),
       })
       useTabStore.getState().closeOthers('/b.md')
       const s = useTabStore.getState()
       expect(s.openFiles).toEqual(['/b.md'])
       expect(s.activeFile).toBe('/b.md')
+      expect(s.isDirty('/a.md')).toBe(false)
+      expect(s.isDirty('/b.md')).toBe(true)
+      expect(mockRemoveContent).toHaveBeenCalledWith('/a.md')
+      expect(mockRemoveContent).toHaveBeenCalledWith('/c.md')
     })
   })
 

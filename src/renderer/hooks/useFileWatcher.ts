@@ -17,11 +17,11 @@ export function useFileWatcher(openFiles: string[], enabled: boolean) {
         setTimeout(() => useTabStore.getState().clearDirty(event.path), 2000)
       }
     }
-    ipc.watcher.onChange(onChange)
+    const unsubscribe = ipc.watcher.onChange(onChange)
 
     return () => {
       openFiles.forEach((p) => ipc.watcher.unwatchFile(p))
-      ipc.watcher.offChange()
+      unsubscribe()
     }
   }, [openFiles, enabled])
 }

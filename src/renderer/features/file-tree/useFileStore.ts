@@ -1,6 +1,7 @@
 import { create } from 'zustand'
 import type { FileEntry } from '../../../shared/types'
 import { ipc } from '../../lib/ipc'
+import { logError } from '../../logger'
 
 interface FileTreeState {
   entries: Record<string, FileEntry[]>
@@ -37,14 +38,23 @@ export const useFileStore = create<FileTreeState>((set, get) => ({
     const { loading } = get()
     if (loading[dirPath]) return
     set((s) => ({ loading: { ...s.loading, [dirPath]: true } }))
-    const entries = await ipc.files.listDirectory(dirPath)
-    set((s) => {
-      const next = { ...s.loading }
-      delete next[dirPath]
-      return {
-        entries: { ...s.entries, [dirPath]: entries },
-        loading: next,
-      }
-    })
+    try {
+      const entries = await ipc.files.listDirectory(dirPath)
+      set((s) => {
+        const next = { ...s.loading }
+        delete next[dirPath]
+        return {
+          entries: { ...s.entries, [dirPath]: entries },
+          loading: next,
+        }
+      })
+    } catch (err) {
+      logError('useFileStore:loadChildren', err)
+      set((s) => {
+        const next = { ...s.loading }
+        delete next[dirPath]
+        return { loading: next }
+      })
+    }
   },
 }))

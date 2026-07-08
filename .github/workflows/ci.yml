@@ -40,6 +40,13 @@ jobs:
       - run: pnpm run test
       - run: pnpm run build
 
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: src-tauri
+      - run: cargo check
+        working-directory: src-tauri
+
   e2e:
     runs-on: ubuntu-latest
     timeout-minutes: 20

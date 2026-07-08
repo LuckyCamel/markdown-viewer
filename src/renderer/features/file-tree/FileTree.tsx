@@ -1,4 +1,5 @@
 import { basename } from '../../../shared/utils'
+import { isVisibleFileEntry } from '../../../shared/settingsDefaults'
 import { useFileStore } from './useFileStore'
 import { useTabStore } from '../tabs/useTabStore'
 import { FileIcon } from '../../components/FileIcon'
@@ -48,7 +49,7 @@ function FileTreeNode({
       </button>
       {entry.isDirectory && isExpanded && children && (
         <div>
-          {children.map((child) => (
+          {children.filter(isVisibleFileEntry).map((child) => (
             <FileTreeNode
               key={child.path}
               entry={child}
@@ -75,7 +76,7 @@ export function FileTree({ rootPath }: FileTreeProps) {
       <div className="px-3 py-1 text-xs font-semibold text-gray-500 uppercase tracking-wider">
         {basename(rootPath)}
       </div>
-      {rootEntries?.map((entry) => (
+      {rootEntries?.filter(isVisibleFileEntry).map((entry) => (
         <FileTreeNode key={entry.path} entry={entry} depth={0} allEntries={entries} />
       ))}
     </div>

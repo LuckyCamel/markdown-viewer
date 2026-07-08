@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useRef, useState, useId } from 'react'
 import { getMermaid } from './mermaid'
 
 interface MermaidBlockProps {
@@ -8,7 +8,7 @@ interface MermaidBlockProps {
 export function MermaidBlock({ chart }: MermaidBlockProps) {
   const containerRef = useRef<HTMLDivElement>(null)
   const [error, setError] = useState<string | null>(null)
-  const id = `mermaid-${Math.random().toString(36).slice(2, 9)}`
+  const id = useId().replace(/:/g, '')
 
   useEffect(() => {
     let cancelled = false

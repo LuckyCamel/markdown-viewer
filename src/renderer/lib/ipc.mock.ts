@@ -4,8 +4,6 @@ import type { FileEntry, FileContent, SearchProgress, FileChangeEvent } from '..
  * E2E 测试用的 mock IPC 实现。
  * 通过 window.__E2E__ 全局对象与测试代码交互。
  */
-
-// 标记：此模块被加载时设置一个全局变量，用于检测 alias 是否生效
 ;(function () {
   if (typeof window !== 'undefined') {
     ;(window as any).__IPC_MOCK_LOADED__ = true
@@ -21,7 +19,9 @@ declare global {
       openExternalCalls: string[]
       searchResults: SearchProgress | null
       fileChangeListeners: Map<string, (event: FileChangeEvent, content: string | null) => void>
-      eventListeners: Map<string, (...args: unknown[]) => void>
+      searchResultListeners: Set<(result: SearchProgress) => void>
+      fileChangeCallbacks: Set<(event: FileChangeEvent, content: string | null) => void>
+      eventListeners: Map<string, Set<(...args: unknown[]) => void>>
     }
   }
 }
@@ -35,6 +35,8 @@ function ensureE2E() {
       openExternalCalls: [],
       searchResults: null,
       fileChangeListeners: new Map(),
+      searchResultListeners: new Set(),
+      fileChangeCallbacks: new Set(),
       eventListeners: new Map(),
     }
   }
@@ -45,6 +47,11 @@ export async function listDirectory(dirPath: string): Promise<FileEntry[]> {
   ensureE2E()
   return window.__E2E__.directoryTree.get(dirPath) || []
 }
+
+export async function updateSettings(
+  _ignoreList: string[],
+  _markdownExtensions: string[],
+): Promise<void> {}
 
 export async function readFile(filePath: string): Promise<FileContent> {
   ensureE2E()
@@ -64,21 +71,25 @@ export async function getFileInfo(filePath: string): Promise<FileEntry> {
   }
 }
 
-export async function invalidateFilter(): Promise<void> {}
-
-export async function searchContent(dirPath: string, query: string): Promise<void> {
+export async function searchContent(_dirPath: string, _query: string): Promise<void> {
   ensureE2E()
   const results = window.__E2E__.searchResults
   if (results) {
-    const cb = window.__E2E__.eventListeners.get('search-result')
-    if (cb) cb(results)
+    for (const cb of window.__E2E__.searchResultListeners) {
+      cb(results)
+    }
   }
 }
 
 export function onSearchResult(callback: (result: SearchProgress) => void): () => void {
   ensureE2E()
-  window.__E2E__.eventListeners.set('search-result', callback as (...args: unknown[]) => void)
-  return () => window.__E2E__.eventListeners.delete('search-result')
+  window.__E2E__.searchResultListeners.add(callback)
+  return () => window.__E2E__.searchResultListeners.delete(callback)
+}
+
+export function offSearchResult(callback: (result: SearchProgress) => void): void {
+  ensureE2E()
+  window.__E2E__.searchResultListeners.delete(callback)
 }
 
 export async function watchFile(filePath: string): Promise<void> {
@@ -95,8 +106,15 @@ export function onFileChange(
   callback: (event: FileChangeEvent, content: string | null) => void,
 ): () => void {
   ensureE2E()
-  window.__E2E__.eventListeners.set('file-change', callback as (...args: unknown[]) => void)
-  return () => window.__E2E__.eventListeners.delete('file-change')
+  window.__E2E__.fileChangeCallbacks.add(callback)
+  return () => window.__E2E__.fileChangeCallbacks.delete(callback)
+}
+
+export function offFileChange(
+  callback: (event: FileChangeEvent, content: string | null) => void,
+): void {
+  ensureE2E()
+  window.__E2E__.fileChangeCallbacks.delete(callback)
 }
 
 export async function storeGet<T>(key: string): Promise<T | undefined> {
@@ -136,14 +154,24 @@ export async function openExternal(url: string): Promise<void> {
 
 export function onIpcEvent(channel: string, callback: (...args: unknown[]) => void): () => void {
   ensureE2E()
-  window.__E2E__.eventListeners.set(channel, callback)
-  return () => window.__E2E__.eventListeners.delete(channel)
+  if (!window.__E2E__.eventListeners.has(channel)) {
+    window.__E2E__.eventListeners.set(channel, new Set())
+  }
+  window.__E2E__.eventListeners.get(channel)!.add(callback)
+  return () => window.__E2E__.eventListeners.get(channel)?.delete(callback)
+}
+
+export function offIpcEvent(channel: string, callback: (...args: unknown[]) => void): void {
+  ensureE2E()
+  window.__E2E__.eventListeners.get(channel)?.delete(callback)
 }
 
 export async function emitIpcEvent(channel: string, ...args: unknown[]): Promise<void> {
   ensureE2E()
-  const cb = window.__E2E__.eventListeners.get(channel)
-  if (cb) cb(...args)
+  const listeners = window.__E2E__.eventListeners.get(channel)
+  if (listeners) {
+    for (const cb of listeners) cb(...args)
+  }
 }
 
 export const ipc = {
@@ -151,18 +179,18 @@ export const ipc = {
     listDirectory,
     readFile,
     getFileInfo,
-    invalidateFilter,
+    updateSettings,
   },
   search: {
     searchContent,
     onResult: onSearchResult,
-    offResult: (_cb: (result: SearchProgress) => void) => {},
+    offResult: offSearchResult,
   },
   watcher: {
     watchFile,
     unwatchFile,
     onChange: onFileChange,
-    offChange: () => {},
+    offChange: offFileChange,
   },
   store: {
     get: storeGet,
@@ -178,6 +206,6 @@ export const ipc = {
   },
   ipc: {
     on: onIpcEvent,
-    off: () => {},
+    off: offIpcEvent,
   },
 }

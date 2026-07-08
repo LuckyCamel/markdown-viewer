@@ -34,6 +34,7 @@ vi.mock('../features/tabs/useTabStore', () => ({
 describe('useFileWatcher', () => {
   beforeEach(() => {
     vi.clearAllMocks()
+    mockOnChange.mockReturnValue(vi.fn())
     vi.useFakeTimers()
   })
 

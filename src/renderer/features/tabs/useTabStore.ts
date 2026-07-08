@@ -1,9 +1,9 @@
 import { create } from 'zustand'
+import { useEditorStore } from '../markdown-viewer/useEditorStore'
 
 interface TabState {
   openFiles: string[]
   activeFile: string | null
-  /** @deprecated Use isDirty() instead */
   dirtyFiles: Set<string>
   isDirty: (filePath: string) => boolean
   openFile: (filePath: string) => void
@@ -13,6 +13,16 @@ interface TabState {
   clearDirty: (filePath: string) => void
   closeOthers: (filePath: string) => void
   closeAll: () => void
+}
+
+/**
+ * 关闭标签时清理编辑器缓存
+ */
+function purgeEditorCache(filePaths: string[]) {
+  const removeContent = useEditorStore.getState().removeContent
+  for (const path of filePaths) {
+    removeContent(path)
+  }
 }
 
 export const useTabStore = create<TabState>((set, get) => ({
@@ -36,6 +46,7 @@ export const useTabStore = create<TabState>((set, get) => ({
     nextDirty.delete(filePath)
     const nextActive =
       activeFile === filePath ? next[Math.min(idx, next.length - 1)] || null : activeFile
+    purgeEditorCache([filePath])
     set({ openFiles: next, activeFile: nextActive, dirtyFiles: nextDirty })
   },
   setActive: (filePath) => set({ activeFile: filePath }),
@@ -51,6 +62,16 @@ export const useTabStore = create<TabState>((set, get) => ({
       next.delete(filePath)
       return { dirtyFiles: next }
     }),
-  closeOthers: (filePath) => set({ openFiles: [filePath], activeFile: filePath }),
-  closeAll: () => set({ openFiles: [], activeFile: null }),
+  closeOthers: (filePath) => {
+    const { openFiles, dirtyFiles } = get()
+    const toClose = openFiles.filter((f) => f !== filePath)
+    const nextDirty = dirtyFiles.has(filePath) ? new Set([filePath]) : new Set<string>()
+    purgeEditorCache(toClose)
+    set({ openFiles: [filePath], activeFile: filePath, dirtyFiles: nextDirty })
+  },
+  closeAll: () => {
+    const { openFiles } = get()
+    purgeEditorCache(openFiles)
+    set({ openFiles: [], activeFile: null, dirtyFiles: new Set() })
+  },
 }))

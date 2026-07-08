@@ -2,10 +2,15 @@ import { useEffect } from 'react'
 import { ipc } from '../lib/ipc'
 import { logError } from '../logger'
 
+export const SCROLL_CONTAINER_SELECTOR = '[data-scroll-container]'
+
+/**
+ * 保存与恢复 Markdown 阅读滚动位置
+ */
 export function useScrollRestore(activeFile: string | null, content: string | undefined) {
   useEffect(() => {
     if (!activeFile) return
-    const container = document.querySelector('main > div:first-child')
+    const container = document.querySelector(SCROLL_CONTAINER_SELECTOR)
     if (!container) return
     const handleScroll = () => {
       const top = container.scrollTop
@@ -29,7 +34,7 @@ export function useScrollRestore(activeFile: string | null, content: string | un
           return undefined
         })
       if (positions?.[activeFile]) {
-        const container = document.querySelector('main > div:first-child')
+        const container = document.querySelector(SCROLL_CONTAINER_SELECTOR)
         if (container) {
           requestAnimationFrame(() => {
             container.scrollTop = positions[activeFile]

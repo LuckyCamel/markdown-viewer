@@ -1,5 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { useSettingsStore } from './useSettingsStore'
+import { DEFAULT_IGNORE_LIST } from '../../../shared/settingsDefaults'
 
 const mockStoreGet = vi.fn()
 const mockStoreSet = vi.fn()
@@ -15,7 +16,10 @@ vi.mock('../../lib/ipc', () => ({
 
 describe('useSettingsStore', () => {
   beforeEach(() => {
-    useSettingsStore.setState({ ignoreList: [] })
+    useSettingsStore.setState({
+      ignoreList: DEFAULT_IGNORE_LIST,
+      markdownExtensions: ['md', 'markdown'],
+    })
     vi.clearAllMocks()
   })
 
@@ -32,7 +36,7 @@ describe('useSettingsStore', () => {
 
     await useSettingsStore.getState().loadFromDisk()
 
-    expect(useSettingsStore.getState().ignoreList).toEqual([])
+    expect(useSettingsStore.getState().ignoreList).toEqual(DEFAULT_IGNORE_LIST)
   })
 
   it('should save ignore list to disk', async () => {

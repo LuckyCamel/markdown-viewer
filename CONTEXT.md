@@ -25,6 +25,4 @@
 
 | # | 候选 | 优先级 | 问题 | 状态 |
 |---|------|--------|------|------|
-| 1 | ContentSearch deps | 中 | useEffect 依赖数组不完整，过时闭包风险 | 待修复 |
-| 2 | dirtyFiles 防御 | 低 | `getState().dirtyFiles` 返回可变 Set 引用 | 待修复 |
-| 3 | E2E 测试重写 | 中 | 旧 E2E 基于 Electron API，需用 Tauri WebDriver 重写 | 待评估 |
+| 1 | E2E 测试重写 | 中 | 旧 E2E 基于 mock IPC，需用 Tauri WebDriver 重写 | 待评估 |

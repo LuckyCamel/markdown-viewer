@@ -1,7 +1,10 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { ipc } from '../../lib/ipc'
 import { useSearchStore } from './useSearchStore'
+import { logError } from '../../logger'
 import type { SearchProgress } from '../../../shared/types'
+
+const SEARCH_DEBOUNCE_MS = 300
 
 interface ContentSearchProps {
   workspacePath: string
@@ -14,21 +17,44 @@ export function ContentSearch({ workspacePath, onSelect }: ContentSearchProps) {
   const isSearching = useSearchStore((s) => s.isSearching)
   const setResults = useSearchStore((s) => s.setResults)
   const setIsSearching = useSearchStore((s) => s.setIsSearching)
+  const searchGenerationRef = useRef(0)
 
   useEffect(() => {
-    if (!query || query.length < 2) return
-    setIsSearching(true)
-    setResults(null)
-
-    const handleResult = (progress: SearchProgress) => {
-      setResults(progress)
+    if (!query || query.length < 2) {
+      setIsSearching(false)
+      setResults(null)
+      return
     }
 
-    ipc.search.onResult(handleResult)
-    ipc.search.searchContent(workspacePath, query)
+    const generation = ++searchGenerationRef.current
+    let unsubscribe: (() => void) | undefined
+
+    const timer = setTimeout(() => {
+      setIsSearching(true)
+      setResults(null)
+
+      const handleResult = (progress: SearchProgress) => {
+        if (generation !== searchGenerationRef.current) return
+        setResults(progress)
+        if (progress.isComplete) {
+          setIsSearching(false)
+        }
+      }
+
+      unsubscribe = ipc.search.onResult(handleResult)
+      ipc.search.searchContent(workspacePath, query).catch((err) => {
+        if (generation === searchGenerationRef.current) {
+          logError('ContentSearch:searchContent', err)
+          setIsSearching(false)
+        }
+      })
+    }, SEARCH_DEBOUNCE_MS)
 
     return () => {
-      ipc.search.offResult(handleResult)
+      clearTimeout(timer)
+      searchGenerationRef.current++
+      unsubscribe?.()
+      setIsSearching(false)
     }
   }, [query, workspacePath, setResults, setIsSearching])
 
@@ -46,7 +72,7 @@ export function ContentSearch({ workspacePath, onSelect }: ContentSearchProps) {
       />
       {isSearching && (
         <div className="mt-2 text-xs text-gray-500">
-          Searching... {results?.searchedFiles}/{results?.totalFiles} files
+          Searching... {results?.searchedFiles ?? 0}/{results?.totalFiles ?? 0} files
         </div>
       )}
       <div className="mt-2 max-h-64 overflow-y-auto">

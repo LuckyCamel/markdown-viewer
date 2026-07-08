@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { renderHook } from '@testing-library/react'
-import { useScrollRestore } from './useScrollRestore'
+import { useScrollRestore, SCROLL_CONTAINER_SELECTOR } from './useScrollRestore'
 
 const mockStoreGet = vi.fn()
 const mockStoreSet = vi.fn()
@@ -17,11 +17,11 @@ vi.mock('../lib/ipc', () => ({
 vi.mock('../logger', () => ({ logError: (...args: unknown[]) => mockLogError(...args) }))
 
 function setupDOM() {
-  document.body.innerHTML = '<main><div></div></main>'
+  document.body.innerHTML = '<main><div data-scroll-container></div></main>'
 }
 
 function fireScroll(top: number) {
-  const el = document.querySelector('main > div:first-child') as HTMLElement
+  const el = document.querySelector(SCROLL_CONTAINER_SELECTOR) as HTMLElement
   Object.defineProperty(el, 'scrollTop', { value: top, writable: true })
   el.dispatchEvent(new Event('scroll'))
 }
@@ -97,7 +97,7 @@ describe('useScrollRestore', () => {
       mockStoreGet.mockResolvedValue({ '/a.md': 120 })
       renderHook(() => useScrollRestore('/a.md', 'content'))
       await vi.waitFor(() => {
-        const el = document.querySelector('main > div:first-child') as HTMLElement
+        const el = document.querySelector(SCROLL_CONTAINER_SELECTOR) as HTMLElement
         expect(el.scrollTop).toBe(120)
       })
     })

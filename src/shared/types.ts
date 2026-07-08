@@ -15,7 +15,7 @@ export interface SearchMatch {
   path: string
   line: number
   column: number
-  match: string
+  matchText: string
   lineContent: string
 }
 
@@ -23,6 +23,7 @@ export interface SearchProgress {
   totalFiles: number
   searchedFiles: number
   matches: SearchMatch[]
+  isComplete: boolean
 }
 
 export interface AppSettings {

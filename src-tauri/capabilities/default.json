@@ -8,6 +8,13 @@
     "core:path:default",
     "core:menu:default",
     "core:window:default",
-    "core:event:default"
+    "core:event:default",
+    "dialog:default",
+    "shell:default",
+    "fs:default",
+    {
+      "identifier": "fs:scope",
+      "allow": [{ "path": "**" }]
+    }
   ]
 }

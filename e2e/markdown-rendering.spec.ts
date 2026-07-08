@@ -45,7 +45,7 @@ test.describe('Markdown Rendering', () => {
     await launchApp(page, ws)
     await openWorkspace(page, ws.dirPath)
     await page.getByText('mermaid.md').first().click()
-    await expect(page.locator('svg')).toBeVisible({ timeout: 15000 })
+    await expect(page.locator('.mermaid-block svg')).toBeVisible({ timeout: 15000 })
     ws.cleanup()
   })
 

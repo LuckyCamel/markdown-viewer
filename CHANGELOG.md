@@ -2,6 +2,38 @@
 
 本文件记录 Markdown Viewer 各版本的变更摘要。
 
+## [Unreleased]
+
+### 修复
+
+- **Open File 工作区**：无 workspace 时以文件父目录初始化 workspace，直接进入阅读界面
+- **大纲点击跳转**：中文标题 id 生成、`markdownHeadings` 注入、滚动容器内定位（已验收）
+- **Tauri 迁移补全**（`28b25ef`）：注册 fs/dialog/shell 插件与 capabilities；IPC 监听器、ContentSearch、滚动恢复等
+
+### 新增
+
+- **搜索可取消**：`cancel_search` command + 前端 `searchId` 会话
+- **搜索结果行号跳转**：点击匹配项打开文件并滚动到对应行
+- **CI `tauri build --no-bundle`**：PR 验证 Tauri 编译与插件链接
+
+### 变更
+
+- CI 增加 `cargo check`
+- 文档：路线图、E2E 策略（`docs/e2e-strategy.md`）、架构同步
+
+## [1.1.1] - 2026-07-08
+
+### 新增
+
+- 设置项（忽略列表、扩展名）同步至 Rust 后端生效
+- 文件类型图标（FileIcon）
+- 快捷键自定义（ShortcutEditor）
+
+### 修复
+
+- CSP 安全策略配置
+- E2E mermaid 测试 SVG 选择器精确化
+
 ## [1.0.3] - 2026-07-08
 
 ### 变更

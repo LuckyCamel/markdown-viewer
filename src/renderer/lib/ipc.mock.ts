@@ -71,7 +71,11 @@ export async function getFileInfo(filePath: string): Promise<FileEntry> {
   }
 }
 
-export async function searchContent(_dirPath: string, _query: string): Promise<void> {
+export async function searchContent(
+  _dirPath: string,
+  _query: string,
+  _searchId: string,
+): Promise<void> {
   ensureE2E()
   const results = window.__E2E__.searchResults
   if (results) {
@@ -80,6 +84,8 @@ export async function searchContent(_dirPath: string, _query: string): Promise<v
     }
   }
 }
+
+export async function cancelSearch(_searchId: string): Promise<void> {}
 
 export function onSearchResult(callback: (result: SearchProgress) => void): () => void {
   ensureE2E()
@@ -183,6 +189,7 @@ export const ipc = {
   },
   search: {
     searchContent,
+    cancelSearch,
     onResult: onSearchResult,
     offResult: offSearchResult,
   },

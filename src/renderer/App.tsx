@@ -17,6 +17,7 @@ import { ipc } from './lib/ipc'
 import { useWorkspaceInit } from './hooks/useWorkspaceInit'
 import { useFileWatcher } from './hooks/useFileWatcher'
 import { useScrollRestore } from './hooks/useScrollRestore'
+import { useContentJump } from './hooks/useContentJump'
 import { useKeyboardShortcuts } from './hooks/useKeyboardShortcuts'
 import { isVisibleFileEntry } from '../shared/settingsDefaults'
 
@@ -37,6 +38,7 @@ function App() {
   const toggleOutline = useUIStore((s) => s.toggleOutline)
   const openSearch = useUIStore((s) => s.openSearch)
   const closeSearch = useUIStore((s) => s.closeSearch)
+  const setPendingContentJump = useUIStore((s) => s.setPendingContentJump)
 
   const openFiles = useTabStore((s) => s.openFiles)
   const activeFile = useTabStore((s) => s.activeFile)
@@ -95,6 +97,7 @@ function App() {
 
   useFileWatcher(openFiles, initialized)
   useScrollRestore(activeFile, content)
+  useContentJump(activeFile, content)
   useKeyboardShortcuts({
     onOpenFolder: async () => {
       const path = await ipc.dialog.openDirectory()
@@ -129,8 +132,13 @@ function App() {
                 {searchPanel === 'content' && (
                   <ContentSearch
                     workspacePath={workspacePath}
-                    onSelect={(p) => {
-                      handleOpenFile(p)
+                    onSelect={(match) => {
+                      setPendingContentJump({
+                        path: match.path,
+                        line: match.line,
+                        lineContent: match.lineContent,
+                      })
+                      handleOpenFile(match.path)
                       closeSearch()
                     }}
                   />

@@ -13,7 +13,7 @@ const mockIpc = vi.hoisted(() => ({
     getFileInfo: vi.fn(),
     updateSettings: vi.fn(),
   },
-  search: { searchContent: vi.fn(), onResult: vi.fn(), offResult: vi.fn() },
+  search: { searchContent: vi.fn(), cancelSearch: vi.fn(), onResult: vi.fn(), offResult: vi.fn() },
   watcher: {
     watchFile: vi.fn(),
     unwatchFile: vi.fn(),

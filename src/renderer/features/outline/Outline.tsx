@@ -1,4 +1,5 @@
 import { headingToId } from '../../../shared/headingId'
+import { scrollToElementInContainer } from '../../../shared/scrollContainer'
 
 interface HeadingItem {
   level: number
@@ -30,9 +31,15 @@ interface OutlineProps {
 export function Outline({ content }: OutlineProps) {
   const headings = extractHeadings(content)
 
+  /**
+   * 点击大纲条目，滚动正文到对应标题
+   */
   const handleClick = (id: string) => {
     const el = document.getElementById(id)
-    if (el) el.scrollIntoView({ behavior: 'smooth' })
+    if (!el) return
+    if (!scrollToElementInContainer(el)) {
+      el.scrollIntoView({ behavior: 'smooth' })
+    }
   }
 
   if (headings.length === 0) {

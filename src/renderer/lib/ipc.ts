@@ -36,8 +36,16 @@ export async function getFileInfo(filePath: string): Promise<FileEntry> {
   }
 }
 
-export async function searchContent(dirPath: string, query: string): Promise<void> {
-  await invoke('search_content', { dirPath, query })
+export async function searchContent(
+  dirPath: string,
+  query: string,
+  searchId: string,
+): Promise<void> {
+  await invoke('search_content', { dirPath, query, searchId })
+}
+
+export async function cancelSearch(searchId: string): Promise<void> {
+  await invoke('cancel_search', { searchId })
 }
 
 const searchResultListeners = new Set<(result: SearchProgress) => void>()
@@ -237,6 +245,7 @@ export const ipc = {
   },
   search: {
     searchContent,
+    cancelSearch,
     onResult: onSearchResult,
     offResult: offSearchResult,
   },

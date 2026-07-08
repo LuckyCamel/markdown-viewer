@@ -20,10 +20,18 @@ export interface SearchMatch {
 }
 
 export interface SearchProgress {
+  searchId: string
   totalFiles: number
   searchedFiles: number
   matches: SearchMatch[]
   isComplete: boolean
+  cancelled?: boolean
+}
+
+export interface ContentJumpTarget {
+  path: string
+  line: number
+  lineContent: string
 }
 
 export interface AppSettings {

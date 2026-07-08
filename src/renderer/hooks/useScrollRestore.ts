@@ -1,8 +1,9 @@
 import { useEffect } from 'react'
 import { ipc } from '../lib/ipc'
 import { logError } from '../logger'
+import { SCROLL_CONTAINER_SELECTOR } from '../../shared/scrollContainer'
 
-export const SCROLL_CONTAINER_SELECTOR = '[data-scroll-container]'
+export { SCROLL_CONTAINER_SELECTOR } from '../../shared/scrollContainer'
 
 /**
  * 保存与恢复 Markdown 阅读滚动位置

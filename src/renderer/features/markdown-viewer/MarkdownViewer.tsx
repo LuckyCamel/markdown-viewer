@@ -6,6 +6,7 @@ import rehypeHighlight from 'rehype-highlight'
 import rehypeRaw from 'rehype-raw'
 import { MermaidBlock } from './MermaidBlock'
 import { rehypeHeadingIds } from './rehypeHeadingIds'
+import { markdownHeadingComponents } from './markdownHeadings'
 import { ipc } from '../../lib/ipc'
 import { useTabStore } from '../tabs/useTabStore'
 import { dirname, joinPaths } from '../../../shared/utils'
@@ -82,7 +83,7 @@ export function MarkdownViewer({ content, filePath }: MarkdownViewerProps) {
       <ReactMarkdown
         remarkPlugins={[remarkGfm, remarkMath]}
         rehypePlugins={[rehypeRaw, rehypeHeadingIds, rehypeKatex, rehypeHighlight]}
-        components={components}
+        components={{ ...markdownHeadingComponents, ...components }}
       >
         {content}
       </ReactMarkdown>

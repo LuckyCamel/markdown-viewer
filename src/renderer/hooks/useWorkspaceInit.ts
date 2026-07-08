@@ -6,6 +6,7 @@ import { useFileStore } from '../features/file-tree/useFileStore'
 import { useSearchStore } from '../features/search/useSearchStore'
 import { ipc } from '../lib/ipc'
 import { logError } from '../logger'
+import { dirname } from '../../shared/utils'
 
 export function useWorkspaceInit() {
   const [workspacePath, setWorkspacePath] = useState<string | null>(null)
@@ -39,12 +40,24 @@ export function useWorkspaceInit() {
     [trackRecent],
   )
 
+  /**
+   * 打开文件；若无 workspace 则以文件父目录作为工作区
+   */
   const handleOpenFile = useCallback(
     (path: string) => {
+      if (!workspacePath) {
+        const parentDir = dirname(path)
+        setWorkspacePath(parentDir)
+        useFileStore.getState().setRoot(parentDir)
+        ipc.store
+          .set('lastWorkspace', parentDir)
+          .catch((err) => logError('useWorkspaceInit:setLastWorkspace', err))
+        trackRecent(parentDir, true).catch((err) => logError('useWorkspaceInit:trackRecent', err))
+      }
       useTabStore.getState().openFile(path)
       trackRecent(path, false).catch((err) => logError('useWorkspaceInit:trackRecent', err))
     },
-    [trackRecent],
+    [trackRecent, workspacePath],
   )
 
   useEffect(() => {

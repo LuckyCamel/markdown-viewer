@@ -148,5 +148,14 @@ describe('useWorkspaceInit', () => {
       await act(async () => result.current.handleOpenFile('/file.md'))
       expect(mockOpenFile).toHaveBeenCalledWith('/file.md')
     })
+
+    it('无工作区时以文件父目录初始化 workspace', async () => {
+      const { result } = renderHook(() => useWorkspaceInit())
+      await act(async () => result.current.handleOpenFile('/projects/readme.md'))
+      expect(mockSetRoot).toHaveBeenCalledWith('/projects')
+      expect(mockStoreSet).toHaveBeenCalledWith('lastWorkspace', '/projects')
+      expect(mockOpenFile).toHaveBeenCalledWith('/projects/readme.md')
+      expect(result.current.workspacePath).toBe('/projects')
+    })
   })
 })

@@ -10,6 +10,10 @@ const DEFAULT_IGNORE_LIST: &[&str] = &[".git", "node_modules", "__pycache__", ".
 const DEFAULT_MARKDOWN_EXTENSIONS: &[&str] = &["md", "markdown"];
 const SEARCH_EMIT_INTERVAL: usize = 5;
 
+struct SearchState {
+    cancelled_ids: Mutex<HashSet<String>>,
+}
+
 struct WatcherState {
     watcher: Mutex<Option<RecommendedWatcher>>,
     watched_paths: Mutex<HashSet<PathBuf>>,
@@ -79,10 +83,12 @@ struct SearchMatch {
 #[derive(serde::Serialize, serde::Deserialize, Clone)]
 #[serde(rename_all = "camelCase")]
 struct SearchProgress {
+    search_id: String,
     total_files: usize,
     searched_files: usize,
     matches: Vec<SearchMatch>,
     is_complete: bool,
+    cancelled: bool,
 }
 
 #[derive(serde::Serialize, serde::Deserialize, Clone)]
@@ -142,9 +148,16 @@ async fn list_directory(
 async fn search_content(
     dir_path: String,
     query: String,
+    search_id: String,
     window: Window,
     settings: State<'_, SettingsState>,
+    search_state: State<'_, SearchState>,
 ) -> Result<(), String> {
+    {
+        let mut cancelled = search_state.cancelled_ids.lock().unwrap();
+        cancelled.remove(&search_id);
+    }
+
     let path = Path::new(&dir_path);
     let mut all_files = Vec::new();
     walk_dir(path, &mut all_files, &settings);
@@ -158,18 +171,44 @@ async fn search_content(
     let query_lower = query.to_lowercase();
     let mut all_matches = Vec::new();
 
-    if total_files == 0 {
+    let emit_progress = |window: &Window,
+                         search_id: &str,
+                         total_files: usize,
+                         searched_files: usize,
+                         matches: &[SearchMatch],
+                         is_complete: bool,
+                         cancelled: bool| {
         let progress = SearchProgress {
-            total_files: 0,
-            searched_files: 0,
-            matches: Vec::new(),
-            is_complete: true,
+            search_id: search_id.to_string(),
+            total_files,
+            searched_files,
+            matches: matches.to_vec(),
+            is_complete,
+            cancelled,
         };
         window.emit("search-result", progress).unwrap_or(());
+    };
+
+    if total_files == 0 {
+        emit_progress(&window, &search_id, 0, 0, &[], true, false);
         return Ok(());
     }
 
     for (i, file_path) in filtered_files.iter().enumerate() {
+        if search_state.cancelled_ids.lock().unwrap().contains(&search_id) {
+            emit_progress(
+                &window,
+                &search_id,
+                total_files,
+                i,
+                &all_matches,
+                true,
+                true,
+            );
+            search_state.cancelled_ids.lock().unwrap().remove(&search_id);
+            return Ok(());
+        }
+
         if let Ok(file) = File::open(file_path) {
             let reader = BufReader::new(file);
             for (line_num, line) in reader.lines().enumerate() {
@@ -192,16 +231,31 @@ async fn search_content(
         let searched = i + 1;
         let is_complete = searched == total_files;
         if is_complete || searched % SEARCH_EMIT_INTERVAL == 0 {
-            let progress = SearchProgress {
+            emit_progress(
+                &window,
+                &search_id,
                 total_files,
-                searched_files: searched,
-                matches: all_matches.clone(),
+                searched,
+                &all_matches,
                 is_complete,
-            };
-            window.emit("search-result", progress).unwrap_or(());
+                false,
+            );
         }
     }
 
+    search_state.cancelled_ids.lock().unwrap().remove(&search_id);
+    Ok(())
+}
+
+/**
+ * 取消进行中的内容搜索
+ */
+#[tauri::command]
+async fn cancel_search(
+    search_id: String,
+    search_state: State<'_, SearchState>,
+) -> Result<(), String> {
+    search_state.cancelled_ids.lock().unwrap().insert(search_id);
     Ok(())
 }
 
@@ -345,9 +399,13 @@ pub fn run() {
             watched_paths: Mutex::new(HashSet::new()),
         })
         .manage(SettingsState::default())
+        .manage(SearchState {
+            cancelled_ids: Mutex::new(HashSet::new()),
+        })
         .invoke_handler(tauri::generate_handler![
             list_directory,
             search_content,
+            cancel_search,
             watch_file,
             unwatch_file,
             update_settings,

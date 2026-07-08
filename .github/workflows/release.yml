@@ -59,8 +59,32 @@ jobs:
             src-tauri/target/release/bundle/deb/*.deb
             src-tauri/target/release/bundle/appimage/*.AppImage
 
+  build-macos:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: src-tauri
+      - name: Install Tauri system dependencies
+        run: brew install gtk+3 libadwaita
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm tauri build --bundles dmg
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - uses: actions/upload-artifact@v4
+        with:
+          name: macos-packages
+          path: src-tauri/target/release/bundle/dmg/*.dmg
+
   release:
-    needs: [build-windows, build-linux]
+    needs: [build-windows, build-linux, build-macos]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/download-artifact@v4
@@ -70,6 +94,10 @@ jobs:
       - uses: actions/download-artifact@v4
         with:
           name: linux-packages
+          path: artifacts
+      - uses: actions/download-artifact@v4
+        with:
+          name: macos-packages
           path: artifacts
       - uses: softprops/action-gh-release@v2
         with:

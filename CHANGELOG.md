@@ -4,6 +4,8 @@
 
 ## [Unreleased]
 
+## [1.2.0] - 2026-07-09
+
 ### 修复
 
 - **Open File 工作区**：无 workspace 时以文件父目录初始化 workspace，直接进入阅读界面

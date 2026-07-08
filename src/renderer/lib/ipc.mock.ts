@@ -201,9 +201,16 @@ export async function getLaunchPaths(): Promise<string[]> {
   return []
 }
 
+export async function grantFsScope(_paths: string[]): Promise<void> {}
+
+export async function ensureStoreMigrated(): Promise<void> {}
+
 export const ipc = {
   app: {
     getLaunchPaths,
+  },
+  scope: {
+    grantFsScope,
   },
   files: {
     listDirectory,

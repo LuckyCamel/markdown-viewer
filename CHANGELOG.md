@@ -4,6 +4,26 @@
 
 ## [Unreleased]
 
+## [1.2.1] - 2026-07-09
+
+### 新增
+
+- **fs:scope 动态授权**：打开文件夹/文件时 invoke `grant_fs_scope`；`capabilities` 静态 allow 收窄为 `[]`
+- **Rust 模块拆分**：`state/`、`commands/`、`search/`、`scope/` 替代 monolithic `lib.rs`
+- **搜索增量协议**：`SearchProgress.newMatches` + 500 条上限；前端 `appendResults` 增量合并
+- **HTML 白名单消毒**：`rehype-sanitize` + 自定义 schema（保留 `u/kbd/mark` 等排版标签）
+- **Rust JSON 持久化**：`app_data/settings.json`；首次启动从 localStorage 迁移
+
+### 变更
+
+- CSP 补充 `object-src 'none'`、`base-uri 'none'`
+- `ipc.store` 改调 Rust `get_setting` / `set_setting`（E2E mock 仍用 localStorage）
+
+### 安全
+
+- Rust command 层 `ensure_under_allowed_root` 纵深防御
+- Markdown inline HTML 经 sanitize 白名单过滤（XSS 向量移除）
+
 ## [1.2.0] - 2026-07-09
 
 ### 修复

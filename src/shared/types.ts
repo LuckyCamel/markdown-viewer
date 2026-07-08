@@ -24,8 +24,11 @@ export interface SearchProgress {
   totalFiles: number
   searchedFiles: number
   matches: SearchMatch[]
+  newMatches?: SearchMatch[]
   isComplete: boolean
   cancelled?: boolean
+  truncated?: boolean
+  matchLimit?: number
 }
 
 export interface ContentJumpTarget {

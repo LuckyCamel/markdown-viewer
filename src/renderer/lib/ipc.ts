@@ -52,6 +52,43 @@ export async function getLaunchPaths(): Promise<string[]> {
   return invoke('get_launch_paths')
 }
 
+/**
+ * 为 plugin-fs 动态授权路径（目录递归、文件及其父目录）
+ */
+export async function grantFsScope(paths: string[]): Promise<void> {
+  if (paths.length === 0) return
+  await invoke('grant_fs_scope', { paths })
+}
+
+const STORE_MIGRATED_KEY = 'storeMigrated'
+
+/**
+ * 首次启动时将 localStorage 设置批量导入 Rust store
+ */
+export async function ensureStoreMigrated(): Promise<void> {
+  const migrated = await invoke<boolean | null>('get_setting', { key: STORE_MIGRATED_KEY })
+  if (migrated) return
+
+  const entries: Record<string, unknown> = {}
+  for (let i = 0; i < localStorage.length; i++) {
+    const key = localStorage.key(i)
+    if (!key || key === STORE_MIGRATED_KEY) continue
+    const raw = localStorage.getItem(key)
+    if (raw === null) continue
+    try {
+      entries[key] = JSON.parse(raw) as unknown
+    } catch {
+      entries[key] = raw
+    }
+  }
+
+  if (Object.keys(entries).length > 0) {
+    await invoke('migrate_settings', { entries })
+  }
+  await invoke('set_setting', { key: STORE_MIGRATED_KEY, value: true })
+  localStorage.setItem(STORE_MIGRATED_KEY, '1')
+}
+
 const searchResultListeners = new Set<(result: SearchProgress) => void>()
 let searchUnlisten: UnlistenFn | null = null
 
@@ -148,23 +185,17 @@ export function offFileChange(
 }
 
 export async function storeGet<T>(key: string): Promise<T | undefined> {
-  const stored = localStorage.getItem(key)
-  if (stored) {
-    try {
-      return JSON.parse(stored) as T
-    } catch {
-      return stored as unknown as T
-    }
-  }
-  return undefined
+  const value = await invoke<unknown | null>('get_setting', { key })
+  if (value === null || value === undefined) return undefined
+  return value as T
 }
 
 export async function storeSet(key: string, value: unknown): Promise<void> {
-  localStorage.setItem(key, typeof value === 'string' ? value : JSON.stringify(value))
+  await invoke('set_setting', { key, value })
 }
 
 export async function storeDelete(key: string): Promise<void> {
-  localStorage.removeItem(key)
+  await invoke('set_setting', { key, value: null })
 }
 
 export async function openDirectory(): Promise<string | null> {
@@ -243,6 +274,9 @@ export async function emitIpcEvent(channel: string, ...args: unknown[]): Promise
 export const ipc = {
   app: {
     getLaunchPaths,
+  },
+  scope: {
+    grantFsScope,
   },
   files: {
     listDirectory,

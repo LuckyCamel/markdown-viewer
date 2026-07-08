@@ -21,15 +21,22 @@
 - mermaid 图表渲染支持完整保留
 - GitHub Actions workflow 适配 Tauri 构建流程
 
-### 活跃（截至 2026-07-08）
+### 阶段 3 安全与架构加固 (2026-07-09)
 
-开发路线图见 [`docs/roadmap.md`](docs/roadmap.md)。**阶段 2 已完成**，下一步进入阶段 3（按需）。
+- Rust 后端模块化：`state/`、`commands/`、`search/`、`scope/`
+- fs:scope 动态授权 + command 层路径校验
+- 搜索增量 emit（500 条上限）+ 前端 append 合并
+- `rehype-sanitize` 白名单 + CSP 收紧
+- 持久化从 localStorage 迁移至 Rust `settings.json`
 
-| # | 候选 | 优先级 | 问题 | 状态 |
-|---|------|--------|------|------|
-| 1 | 大纲可视区域高亮 | 中 | scroll-spy（阶段 2.1） | 已完成 |
-| 2 | 欢迎页 Recent Files | 中 | 阶段 2.2 | 已完成 |
-| 3 | CLI 参数恢复 | 低 | -v/-h + 启动路径（阶段 2.3） | 已完成 |
-| 4 | 无扩展名文件 | 低 | 阶段 2.4 | 已完成 |
-| 5 | 内部链接增强 | 低 | 阶段 2.5 | 已完成 |
-| 6 | 错误态 UI | 低 | 阶段 2.6 | 已完成 |
+开发路线图见 [`docs/roadmap.md`](docs/roadmap.md)。**阶段 3 已完成**（v1.2.1）。
+
+阶段 3 文档：[`docs/phase3/requirements.md`](docs/phase3/requirements.md) · [`design.md`](docs/phase3/design.md) · [`tasks.md`](docs/phase3/tasks.md)
+
+| # | 项 | 状态 |
+|---|-----|------|
+| 1 | fs:scope 收窄 | 已完成 |
+| 2 | rehype-sanitize XSS | 已完成 |
+| 3 | Rust 模块拆分 | 已完成 |
+| 4 | 搜索增量协议 | 已完成 |
+| 5 | Rust JSON store | 已完成 |

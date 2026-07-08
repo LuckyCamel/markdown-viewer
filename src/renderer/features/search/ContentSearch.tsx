@@ -23,6 +23,7 @@ export function ContentSearch({ workspacePath, onSelect }: ContentSearchProps) {
   const results = useSearchStore((s) => s.results)
   const isSearching = useSearchStore((s) => s.isSearching)
   const setResults = useSearchStore((s) => s.setResults)
+  const appendResults = useSearchStore((s) => s.appendResults)
   const setIsSearching = useSearchStore((s) => s.setIsSearching)
   const searchGenerationRef = useRef(0)
   const activeSearchIdRef = useRef<string | null>(null)
@@ -46,7 +47,7 @@ export function ContentSearch({ workspacePath, onSelect }: ContentSearchProps) {
       const handleResult = (progress: SearchProgress) => {
         if (generation !== searchGenerationRef.current) return
         if (progress.searchId !== searchId) return
-        setResults(progress)
+        appendResults(progress)
         if (progress.isComplete) {
           setIsSearching(false)
         }
@@ -73,7 +74,7 @@ export function ContentSearch({ workspacePath, onSelect }: ContentSearchProps) {
       unsubscribe?.()
       setIsSearching(false)
     }
-  }, [query, workspacePath, setResults, setIsSearching])
+  }, [query, workspacePath, setResults, appendResults, setIsSearching])
 
   const matches = results?.matches || []
 
@@ -90,6 +91,11 @@ export function ContentSearch({ workspacePath, onSelect }: ContentSearchProps) {
       {isSearching && (
         <div className="mt-2 text-xs text-gray-500">
           Searching... {results?.searchedFiles ?? 0}/{results?.totalFiles ?? 0} files
+        </div>
+      )}
+      {results?.truncated && (
+        <div className="mt-2 text-xs text-amber-600 dark:text-amber-400">
+          仅显示前 {results.matchLimit ?? 500} 条匹配结果
         </div>
       )}
       <div className="mt-2 max-h-64 overflow-y-auto">

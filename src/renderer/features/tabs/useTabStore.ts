@@ -1,5 +1,7 @@
 import { create } from 'zustand'
 import { useEditorStore } from '../markdown-viewer/useEditorStore'
+import { ipc } from '../../lib/ipc'
+import { logError } from '../../logger'
 
 interface TabState {
   openFiles: string[]
@@ -31,6 +33,7 @@ export const useTabStore = create<TabState>((set, get) => ({
   dirtyFiles: new Set<string>(),
   isDirty: (filePath) => get().dirtyFiles.has(filePath),
   openFile: (filePath) => {
+    ipc.scope.grantFsScope([filePath]).catch((err) => logError('useTabStore:grantFsScope', err))
     const { openFiles } = get()
     if (!openFiles.includes(filePath)) {
       set({ openFiles: [...openFiles, filePath], activeFile: filePath })

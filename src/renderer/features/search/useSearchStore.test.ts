@@ -29,6 +29,29 @@ describe('useSearchStore', () => {
     expect(useSearchStore.getState().isSearching).toBe(true)
   })
 
+  it('appendResults 增量合并 newMatches', () => {
+    useSearchStore.getState().appendResults({
+      searchId: 's1',
+      totalFiles: 10,
+      searchedFiles: 1,
+      matches: [{ path: '/a.md', line: 1, column: 0, matchText: 'x', lineContent: 'x' }],
+      newMatches: [{ path: '/a.md', line: 1, column: 0, matchText: 'x', lineContent: 'x' }],
+      isComplete: false,
+    })
+    useSearchStore.getState().appendResults({
+      searchId: 's1',
+      totalFiles: 10,
+      searchedFiles: 2,
+      matches: [
+        { path: '/a.md', line: 1, column: 0, matchText: 'x', lineContent: 'x' },
+        { path: '/b.md', line: 2, column: 0, matchText: 'y', lineContent: 'y' },
+      ],
+      newMatches: [{ path: '/b.md', line: 2, column: 0, matchText: 'y', lineContent: 'y' }],
+      isComplete: false,
+    })
+    expect(useSearchStore.getState().results?.matches).toHaveLength(2)
+  })
+
   it('reset 清空所有字段', () => {
     useSearchStore.setState({ query: 'x', results: {} as any, isSearching: true })
     useSearchStore.getState().reset()

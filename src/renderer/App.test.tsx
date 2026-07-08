@@ -7,6 +7,7 @@ import { useFileStore } from './features/file-tree/useFileStore'
 
 const mockIpc = vi.hoisted(() => ({
   app: { getLaunchPaths: vi.fn() },
+  scope: { grantFsScope: vi.fn().mockResolvedValue(undefined) },
   store: { get: vi.fn(), set: vi.fn(), del: vi.fn() },
   files: {
     listDirectory: vi.fn(),
@@ -25,7 +26,10 @@ const mockIpc = vi.hoisted(() => ({
   shell: { openExternal: vi.fn() },
 }))
 
-vi.mock('./lib/ipc', () => ({ ipc: mockIpc }))
+vi.mock('./lib/ipc', () => ({
+  ensureStoreMigrated: vi.fn().mockResolvedValue(undefined),
+  ipc: mockIpc,
+}))
 
 describe('App', () => {
   beforeEach(() => {

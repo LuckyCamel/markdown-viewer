@@ -4,9 +4,16 @@ import { useSettingsStore } from '../features/settings/useSettingsStore'
 import { useTabStore } from '../features/tabs/useTabStore'
 import { useFileStore } from '../features/file-tree/useFileStore'
 import { useSearchStore } from '../features/search/useSearchStore'
-import { ipc } from '../lib/ipc'
+import { ipc, ensureStoreMigrated } from '../lib/ipc'
 import { logError } from '../logger'
 import { dirname } from '../../shared/utils'
+
+/**
+ * 授权路径供 plugin-fs 读取；失败仅记录日志
+ */
+function grantPaths(paths: string[]): void {
+  ipc.scope.grantFsScope(paths).catch((err) => logError('useWorkspaceInit:grantFsScope', err))
+}
 
 export function useWorkspaceInit() {
   const [workspacePath, setWorkspacePath] = useState<string | null>(null)
@@ -28,6 +35,7 @@ export function useWorkspaceInit() {
 
   const handleOpenFolder = useCallback(
     (path: string) => {
+      grantPaths([path])
       setWorkspacePath(path)
       useFileStore.getState().setRoot(path)
       useTabStore.getState().closeAll()
@@ -45,6 +53,7 @@ export function useWorkspaceInit() {
    */
   const handleOpenFile = useCallback(
     (path: string) => {
+      grantPaths([path])
       if (!workspacePath) {
         const parentDir = dirname(path)
         setWorkspacePath(parentDir)
@@ -62,6 +71,8 @@ export function useWorkspaceInit() {
 
   useEffect(() => {
     async function init() {
+      await ensureStoreMigrated().catch((err) => logError('useWorkspaceInit:migrateStore', err))
+
       const [
         savedTheme,
         savedWorkspace,
@@ -95,6 +106,7 @@ export function useWorkspaceInit() {
           try {
             const info = await ipc.files.getFileInfo(path)
             if (info.isDirectory) {
+              grantPaths([path])
               setWorkspacePath(path)
               useFileStore.getState().setRoot(path)
               useTabStore.getState().closeAll()
@@ -104,6 +116,7 @@ export function useWorkspaceInit() {
                 .catch((err) => logError('useWorkspaceInit:setLastWorkspace', err))
               trackRecent(path, true).catch((err) => logError('useWorkspaceInit:trackRecent', err))
             } else {
+              grantPaths([path])
               if (!useFileStore.getState().rootPath) {
                 const parentDir = dirname(path)
                 setWorkspacePath(parentDir)
@@ -124,10 +137,12 @@ export function useWorkspaceInit() {
         }
       } else {
         if (savedWorkspace) {
+          grantPaths([savedWorkspace])
           setWorkspacePath(savedWorkspace)
           useFileStore.getState().setRoot(savedWorkspace)
         }
         if (savedOpenFiles && savedOpenFiles.length > 0) {
+          grantPaths(savedOpenFiles)
           for (const f of savedOpenFiles) useTabStore.getState().openFile(f)
           if (savedActiveFile) useTabStore.getState().setActive(savedActiveFile)
         }

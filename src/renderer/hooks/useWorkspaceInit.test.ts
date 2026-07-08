@@ -10,8 +10,15 @@ const mockGetFileInfo = vi.fn()
 const mockLogError = vi.fn()
 let mockRootPath: string | null = null
 
+const mockGrantFsScope = vi.fn()
+const mockEnsureStoreMigrated = vi.fn()
+
 vi.mock('../lib/ipc', () => ({
+  ensureStoreMigrated: (...args: unknown[]) => mockEnsureStoreMigrated(...args),
   ipc: {
+    scope: {
+      grantFsScope: (...args: unknown[]) => mockGrantFsScope(...args),
+    },
     store: {
       get: (...args: unknown[]) => mockStoreGet(...args),
       set: (...args: unknown[]) => mockStoreSet(...args),
@@ -84,6 +91,8 @@ vi.mock('../features/search/useSearchStore', () => ({
 describe('useWorkspaceInit', () => {
   beforeEach(() => {
     vi.clearAllMocks()
+    mockEnsureStoreMigrated.mockResolvedValue(undefined)
+    mockGrantFsScope.mockResolvedValue(undefined)
     mockRootPath = null
     mockStoreGet.mockResolvedValue(undefined)
     mockStoreSet.mockResolvedValue(undefined)

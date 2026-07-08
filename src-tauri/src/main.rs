@@ -11,6 +11,57 @@ struct WatcherState {
     watched_paths: Mutex<HashSet<PathBuf>>,
 }
 
+struct SettingsState {
+    ignore_list: Mutex<Vec<String>>,
+    markdown_extensions: Mutex<Vec<String>>,
+}
+
+impl SettingsState {
+    fn default() -> Self {
+        Self {
+            ignore_list: Mutex::new(vec![
+                ".git".to_string(),
+                "node_modules".to_string(),
+                "__pycache__".to_string(),
+                ".DS_Store".to_string(),
+            ]),
+            markdown_extensions: Mutex::new(vec![
+                "md".to_string(),
+                "markdown".to_string(),
+            ]),
+        }
+    }
+
+    fn is_ignored(&self, name: &str) -> bool {
+        if name.starts_with('.') {
+            return true;
+        }
+        let list = self.ignore_list.lock().unwrap();
+        list.iter().any(|item| item == name)
+    }
+
+    fn is_markdown_file(&self, path: &Path) -> bool {
+        if let Some(ext) = path.extension() {
+            let ext_str = ext.to_string_lossy().to_string();
+            let exts = self.markdown_extensions.lock().unwrap();
+            exts.iter().any(|e| e == &ext_str)
+        } else {
+            false
+        }
+    }
+
+    fn is_text_file(&self, path: &Path) -> bool {
+        if let Some(ext) = path.extension() {
+            let ext_str = ext.to_string_lossy().to_string();
+            let exts = self.markdown_extensions.lock().unwrap();
+            let text_extensions = ["txt", "json", "yaml", "yml", "toml", "rs", "ts", "js", "html", "css"];
+            exts.iter().any(|e| e == &ext_str) || text_extensions.contains(&ext_str.as_str())
+        } else {
+            false
+        }
+    }
+}
+
 #[derive(serde::Serialize, serde::Deserialize, Clone)]
 struct SearchMatch {
     path: String,
@@ -38,7 +89,10 @@ struct FileChangePayload {
  * 列出目录下的文件和文件夹
  */
 #[tauri::command]
-async fn list_directory(dir_path: String) -> Result<Vec<serde_json::Value>, String> {
+async fn list_directory(
+    dir_path: String,
+    settings: State<'_, SettingsState>,
+) -> Result<Vec<serde_json::Value>, String> {
     let path = Path::new(&dir_path);
     let mut entries = Vec::new();
 
@@ -46,16 +100,18 @@ async fn list_directory(dir_path: String) -> Result<Vec<serde_json::Value>, Stri
         let entry = entry.map_err(|e| e.to_string())?;
         let file_name = entry.file_name().to_string_lossy().to_string();
         
-        if file_name.starts_with('.') || matches!(file_name.as_str(), ".git" | "node_modules" | "__pycache__" | ".DS_Store") {
+        if settings.is_ignored(&file_name) {
             continue;
         }
 
         let is_dir = entry.path().is_dir();
+        let is_markdown = !is_dir && settings.is_markdown_file(&entry.path());
         entries.push(serde_json::json!({
             "name": file_name,
             "path": entry.path().to_string_lossy().to_string(),
             "isDirectory": is_dir,
             "isHidden": file_name.starts_with('.'),
+            "isMarkdown": is_markdown,
         }));
     }
 
@@ -88,21 +144,15 @@ async fn search_content(
     dir_path: String,
     query: String,
     window: Window,
+    settings: State<'_, SettingsState>,
 ) -> Result<(), String> {
     let path = Path::new(&dir_path);
     let mut all_files = Vec::new();
-    walk_dir(path, &mut all_files);
+    walk_dir(path, &mut all_files, &settings);
 
-    let text_extensions = [".md", ".markdown", ".txt", ".json", ".yaml", ".yml", ".toml", ".rs", ".ts", ".js", ".html", ".css"];
     let filtered_files: Vec<PathBuf> = all_files
         .into_iter()
-        .filter(|p| {
-            if let Some(ext) = p.extension() {
-                text_extensions.contains(&ext.to_string_lossy().as_ref())
-            } else {
-                false
-            }
-        })
+        .filter(|p| settings.is_text_file(p))
         .collect();
 
     let total_files = filtered_files.len();
@@ -223,19 +273,39 @@ async fn unwatch_file(
     Ok(())
 }
 
-fn walk_dir(path: &Path, files: &mut Vec<PathBuf>) {
+/**
+ * 更新设置（忽略列表和扩展名）
+ */
+#[tauri::command]
+async fn update_settings(
+    ignore_list: Vec<String>,
+    markdown_extensions: Vec<String>,
+    settings: State<'_, SettingsState>,
+) -> Result<(), String> {
+    {
+        let mut list = settings.ignore_list.lock().unwrap();
+        *list = ignore_list;
+    }
+    {
+        let mut exts = settings.markdown_extensions.lock().unwrap();
+        *exts = markdown_extensions;
+    }
+    Ok(())
+}
+
+fn walk_dir(path: &Path, files: &mut Vec<PathBuf>, settings: &SettingsState) {
     if path.is_dir() {
         if let Ok(entries) = fs::read_dir(path) {
             for entry in entries.flatten() {
                 let entry_path = entry.path();
                 let file_name = entry.file_name().to_string_lossy().to_string();
                 
-                if file_name.starts_with('.') || matches!(file_name.as_str(), ".git" | "node_modules" | "__pycache__" | ".DS_Store") {
+                if settings.is_ignored(&file_name) {
                     continue;
                 }
 
                 if entry_path.is_dir() {
-                    walk_dir(&entry_path, files);
+                    walk_dir(&entry_path, files, settings);
                 } else {
                     files.push(entry_path);
                 }
@@ -250,12 +320,14 @@ fn main() {
             watcher: Mutex::new(None),
             watched_paths: Mutex::new(HashSet::new()),
         })
+        .manage(SettingsState::default())
         .invoke_handler(tauri::generate_handler![
             list_directory,
             read_file,
             search_content,
             watch_file,
             unwatch_file,
+            update_settings,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

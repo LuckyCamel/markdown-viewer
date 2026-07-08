@@ -32,9 +32,11 @@ export function MarkdownViewer({ content, filePath }: MarkdownViewerProps) {
       return <code {...props}>{children}</code>
     },
     img({ src, alt }: { src?: string; alt?: string }) {
-      if (src && !src.startsWith('http') && !src.startsWith('local-file://') && filePath) {
+      if (src && !src.startsWith('http') && !src.startsWith('asset://') && filePath) {
         const resolved = joinPaths(dirname(filePath), src)
-        return <img src={`local-file://${resolved}`} alt={alt || ''} />
+        const normalized = resolved.replace(/\\/g, '/')
+        const encoded = encodeURIComponent(normalized).replace(/%2F/g, '/').replace(/%3A/g, ':')
+        return <img src={`asset://localhost/${encoded}`} alt={alt || ''} />
       }
       return <img src={src} alt={alt || ''} />
     },

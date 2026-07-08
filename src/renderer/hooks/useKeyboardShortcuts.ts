@@ -1,5 +1,12 @@
-import { useEffect, useRef } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useTabStore } from '../features/tabs/useTabStore'
+import {
+  DEFAULT_SHORTCUTS,
+  loadShortcuts,
+  type ShortcutAction,
+  type ShortcutConfig,
+} from '../lib/shortcuts'
+import { logError } from '../logger'
 
 interface ShortcutHandlers {
   onOpenFolder: () => void
@@ -10,91 +17,88 @@ interface ShortcutHandlers {
   onToggleSettings: () => void
 }
 
+type HandlerAction =
+  | 'openFolder'
+  | 'toggleSidebar'
+  | 'toggleOutline'
+  | 'openFileSearch'
+  | 'openContentSearch'
+  | 'toggleSettings'
+
+const ACTION_TO_HANDLER: Record<HandlerAction, keyof ShortcutHandlers> = {
+  openFolder: 'onOpenFolder',
+  toggleSidebar: 'onToggleSidebar',
+  toggleOutline: 'onToggleOutline',
+  openFileSearch: 'onOpenFileSearch',
+  openContentSearch: 'onOpenContentSearch',
+  toggleSettings: 'onToggleSettings',
+}
+
 /**
- * 键盘快捷键 Hook，替代原生菜单功能
+ * 键盘快捷键 Hook，支持自定义配置
  *
- * 快捷键映射：
- * - Ctrl+Shift+O: 打开文件夹
- * - Ctrl+B: 切换侧边栏
- * - Ctrl+Shift+L: 切换大纲
- * - Ctrl+P: 文件搜索
- * - Ctrl+Shift+F: 内容搜索
- * - Ctrl+,: 设置
- * - Ctrl+W: 关闭当前标签
- * - Ctrl+Tab: 下一个标签
- * - Ctrl+Shift+Tab: 上一个标签
+ * 从 localStorage 加载用户配置，未配置时使用默认值。
+ * 内置标签页切换快捷键（关闭标签、切换标签）。
  */
 export function useKeyboardShortcuts(handlers: ShortcutHandlers) {
   const handlersRef = useRef(handlers)
   handlersRef.current = handlers
 
+  const [shortcuts, setShortcuts] =
+    useState<Record<ShortcutAction, ShortcutConfig>>(DEFAULT_SHORTCUTS)
+
+  useEffect(() => {
+    loadShortcuts()
+      .then((config) => setShortcuts(config))
+      .catch((err) => logError('useKeyboardShortcuts:loadShortcuts', err))
+  }, [])
+
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       const ctrl = e.ctrlKey || e.metaKey
+      const key = e.key
 
-      if (!ctrl) return
+      for (const action of Object.keys(shortcuts) as ShortcutAction[]) {
+        const config = shortcuts[action]
+        if (
+          config.ctrl === ctrl &&
+          config.shift === e.shiftKey &&
+          config.alt === e.altKey &&
+          key.toLowerCase() === config.key.toLowerCase()
+        ) {
+          if (action === 'closeTab') {
+            e.preventDefault()
+            const state = useTabStore.getState()
+            if (state.activeFile) {
+              state.closeFile(state.activeFile)
+            }
+            return
+          }
 
-      const key = e.key.toLowerCase()
+          if (action === 'nextTab' || action === 'prevTab') {
+            e.preventDefault()
+            const state = useTabStore.getState()
+            if (state.openFiles.length < 2) return
+            const idx = state.openFiles.indexOf(state.activeFile ?? '')
+            const next =
+              action === 'prevTab'
+                ? (idx - 1 + state.openFiles.length) % state.openFiles.length
+                : (idx + 1) % state.openFiles.length
+            state.setActive(state.openFiles[next])
+            return
+          }
 
-      if (ctrl && key === 'p' && !e.shiftKey) {
-        e.preventDefault()
-        handlersRef.current.onOpenFileSearch()
-        return
-      }
-
-      if (ctrl && key === 'f' && e.shiftKey) {
-        e.preventDefault()
-        handlersRef.current.onOpenContentSearch()
-        return
-      }
-
-      if (ctrl && key === 'b') {
-        e.preventDefault()
-        handlersRef.current.onToggleSidebar()
-        return
-      }
-
-      if (ctrl && key === 'l' && e.shiftKey) {
-        e.preventDefault()
-        handlersRef.current.onToggleOutline()
-        return
-      }
-
-      if (ctrl && key === 'o' && e.shiftKey) {
-        e.preventDefault()
-        handlersRef.current.onOpenFolder()
-        return
-      }
-
-      if (ctrl && key === ',') {
-        e.preventDefault()
-        handlersRef.current.onToggleSettings()
-        return
-      }
-
-      if (ctrl && key === 'w') {
-        e.preventDefault()
-        const state = useTabStore.getState()
-        if (state.activeFile) {
-          state.closeFile(state.activeFile)
+          const handlerKey = ACTION_TO_HANDLER[action as HandlerAction]
+          if (handlerKey) {
+            e.preventDefault()
+            handlersRef.current[handlerKey]()
+          }
+          return
         }
-        return
-      }
-
-      if (ctrl && key === 'tab') {
-        e.preventDefault()
-        const state = useTabStore.getState()
-        if (state.openFiles.length < 2) return
-        const idx = state.openFiles.indexOf(state.activeFile ?? '')
-        const next = e.shiftKey
-          ? (idx - 1 + state.openFiles.length) % state.openFiles.length
-          : (idx + 1) % state.openFiles.length
-        state.setActive(state.openFiles[next])
-        return
       }
     }
 
     window.addEventListener('keydown', handleKeyDown)
     return () => window.removeEventListener('keydown', handleKeyDown)
-  }, [])
+  }, [shortcuts])
 }

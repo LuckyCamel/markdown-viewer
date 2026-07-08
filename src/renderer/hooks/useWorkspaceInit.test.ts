@@ -4,6 +4,7 @@ import { useWorkspaceInit } from './useWorkspaceInit'
 
 const mockStoreGet = vi.fn()
 const mockStoreSet = vi.fn()
+const mockUpdateSettings = vi.fn()
 const mockLogError = vi.fn()
 
 vi.mock('../lib/ipc', () => ({
@@ -11,6 +12,9 @@ vi.mock('../lib/ipc', () => ({
     store: {
       get: (...args: unknown[]) => mockStoreGet(...args),
       set: (...args: unknown[]) => mockStoreSet(...args),
+    },
+    files: {
+      updateSettings: (...args: unknown[]) => mockUpdateSettings(...args),
     },
   },
 }))
@@ -35,7 +39,11 @@ vi.mock('../stores/useUIStore', () => {
 })
 vi.mock('../features/settings/useSettingsStore', () => ({
   useSettingsStore: {
-    getState: () => ({ setIgnoreList: mockSetIgnoreList }),
+    getState: () => ({
+      setIgnoreList: mockSetIgnoreList,
+      ignoreList: [],
+      markdownExtensions: [],
+    }),
   },
 }))
 vi.mock('../features/tabs/useTabStore', () => ({

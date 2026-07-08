@@ -1,6 +1,7 @@
 import { basename } from '../../../shared/utils'
 import { useFileStore } from './useFileStore'
 import { useTabStore } from '../tabs/useTabStore'
+import { FileIcon } from '../../components/FileIcon'
 import type { FileEntry } from '../../../shared/types'
 
 function FileTreeNode({
@@ -30,13 +31,20 @@ function FileTreeNode({
     <div>
       <button
         onClick={handleClick}
-        className={`w-full text-left px-2 py-0.5 text-sm hover:bg-gray-100 dark:hover:bg-gray-800 flex items-center gap-1 ${
+        className={`w-full text-left px-2 py-0.5 text-sm hover:bg-gray-100 dark:hover:bg-gray-800 flex items-center gap-1.5 ${
           entry.isHidden ? 'text-gray-400' : ''
         }`}
         style={{ paddingLeft: `${depth * 16 + 8}px` }}
       >
-        {entry.isDirectory ? (isExpanded ? '▼' : '▶') : ' '}
-        <span>{entry.name}</span>
+        {entry.isDirectory ? (
+          <span className="text-xs text-gray-400 w-3 flex-shrink-0 text-center">
+            {isExpanded ? '▼' : '▶'}
+          </span>
+        ) : (
+          <span className="w-3 flex-shrink-0" />
+        )}
+        <FileIcon name={entry.name} isDirectory={entry.isDirectory} isOpen={isExpanded} size={16} />
+        <span className="truncate">{entry.name}</span>
       </button>
       {entry.isDirectory && isExpanded && children && (
         <div>

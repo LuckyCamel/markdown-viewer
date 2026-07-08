@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { FileIcon } from '../../components/FileIcon'
 
 interface FileItem {
   path: string
@@ -31,9 +32,10 @@ export function FileSearch({ files, onSelect }: FileSearchProps) {
           <button
             key={file.path}
             onClick={() => onSelect(file.path)}
-            className="w-full text-left px-2 py-1 text-sm hover:bg-gray-100 dark:hover:bg-gray-800 rounded"
+            className="w-full text-left px-2 py-1 text-sm hover:bg-gray-100 dark:hover:bg-gray-800 rounded flex items-center gap-2"
           >
-            {file.name}
+            <FileIcon name={file.name} size={14} />
+            <span className="truncate">{file.name}</span>
           </button>
         ))}
       </div>

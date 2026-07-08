@@ -9,6 +9,13 @@ export async function listDirectory(dirPath: string): Promise<FileEntry[]> {
   return invoke('list_directory', { dirPath })
 }
 
+export async function updateSettings(
+  ignoreList: string[],
+  markdownExtensions: string[],
+): Promise<void> {
+  await invoke('update_settings', { ignoreList, markdownExtensions })
+}
+
 export async function readFile(filePath: string): Promise<FileContent> {
   const content = await readTextFile(filePath)
   return { path: filePath, content }
@@ -24,8 +31,6 @@ export async function getFileInfo(filePath: string): Promise<FileEntry> {
     isHidden: name.startsWith('.'),
   }
 }
-
-export async function invalidateFilter(): Promise<void> {}
 
 export async function searchContent(dirPath: string, query: string): Promise<void> {
   await invoke('search_content', { dirPath, query })
@@ -123,7 +128,7 @@ export const ipc = {
     listDirectory,
     readFile,
     getFileInfo,
-    invalidateFilter,
+    updateSettings,
   },
   search: {
     searchContent,

@@ -3,6 +3,7 @@ export interface FileEntry {
   path: string
   isDirectory: boolean
   isHidden: boolean
+  isMarkdown?: boolean
 }
 
 export interface FileContent {

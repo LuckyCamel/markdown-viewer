@@ -68,6 +68,15 @@ export function useWorkspaceInit() {
       if (savedTheme) setTheme(savedTheme)
       if (savedIgnoreList) useSettingsStore.getState().setIgnoreList(savedIgnoreList)
       if (savedExtensions) useSettingsStore.getState().setMarkdownExtensions(savedExtensions)
+
+      const ignoreList = useSettingsStore.getState().ignoreList
+      const markdownExtensions = useSettingsStore.getState().markdownExtensions
+      if (ignoreList.length > 0 || markdownExtensions.length > 0) {
+        ipc.files
+          .updateSettings(ignoreList, markdownExtensions)
+          .catch((err) => logError('useWorkspaceInit:updateSettings', err))
+      }
+
       if (savedWorkspace) {
         setWorkspacePath(savedWorkspace)
         useFileStore.getState().setRoot(savedWorkspace)

@@ -1,5 +1,6 @@
 import { basename } from '../../../shared/utils'
 import { useTabStore } from './useTabStore'
+import { FileIcon } from '../../components/FileIcon'
 
 export function TabBar() {
   const openFiles = useTabStore((s) => s.openFiles)
@@ -15,6 +16,7 @@ export function TabBar() {
       {openFiles.map((filePath) => {
         const isActive = filePath === activeFile
         const dirty = isDirty(filePath)
+        const fileName = basename(filePath)
         return (
           <div
             key={filePath}
@@ -25,7 +27,7 @@ export function TabBar() {
               if (e.button === 1) closeFile(filePath)
             }}
             className={`
-              flex items-center gap-1 px-3 py-1.5 text-sm cursor-pointer border-r border-gray-200 dark:border-gray-700 select-none
+              flex items-center gap-1.5 px-3 py-1.5 text-sm cursor-pointer border-r border-gray-200 dark:border-gray-700 select-none
               ${
                 isActive
                   ? 'bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 border-t-2 border-t-blue-500'
@@ -33,7 +35,8 @@ export function TabBar() {
               }
             `}
           >
-            <span className="truncate max-w-32">{basename(filePath)}</span>
+            <FileIcon name={fileName} size={14} />
+            <span className="truncate max-w-32">{fileName}</span>
             {dirty && <span className="w-1.5 h-1.5 rounded-full bg-blue-500" />}
             <button
               onClick={(e) => {

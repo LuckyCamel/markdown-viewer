@@ -17,7 +17,9 @@ import { ipc } from './lib/ipc'
 import { useWorkspaceInit } from './hooks/useWorkspaceInit'
 import { useFileWatcher } from './hooks/useFileWatcher'
 import { useScrollRestore } from './hooks/useScrollRestore'
+import { EditorLoadError } from './features/markdown-viewer/EditorLoadError'
 import { useContentJump } from './hooks/useContentJump'
+import { useAnchorJump } from './hooks/useAnchorJump'
 import { useKeyboardShortcuts } from './hooks/useKeyboardShortcuts'
 import { isVisibleFileEntry } from '../shared/settingsDefaults'
 
@@ -44,6 +46,8 @@ function App() {
   const activeFile = useTabStore((s) => s.activeFile)
 
   const content = useEditorStore((s) => (activeFile ? s.contents[activeFile] : undefined))
+  const loadError = useEditorStore((s) => (activeFile ? s.errors[activeFile] : undefined))
+  const loading = useEditorStore((s) => (activeFile ? s.loading[activeFile] : false))
   const loadContent = useEditorStore((s) => s.loadContent)
 
   const entries = useFileStore((s) => s.entries)
@@ -98,6 +102,7 @@ function App() {
   useFileWatcher(openFiles, initialized)
   useScrollRestore(activeFile, content)
   useContentJump(activeFile, content)
+  useAnchorJump(activeFile, content)
   useKeyboardShortcuts({
     onOpenFolder: async () => {
       const path = await ipc.dialog.openDirectory()
@@ -153,13 +158,18 @@ function App() {
               <div className="h-full flex flex-col">
                 <TabBar />
                 <div className="flex-1 overflow-y-auto" data-scroll-container>
-                  {content !== undefined ? (
+                  {loadError ? (
+                    <EditorLoadError
+                      message={loadError}
+                      onRetry={() => activeFile && loadContent(activeFile)}
+                    />
+                  ) : content !== undefined ? (
                     <MarkdownViewer content={content} filePath={activeFile ?? undefined} />
-                  ) : (
+                  ) : loading ? (
                     <div className="flex items-center justify-center h-full text-gray-500">
                       Loading...
                     </div>
-                  )}
+                  ) : null}
                 </div>
               </div>
             ) : (

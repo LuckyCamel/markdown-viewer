@@ -69,6 +69,7 @@ export function useWorkspaceInit() {
         savedActiveFile,
         savedIgnoreList,
         savedExtensions,
+        launchPaths,
       ] = await Promise.all([
         ipc.store.get<ReturnType<typeof useUIStore.getState>['theme']>('theme'),
         ipc.store.get<string | null>('lastWorkspace'),
@@ -76,6 +77,7 @@ export function useWorkspaceInit() {
         ipc.store.get<string | null>('activeFile'),
         ipc.store.get<string[]>('ignoreList'),
         ipc.store.get<string[]>('markdownExtensions'),
+        ipc.app.getLaunchPaths(),
       ])
 
       if (savedTheme) setTheme(savedTheme)
@@ -88,18 +90,52 @@ export function useWorkspaceInit() {
         .updateSettings(ignoreList, markdownExtensions)
         .catch((err) => logError('useWorkspaceInit:updateSettings', err))
 
-      if (savedWorkspace) {
-        setWorkspacePath(savedWorkspace)
-        useFileStore.getState().setRoot(savedWorkspace)
-      }
-      if (savedOpenFiles && savedOpenFiles.length > 0) {
-        for (const f of savedOpenFiles) useTabStore.getState().openFile(f)
-        if (savedActiveFile) useTabStore.getState().setActive(savedActiveFile)
+      if (launchPaths.length > 0) {
+        for (const path of launchPaths) {
+          try {
+            const info = await ipc.files.getFileInfo(path)
+            if (info.isDirectory) {
+              setWorkspacePath(path)
+              useFileStore.getState().setRoot(path)
+              useTabStore.getState().closeAll()
+              useSearchStore.getState().reset()
+              ipc.store
+                .set('lastWorkspace', path)
+                .catch((err) => logError('useWorkspaceInit:setLastWorkspace', err))
+              trackRecent(path, true).catch((err) => logError('useWorkspaceInit:trackRecent', err))
+            } else {
+              if (!useFileStore.getState().rootPath) {
+                const parentDir = dirname(path)
+                setWorkspacePath(parentDir)
+                useFileStore.getState().setRoot(parentDir)
+                ipc.store
+                  .set('lastWorkspace', parentDir)
+                  .catch((err) => logError('useWorkspaceInit:setLastWorkspace', err))
+                trackRecent(parentDir, true).catch((err) =>
+                  logError('useWorkspaceInit:trackRecent', err),
+                )
+              }
+              useTabStore.getState().openFile(path)
+              trackRecent(path, false).catch((err) => logError('useWorkspaceInit:trackRecent', err))
+            }
+          } catch (err) {
+            logError('useWorkspaceInit:launchPath', err)
+          }
+        }
+      } else {
+        if (savedWorkspace) {
+          setWorkspacePath(savedWorkspace)
+          useFileStore.getState().setRoot(savedWorkspace)
+        }
+        if (savedOpenFiles && savedOpenFiles.length > 0) {
+          for (const f of savedOpenFiles) useTabStore.getState().openFile(f)
+          if (savedActiveFile) useTabStore.getState().setActive(savedActiveFile)
+        }
       }
       setInitialized(true)
     }
     init().catch((err) => logError('useWorkspaceInit:init', err))
-  }, [setTheme])
+  }, [setTheme, trackRecent])
 
   return {
     initialized,

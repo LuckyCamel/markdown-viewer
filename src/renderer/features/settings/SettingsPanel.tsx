@@ -7,14 +7,16 @@ import { ipc } from '../../lib/ipc'
 import { logError } from '../../logger'
 import type { ThemeMode } from '../../../shared/types'
 
+import { parseExtensionLines, formatExtensionLines } from '../../../shared/parseExtensionLines'
+
+type SettingsTab = 'general' | 'shortcuts'
+
 function parseLines(value: string): string[] {
   return value
     .split('\n')
     .map((s) => s.trim())
     .filter(Boolean)
 }
-
-type SettingsTab = 'general' | 'shortcuts'
 
 export function SettingsPanel() {
   const theme = useUIStore((s) => s.theme)
@@ -38,7 +40,7 @@ export function SettingsPanel() {
   }
 
   const handleSettingsChange = async (type: 'ignoreList' | 'extensions', value: string) => {
-    const list = parseLines(value)
+    const list = type === 'ignoreList' ? parseLines(value) : parseExtensionLines(value)
     if (type === 'ignoreList') {
       setIgnoreList(list)
     } else {
@@ -104,7 +106,7 @@ export function SettingsPanel() {
           <div>
             <label className="block text-sm font-medium mb-2">Markdown Extensions</label>
             <textarea
-              value={markdownExtensions.join('\n')}
+              value={formatExtensionLines(markdownExtensions)}
               onChange={(e) => handleSettingsChange('extensions', e.target.value)}
               rows={3}
               className="w-full px-3 py-1.5 text-sm border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-800"

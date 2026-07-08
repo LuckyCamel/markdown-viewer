@@ -48,6 +48,10 @@ export async function cancelSearch(searchId: string): Promise<void> {
   await invoke('cancel_search', { searchId })
 }
 
+export async function getLaunchPaths(): Promise<string[]> {
+  return invoke('get_launch_paths')
+}
+
 const searchResultListeners = new Set<(result: SearchProgress) => void>()
 let searchUnlisten: UnlistenFn | null = null
 
@@ -237,6 +241,9 @@ export async function emitIpcEvent(channel: string, ...args: unknown[]): Promise
 }
 
 export const ipc = {
+  app: {
+    getLaunchPaths,
+  },
   files: {
     listDirectory,
     readFile,

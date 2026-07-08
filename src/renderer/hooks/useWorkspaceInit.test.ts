@@ -5,7 +5,10 @@ import { useWorkspaceInit } from './useWorkspaceInit'
 const mockStoreGet = vi.fn()
 const mockStoreSet = vi.fn()
 const mockUpdateSettings = vi.fn()
+const mockGetLaunchPaths = vi.fn()
+const mockGetFileInfo = vi.fn()
 const mockLogError = vi.fn()
+let mockRootPath: string | null = null
 
 vi.mock('../lib/ipc', () => ({
   ipc: {
@@ -13,8 +16,12 @@ vi.mock('../lib/ipc', () => ({
       get: (...args: unknown[]) => mockStoreGet(...args),
       set: (...args: unknown[]) => mockStoreSet(...args),
     },
+    app: {
+      getLaunchPaths: (...args: unknown[]) => mockGetLaunchPaths(...args),
+    },
     files: {
       updateSettings: (...args: unknown[]) => mockUpdateSettings(...args),
+      getFileInfo: (...args: unknown[]) => mockGetFileInfo(...args),
     },
   },
 }))
@@ -57,7 +64,15 @@ vi.mock('../features/tabs/useTabStore', () => ({
 }))
 vi.mock('../features/file-tree/useFileStore', () => ({
   useFileStore: {
-    getState: () => ({ setRoot: mockSetRoot }),
+    getState: () => ({
+      setRoot: (path: string) => {
+        mockSetRoot(path)
+        mockRootPath = path
+      },
+      get rootPath() {
+        return mockRootPath
+      },
+    }),
   },
 }))
 vi.mock('../features/search/useSearchStore', () => ({
@@ -69,9 +84,11 @@ vi.mock('../features/search/useSearchStore', () => ({
 describe('useWorkspaceInit', () => {
   beforeEach(() => {
     vi.clearAllMocks()
+    mockRootPath = null
     mockStoreGet.mockResolvedValue(undefined)
     mockStoreSet.mockResolvedValue(undefined)
     mockUpdateSettings.mockResolvedValue(undefined)
+    mockGetLaunchPaths.mockResolvedValue([])
   })
 
   describe('初始化', () => {
@@ -117,6 +134,29 @@ describe('useWorkspaceInit', () => {
       await vi.waitFor(() => {
         expect(mockLogError).toHaveBeenCalledWith('useWorkspaceInit:init', expect.any(Error))
       })
+    })
+
+    it('CLI 启动路径优先于已保存 workspace', async () => {
+      mockGetLaunchPaths.mockResolvedValue(['/cli/readme.md'])
+      mockGetFileInfo.mockResolvedValue({
+        path: '/cli/readme.md',
+        name: 'readme.md',
+        isDirectory: false,
+      })
+      mockStoreGet.mockImplementation(async (key: string) => {
+        if (key === 'lastWorkspace') return '/saved'
+        if (key === 'openFiles') return ['/saved/old.md']
+        return undefined
+      })
+
+      const { result } = renderHook(() => useWorkspaceInit())
+      await vi.waitFor(() => {
+        expect(result.current.initialized).toBe(true)
+      })
+
+      expect(mockOpenFile).toHaveBeenCalledWith('/cli/readme.md')
+      expect(mockOpenFile).not.toHaveBeenCalledWith('/saved/old.md')
+      expect(mockSetRoot).toHaveBeenCalledWith('/cli')
     })
   })
 

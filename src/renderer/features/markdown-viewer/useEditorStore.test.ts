@@ -59,6 +59,19 @@ describe('useEditorStore', () => {
     expect(useEditorStore.getState().errors).not.toHaveProperty('/a.md')
   })
 
+  it('重试加载时应清除既有错误', async () => {
+    useEditorStore.setState({
+      errors: { '/a.md': 'Error: ENOENT' },
+      loading: { '/a.md': false },
+    })
+    mockReadFile.mockResolvedValue({ path: '/a.md', content: '# ok' })
+
+    await useEditorStore.getState().loadContent('/a.md')
+
+    expect(useEditorStore.getState().errors['/a.md']).toBeUndefined()
+    expect(useEditorStore.getState().contents['/a.md']).toBe('# ok')
+  })
+
   it('should set content directly', () => {
     useEditorStore.getState().setContent('/a.md', 'direct')
 

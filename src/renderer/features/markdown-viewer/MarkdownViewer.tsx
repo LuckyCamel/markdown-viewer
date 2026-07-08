@@ -10,6 +10,9 @@ import { markdownHeadingComponents } from './markdownHeadings'
 import { ipc } from '../../lib/ipc'
 import { useTabStore } from '../tabs/useTabStore'
 import { dirname, joinPaths } from '../../../shared/utils'
+import { isInternalMarkdownHref, parseMarkdownHref } from '../../../shared/markdownLink'
+import { scrollToAnchor } from '../../../shared/scrollContainer'
+import { useUIStore } from '../../stores/useUIStore'
 
 interface MarkdownViewerProps {
   content: string
@@ -43,7 +46,9 @@ export function MarkdownViewer({ content, filePath }: MarkdownViewerProps) {
       return <img src={src} alt={alt || ''} />
     },
     a({ href, children }: { href?: string; children?: React.ReactNode }) {
-      if (href?.startsWith('http')) {
+      if (!href) return <a>{children}</a>
+
+      if (href.startsWith('http')) {
         return (
           <a
             href={href}
@@ -58,14 +63,29 @@ export function MarkdownViewer({ content, filePath }: MarkdownViewerProps) {
           </a>
         )
       }
-      if (href?.endsWith('.md')) {
+
+      if (isInternalMarkdownHref(href)) {
         return (
           <a
             href={href}
             onClick={(e) => {
               e.preventDefault()
-              if (filePath) {
-                const resolved = joinPaths(dirname(filePath), href)
+              if (!filePath) return
+
+              const parsed = parseMarkdownHref(href)
+              if (!parsed.filePart && parsed.anchor) {
+                scrollToAnchor(parsed.anchor)
+                return
+              }
+
+              if (parsed.filePart) {
+                const resolved = joinPaths(dirname(filePath), parsed.filePart)
+                if (parsed.anchor) {
+                  useUIStore.getState().setPendingAnchorJump({
+                    path: resolved,
+                    anchor: parsed.anchor,
+                  })
+                }
                 useTabStore.getState().openFile(resolved)
               }
             }}
@@ -74,6 +94,7 @@ export function MarkdownViewer({ content, filePath }: MarkdownViewerProps) {
           </a>
         )
       }
+
       return <a href={href}>{children}</a>
     },
   }

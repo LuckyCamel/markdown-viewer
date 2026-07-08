@@ -15,7 +15,13 @@ export const useEditorStore = create<EditorState>((set) => ({
   loading: {},
   errors: {},
   loadContent: async (filePath) => {
-    set((s) => ({ loading: { ...s.loading, [filePath]: true } }))
+    set((s) => {
+      const { [filePath]: _err, ...restErrors } = s.errors
+      return {
+        loading: { ...s.loading, [filePath]: true },
+        errors: restErrors,
+      }
+    })
     try {
       const result = await ipc.files.readFile(filePath)
       set((s) => ({

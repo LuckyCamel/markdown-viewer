@@ -34,6 +34,11 @@ export interface ContentJumpTarget {
   lineContent: string
 }
 
+export interface AnchorJumpTarget {
+  path: string
+  anchor: string
+}
+
 export interface AppSettings {
   theme: 'system' | 'light' | 'dark'
   ignoreList: string[]

@@ -6,6 +6,7 @@ import { useUIStore } from './stores/useUIStore'
 import { useFileStore } from './features/file-tree/useFileStore'
 
 const mockIpc = vi.hoisted(() => ({
+  app: { getLaunchPaths: vi.fn() },
   store: { get: vi.fn(), set: vi.fn(), del: vi.fn() },
   files: {
     listDirectory: vi.fn(),
@@ -43,6 +44,7 @@ describe('App', () => {
     mockIpc.files.listDirectory.mockResolvedValue([])
     mockIpc.files.readFile.mockResolvedValue({ path: '', content: '' })
     mockIpc.files.updateSettings.mockResolvedValue(undefined)
+    mockIpc.app.getLaunchPaths.mockResolvedValue([])
   })
 
   it('should show WelcomePage when no workspace', () => {

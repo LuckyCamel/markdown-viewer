@@ -52,6 +52,16 @@ export function scrollToTextInContainer(snippet: string): boolean {
 }
 
 /**
+ * 滚动到正文中的锚点 id（兼容 encode 与 heading slug）
+ */
+export function scrollToAnchor(anchor: string): boolean {
+  const decoded = decodeURIComponent(anchor)
+  const el = document.getElementById(decoded) ?? document.getElementById(anchor)
+  if (!el) return false
+  return scrollToElementInContainer(el)
+}
+
+/**
  * 内容搜索跳转：优先匹配行片段，失败则按行号估算
  */
 export function scrollToContentMatch(

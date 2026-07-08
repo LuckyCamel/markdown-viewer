@@ -180,7 +180,14 @@ export async function emitIpcEvent(channel: string, ...args: unknown[]): Promise
   }
 }
 
+export async function getLaunchPaths(): Promise<string[]> {
+  return []
+}
+
 export const ipc = {
+  app: {
+    getLaunchPaths,
+  },
   files: {
     listDirectory,
     readFile,

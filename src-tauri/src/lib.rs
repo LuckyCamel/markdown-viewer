@@ -6,9 +6,15 @@ use std::sync::Mutex;
 use notify::{RecommendedWatcher, RecursiveMode, Watcher};
 use tauri::{Emitter, State, Window};
 
+pub mod cli;
+
 const DEFAULT_IGNORE_LIST: &[&str] = &[".git", "node_modules", "__pycache__", ".DS_Store"];
 const DEFAULT_MARKDOWN_EXTENSIONS: &[&str] = &["md", "markdown"];
 const SEARCH_EMIT_INTERVAL: usize = 5;
+
+struct LaunchState {
+    paths: Vec<String>,
+}
 
 struct SearchState {
     cancelled_ids: Mutex<HashSet<String>>,
@@ -48,21 +54,24 @@ impl SettingsState {
     }
 
     fn is_markdown_file(&self, path: &Path) -> bool {
-        if let Some(ext) = path.extension() {
-            let ext_str = ext.to_string_lossy().to_string();
-            let exts = self.markdown_extensions.lock().unwrap();
-            exts.iter().any(|e| e == &ext_str)
-        } else {
-            false
+        let exts = self.markdown_extensions.lock().unwrap();
+        match path.extension() {
+            Some(ext) => {
+                let ext_str = ext.to_string_lossy().to_string();
+                exts.iter().any(|e| !e.is_empty() && e == &ext_str)
+            }
+            None => exts.iter().any(|e| e.is_empty()),
         }
     }
 
     fn is_text_file(&self, path: &Path) -> bool {
+        if self.is_markdown_file(path) {
+            return true;
+        }
         if let Some(ext) = path.extension() {
             let ext_str = ext.to_string_lossy().to_string();
-            let exts = self.markdown_extensions.lock().unwrap();
             let text_extensions = ["txt", "json", "yaml", "yml", "toml", "rs", "ts", "js", "html", "css"];
-            exts.iter().any(|e| e == &ext_str) || text_extensions.contains(&ext_str.as_str())
+            text_extensions.contains(&ext_str.as_str())
         } else {
             false
         }
@@ -345,6 +354,14 @@ async fn unwatch_file(
 }
 
 /**
+ * 返回启动时 CLI 传入的路径（文件或目录）
+ */
+#[tauri::command]
+fn get_launch_paths(state: State<'_, LaunchState>) -> Vec<String> {
+    state.paths.clone()
+}
+
+/**
  * 更新设置（忽略列表和扩展名）
  */
 #[tauri::command]
@@ -389,7 +406,7 @@ fn walk_dir(path: &Path, files: &mut Vec<PathBuf>, settings: &SettingsState) {
  * Tauri 应用入口：注册插件与 command
  */
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
-pub fn run() {
+pub fn run(launch_paths: Vec<String>) {
     tauri::Builder::default()
         .plugin(tauri_plugin_fs::init())
         .plugin(tauri_plugin_dialog::init())
@@ -402,6 +419,9 @@ pub fn run() {
         .manage(SearchState {
             cancelled_ids: Mutex::new(HashSet::new()),
         })
+        .manage(LaunchState {
+            paths: launch_paths,
+        })
         .invoke_handler(tauri::generate_handler![
             list_directory,
             search_content,
@@ -409,7 +429,28 @@ pub fn run() {
             watch_file,
             unwatch_file,
             update_settings,
+            get_launch_paths,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
+}
+
+#[cfg(test)]
+mod settings_tests {
+    use super::*;
+
+    fn settings_with(exts: Vec<&str>) -> SettingsState {
+        SettingsState {
+            ignore_list: Mutex::new(vec![]),
+            markdown_extensions: Mutex::new(exts.into_iter().map(String::from).collect()),
+        }
+    }
+
+    #[test]
+    fn markdown_file_matches_extensionless_when_configured() {
+        let settings = settings_with(vec!["md", ""]);
+        assert!(settings.is_markdown_file(Path::new("README")));
+        assert!(settings.is_markdown_file(Path::new("guide.md")));
+        assert!(!settings.is_markdown_file(Path::new("image.png")));
+    }
 }

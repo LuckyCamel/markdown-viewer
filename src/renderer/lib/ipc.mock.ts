@@ -1,6 +1,22 @@
 import type { FileEntry, FileContent, SearchProgress, FileChangeEvent } from '../../shared/types'
 
 /**
+ * 与 Rust SettingsState 默认规则一致，供 mock listDirectory 补全 isMarkdown
+ */
+function isMarkdownFileName(name: string): boolean {
+  if (/\.(md|markdown)$/i.test(name)) return true
+  return !name.includes('.')
+}
+
+/**
+ * 补全目录条目上的 isMarkdown 标记
+ */
+function enrichFileEntry(entry: FileEntry): FileEntry {
+  if (entry.isDirectory || entry.isMarkdown === true) return entry
+  return { ...entry, isMarkdown: isMarkdownFileName(entry.name) }
+}
+
+/**
  * E2E 测试用的 mock IPC 实现。
  * 通过 window.__E2E__ 全局对象与测试代码交互。
  */
@@ -45,7 +61,8 @@ function ensureE2E() {
 
 export async function listDirectory(dirPath: string): Promise<FileEntry[]> {
   ensureE2E()
-  return window.__E2E__.directoryTree.get(dirPath) || []
+  const entries = window.__E2E__.directoryTree.get(dirPath) || []
+  return entries.map(enrichFileEntry)
 }
 
 export async function updateSettings(

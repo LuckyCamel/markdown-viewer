@@ -5,6 +5,14 @@ import { tmpdir } from 'os'
 import type { FileEntry } from '../src/shared/types'
 
 /**
+ * 判断 E2E fixture 文件名是否应视为 Markdown
+ */
+function isMarkdownFileName(name: string): boolean {
+  if (/\.(md|markdown)$/i.test(name)) return true
+  return !name.includes('.')
+}
+
+/**
  * 创建临时测试目录，并扫描内容生成 FileEntry 列表。
  * 返回目录路径、清理函数、文件内容映射和目录条目列表。
  */
@@ -36,6 +44,7 @@ export function createTestWorkspace(files: Record<string, string>): {
           path: fullPath.replace(/\\/g, '/'),
           isDirectory: stat.isDirectory(),
           isHidden: name.startsWith('.'),
+          isMarkdown: !stat.isDirectory() && isMarkdownFileName(name),
         })
       } catch {
         // skip
@@ -82,6 +91,7 @@ export async function launchApp(
   if (workspace) {
     await page.addInitScript(
       ({ dirPath, fileContents, entries }) => {
+        localStorage.clear()
         window.__E2E__ = {
           files: new Map(Object.entries(fileContents)),
           directoryTree: new Map([[dirPath, entries]]),
@@ -102,6 +112,7 @@ export async function launchApp(
     )
   } else {
     await page.addInitScript(() => {
+      localStorage.clear()
       window.__E2E__ = {
         files: new Map(),
         directoryTree: new Map(),

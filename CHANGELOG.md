@@ -6,7 +6,7 @@
 
 ### 文档
 
-- **文档体系重设计**：`docs/` 纳入 Git；L1 入口为根 README；新增 `product.md`、`development.md`、`backlog.md`、`release-checklist.md`；`spec-v1`、`phase3` 迁入 `archive/`；删除 `roadmap.md`、`e2e-strategy.md`
+- **文档当前态重设计**：删除 `archive/`、`adr/`、`backlog`、`CONTEXT.md`；`docs/` 仅保留 4 份活文档；根 README 为唯一入口；发布参与文档禁止含未完成规划/任务待办
 
 ## [1.2.2] - 2026-07-09
 

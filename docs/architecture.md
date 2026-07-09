@@ -134,20 +134,27 @@ Tauri Rust 后端 + Web 前端，通过 IPC 通信。
 ## 5. 横切关注点
 
 ### 5.1 错误处理
-详见 [ADR-0001](adr/0001-error-handling-model.md)。
 
 核心原则：**纯函数自然抛出，边界层统一捕获**。
+- 纯函数（Rust 命令逻辑、前端工具函数等）自然抛出，不写 try/catch
+- 边界层（Tauri command、事件监听器、React 副作用 hook）统一捕获
 - 格式：`logError('模块名:子操作', err)`
-- 边界层：Tauri command、事件监听器、React 副作用 hook、ErrorBoundary
-- 全局兜底：`window.onerror` / React ErrorBoundary
+- 全局兜底：`window.onerror` / React ErrorBoundary（最后防线，不依赖其恢复）
+- 不引入 `Result<T,E>` 类型或统一 Error 类
 
 ### 5.2 IPC 通信
-详见 [ADR-0002](adr/0002-ipc-pattern.md)。
 
-三种模式：
-- **invoke/command**：`list_directory`、`search_content`、`cancel_search`、`watch_file`、`unwatch_file`、`update_settings`、`get_launch_paths`、`grant_fs_scope`、`get_setting`、`set_setting`、`migrate_settings`
-- **emit/listen**：`search-result`、`file-change`、`menu-action`（原生菜单 → 前端 `useMenuEvents`）
-- **官方插件**：plugin-fs（读文件/stat）、plugin-dialog、plugin-shell
+按语义选择三种模式：
+
+- **invoke/command**（请求-响应）：需要返回值的场景。Rust 返回 `Result<T, String>`，`Err` 透传到前端 Promise.reject
+- **emit/listen**（事件推送）：单向通知。前端 `listen` 回调内 catch → `logError`
+- **官方插件**：通用能力优先用 plugin-fs / plugin-dialog / plugin-shell
+
+**invoke/command**：`list_directory`、`search_content`、`cancel_search`、`watch_file`、`unwatch_file`、`update_settings`、`get_launch_paths`、`grant_fs_scope`、`get_setting`、`set_setting`、`migrate_settings`
+
+**emit/listen**：`search-result`、`file-change`、`menu-action`（原生菜单 → 前端 `useMenuEvents`）
+
+**官方插件**：plugin-fs（读文件/stat）、plugin-dialog、plugin-shell
 
 所有 IPC 调用集中封装在 `src/renderer/lib/ipc.ts`，前端不直接调用 `invoke` / `emit`。
 
@@ -164,12 +171,15 @@ Tauri Rust 后端 + Web 前端，通过 IPC 通信。
 ### 5.5 安全
 - 前端运行在 WebView 沙箱中，无 Node.js 环境
 - **fs:scope**：`capabilities` 静态 `allow: []`；打开工作区/文件时 `grant_fs_scope` 动态授权；command 层 `ensure_under_allowed_root` 纵深防御
-- 本地图片通过 `asset://localhost/` 引用（见 [ADR-0004](adr/0004-custom-protocol-design.md)）
-- **HTML 消毒**：`rehype-sanitize` 白名单 + `rehype-raw`（见 [ADR-0007](adr/0007-html-sanitization.md)）
+- 本地图片通过 `asset://localhost/` 引用
+- **HTML 消毒**：`rehype-raw` → `rehype-sanitize` 白名单（保留 `u`、`kbd`、`mark` 等排版标签；禁止 `script`、`iframe`、`on*` 属性）
 - CSP：`tauri.conf.json` 配置 `asset:`、`object-src 'none'`、`base-uri 'none'` 等
 - 外部链接经 `plugin-shell` 打开，不直接在 WebView 跳转
 
-### 5.6 持久化
+### 5.6 渲染优化
+- **Mermaid**：动态 `import('mermaid')` + 单例缓存（`mermaid.ts` / `MermaidBlock.tsx`），首次遇到 mermaid 代码块时加载，Vite 代码分割为独立 chunk
+
+### 5.7 持久化
 - 生产环境：`app_data_dir/settings.json`（Rust `StoreState`），`ipc.store` 经 invoke 读写
 - 首次启动：`ensureStoreMigrated()` 从 localStorage 批量导入
 - E2E mock：仍用 localStorage（`ipc.mock.ts`）

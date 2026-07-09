@@ -1,5 +1,7 @@
 # Markdown Viewer
 
+> 当前版本：**1.2.2**
+
 跨平台 Tauri 桌面应用，以工作区方式浏览和渲染 Markdown 文件。
 
 ## 功能特性
@@ -63,16 +65,10 @@ src/
 
 | 读者 | 文档 | 说明 |
 |------|------|------|
-| 用户 / 新贡献者 | [product.md](docs/product.md) | 功能、快捷键、平台、非目标 |
-| 日常开发者 | [development.md](docs/development.md) | 命令、测试、发布与 tag 流程 |
-| 日常开发者 | [architecture.md](docs/architecture.md) | 模块划分、IPC、数据流 |
-| 发布负责人 | [release-checklist.md](docs/release-checklist.md) | 发布前手工冒烟 |
-| 规划参考 | [backlog.md](docs/backlog.md) | 未立项候选 |
-| AI Agent | [AGENTS.md](AGENTS.md) | 代码约束与 Key Files |
-| 架构决策 | [adr/](docs/adr/) | ADR 索引（为何这样设计） |
-| 历史追溯 | [archive/](docs/archive/) | 里程碑、V1 规格、阶段规划 |
-
-版本变更见 [CHANGELOG.md](CHANGELOG.md)；演进摘要见 [archive/history.md](docs/archive/history.md)。
+| 用户 / 新贡献者 | [product.md](docs/product.md) | 功能、快捷键、平台 |
+| 日常开发者 | [development.md](docs/development.md) + [architecture.md](docs/architecture.md) | 开发与架构 |
+| 发布负责人 | [release-checklist.md](docs/release-checklist.md) + [CHANGELOG.md](CHANGELOG.md) | 冒烟与版本记录 |
+| AI Agent | [AGENTS.md](AGENTS.md) | 代码约束 |
 
 ## 许可
 

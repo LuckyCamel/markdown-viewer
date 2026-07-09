@@ -1,5 +1,6 @@
 pub mod cli;
 mod commands;
+mod menu;
 mod scope;
 mod search;
 mod state;
@@ -21,6 +22,7 @@ pub fn run(launch_paths: Vec<String>) {
         .plugin(tauri_plugin_dialog::init())
         .plugin(tauri_plugin_shell::init())
         .setup(|app| {
+            menu::setup_menu(app)?;
             let store = init_store(&app.handle())?;
             app.manage(store);
             Ok(())

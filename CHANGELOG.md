@@ -4,6 +4,16 @@
 
 ## [Unreleased]
 
+## [1.2.2] - 2026-07-09
+
+### 新增
+
+- **原生菜单栏**：File / View / Search 子菜单，点击通过 `menu-action` 事件驱动前端操作
+
+### 修复
+
+- **Windows Release 控制台**：`windows_subsystem = "windows"`，打包后启动不再附带 Terminal 窗口
+
 ## [1.2.1] - 2026-07-09
 
 ### 新增

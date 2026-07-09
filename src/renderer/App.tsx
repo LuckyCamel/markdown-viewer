@@ -21,6 +21,7 @@ import { EditorLoadError } from './features/markdown-viewer/EditorLoadError'
 import { useContentJump } from './hooks/useContentJump'
 import { useAnchorJump } from './hooks/useAnchorJump'
 import { useKeyboardShortcuts } from './hooks/useKeyboardShortcuts'
+import { useMenuEvents } from './hooks/useMenuEvents'
 import { isVisibleFileEntry } from '../shared/settingsDefaults'
 
 function App() {
@@ -107,6 +108,22 @@ function App() {
     onOpenFolder: async () => {
       const path = await ipc.dialog.openDirectory()
       if (path) handleOpenFolder(path)
+    },
+    onToggleSidebar: toggleSidebar,
+    onToggleOutline: toggleOutline,
+    onOpenFileSearch: () => openSearch('file'),
+    onOpenContentSearch: () => openSearch('content'),
+    onToggleSettings: () => setShowSettings((v) => !v),
+  })
+
+  useMenuEvents({
+    onOpenFolder: async () => {
+      const path = await ipc.dialog.openDirectory()
+      if (path) handleOpenFolder(path)
+    },
+    onOpenFile: async () => {
+      const path = await ipc.dialog.openFile()
+      if (path) handleOpenFile(path)
     },
     onToggleSidebar: toggleSidebar,
     onToggleOutline: toggleOutline,

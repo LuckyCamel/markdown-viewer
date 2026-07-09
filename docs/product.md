@@ -1,0 +1,88 @@
+# 产品说明
+
+> 最后更新：2026-07-09  
+> 当前版本：**1.2.2**
+
+跨平台 Tauri 桌面 Markdown 阅读器，以工作区方式浏览本地目录中的 Markdown 文件。
+
+---
+
+## 功能清单
+
+| 类别 | 功能 |
+|------|------|
+| 渲染 | GFM 全套、KaTeX 数学、Mermaid 图表、highlight.js 代码高亮 |
+| 浏览 | 递归文件树、隐藏文件灰色标注、可配置忽略列表与 Markdown 扩展名 |
+| 标签 | 多标签切换/关闭、脏标记、惰性加载 |
+| 搜索 | 文件搜索 (Ctrl+P)、全局内容搜索 (Ctrl+Shift+F)、增量进度、500 条上限 |
+| 大纲 | 标题层级导航、点击跳转、scroll-spy 可视区域高亮 |
+| 主题 | 暗色/亮色/跟随系统 |
+| 布局 | 侧边栏与大纲面板可拖拽调节宽度，持久化 |
+| 状态 | 启动恢复目录、已打开文件、滚动位置 |
+| 监控 | 外部修改自动热更新 |
+| 链接 | 内部 `.md` 应用内打开；外部链接系统浏览器 |
+| 设置 | 主题、忽略列表、Markdown 扩展名、快捷键自定义 |
+| 菜单 | 原生菜单栏 File / View / Search（v1.2.2+），与快捷键并存 |
+| CLI | `-v` / `-h`；启动时打开文件或目录路径 |
+
+---
+
+## 键盘快捷键
+
+| 快捷键 | 功能 |
+|--------|------|
+| Ctrl+Shift+O | 打开文件夹 |
+| Ctrl+P | 文件搜索 |
+| Ctrl+Shift+F | 全局内容搜索 |
+| Ctrl+B | 切换侧边栏 |
+| Ctrl+Shift+L | 切换大纲面板 |
+| Ctrl+W | 关闭当前标签 |
+| Ctrl+Tab | 下一个标签 |
+| Ctrl+Shift+Tab | 上一个标签 |
+| Ctrl+, | 打开设置 |
+
+快捷键可在设置面板自定义（`ShortcutEditor`）。实现见 `useKeyboardShortcuts`。
+
+---
+
+## 原生菜单（v1.2.2+）
+
+| 菜单 | 项 | 等效快捷键 |
+|------|-----|------------|
+| File | Open Folder… | Ctrl+Shift+O |
+| File | Open File… | — |
+| File | Close Tab | Ctrl+W |
+| File | Settings… | Ctrl+, |
+| View | Toggle Sidebar | Ctrl+B |
+| View | Toggle Outline | Ctrl+Shift+L |
+| Search | Find File… | Ctrl+P |
+| Search | Find in Files… | Ctrl+Shift+F |
+
+---
+
+## 支持平台与安装包
+
+| 平台 | 格式 |
+|------|------|
+| Windows | NSIS `.exe` |
+| macOS | `.dmg` |
+| Linux | `.deb`、AppImage |
+
+Release 由推送 `v*` tag 触发，详见 [development.md](development.md#发布流程)。
+
+---
+
+## Inline HTML
+
+Markdown 经 `rehype-raw` 解析后由 `rehype-sanitize` 白名单过滤，仅保留排版类标签（如 `u`、`kbd`、`mark`）。  
+设计决策见 [ADR-0007](adr/0007-html-sanitization.md)。
+
+---
+
+## 非目标
+
+- **无编辑模式**：专注阅读，不提供 Markdown 编辑
+- **无分屏预览**（V2 候选）
+- **无独立预览窗口**（V2 候选）
+
+未立项候选见 [backlog.md](backlog.md)。

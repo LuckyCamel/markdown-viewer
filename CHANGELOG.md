@@ -4,6 +4,10 @@
 
 ## [Unreleased]
 
+### 文档
+
+- **文档体系重设计**：`docs/` 纳入 Git；L1 入口为根 README；新增 `product.md`、`development.md`、`backlog.md`、`release-checklist.md`；`spec-v1`、`phase3` 迁入 `archive/`；删除 `roadmap.md`、`e2e-strategy.md`
+
 ## [1.2.2] - 2026-07-09
 
 ### 新增
@@ -13,6 +17,11 @@
 ### 修复
 
 - **Windows Release 控制台**：`windows_subsystem = "windows"`，打包后启动不再附带 Terminal 窗口
+- **Release CI**：Linux deb/AppImage 扁平化上传，修复 GitHub Release 仅含 exe/dmg 的问题
+
+### 文档
+
+- 同步 `architecture.md`、ADR、路线图；阶段 3 规划文档归档
 
 ## [1.2.1] - 2026-07-09
 

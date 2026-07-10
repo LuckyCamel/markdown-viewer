@@ -1,0 +1,115 @@
+/* highlight.js 代码主题 - 使用 CSS 变量驱动 */
+
+pre code.hljs {
+  display: block;
+  overflow-x: auto;
+  padding: 1em;
+  border-radius: 0.375rem;
+}
+
+code.hljs {
+  padding: 3px 5px;
+  border-radius: 0.25rem;
+}
+
+.hljs {
+  color: var(--code-fg);
+  background: var(--code-bg);
+}
+
+.hljs-doctag,
+.hljs-keyword,
+.hljs-meta .hljs-keyword,
+.hljs-template-tag,
+.hljs-template-variable,
+.hljs-type,
+.hljs-variable.language_ {
+  color: var(--code-keyword);
+}
+
+.hljs-title,
+.hljs-title.class_,
+.hljs-title.class_.inherited__,
+.hljs-title.function_ {
+  color: var(--code-function);
+}
+
+.hljs-attr,
+.hljs-attribute,
+.hljs-literal,
+.hljs-meta,
+.hljs-number,
+.hljs-operator,
+.hljs-variable,
+.hljs-selector-attr,
+.hljs-selector-class,
+.hljs-selector-id {
+  color: var(--code-number);
+}
+
+.hljs-regexp,
+.hljs-string,
+.hljs-meta .hljs-string {
+  color: var(--code-string);
+}
+
+.hljs-built_in,
+.hljs-symbol {
+  color: var(--code-builtin);
+}
+
+.hljs-comment,
+.hljs-code,
+.hljs-formula {
+  color: var(--code-comment);
+}
+
+.hljs-name,
+.hljs-quote,
+.hljs-selector-tag,
+.hljs-selector-pseudo {
+  color: var(--code-tag);
+}
+
+.hljs-subst {
+  color: var(--code-fg);
+}
+
+.hljs-section {
+  color: var(--code-section);
+  font-weight: bold;
+}
+
+.hljs-bullet {
+  color: var(--code-bullet);
+}
+
+.hljs-emphasis {
+  color: var(--code-fg);
+  font-style: italic;
+}
+
+.hljs-strong {
+  color: var(--code-fg);
+  font-weight: bold;
+}
+
+.hljs-addition {
+  color: var(--code-addition);
+  background-color: var(--code-addition-bg);
+}
+
+.hljs-deletion {
+  color: var(--code-deletion);
+  background-color: var(--code-deletion-bg);
+}
+
+/* 源码查看器样式 */
+.source-viewer {
+  background: var(--code-bg);
+  color: var(--code-fg);
+}
+
+.source-viewer pre {
+  color: var(--code-fg);
+}

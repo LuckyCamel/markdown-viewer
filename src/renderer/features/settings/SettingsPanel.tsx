@@ -6,6 +6,7 @@ import { useEffect, useState } from 'react'
 import { ipc } from '../../lib/ipc'
 import { logError } from '../../logger'
 import type { ThemeMode } from '../../../shared/types'
+import { CODE_THEMES } from '../../lib/codeThemes'
 
 import { parseExtensionLines, formatExtensionLines } from '../../../shared/parseExtensionLines'
 
@@ -21,6 +22,8 @@ function parseLines(value: string): string[] {
 export function SettingsPanel() {
   const theme = useUIStore((s) => s.theme)
   const setTheme = useUIStore((s) => s.setTheme)
+  const codeTheme = useUIStore((s) => s.codeTheme)
+  const setCodeTheme = useUIStore((s) => s.setCodeTheme)
   const ignoreList = useSettingsStore((s) => s.ignoreList)
   const setIgnoreList = useSettingsStore((s) => s.setIgnoreList)
   const markdownExtensions = useSettingsStore((s) => s.markdownExtensions)
@@ -37,6 +40,13 @@ export function SettingsPanel() {
   const handleThemeChange = async (newTheme: ThemeMode) => {
     setTheme(newTheme)
     await ipc.store.set('theme', newTheme).catch((err) => logError('SettingsPanel:setTheme', err))
+  }
+
+  const handleCodeThemeChange = async (newCodeTheme: string) => {
+    setCodeTheme(newCodeTheme)
+    await ipc.store
+      .set('codeTheme', newCodeTheme)
+      .catch((err) => logError('SettingsPanel:setCodeTheme', err))
   }
 
   const handleSettingsChange = async (type: 'ignoreList' | 'extensions', value: string) => {
@@ -101,6 +111,31 @@ export function SettingsPanel() {
                 </button>
               ))}
             </div>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium mb-2">Code Theme</label>
+            <select
+              value={codeTheme}
+              onChange={(e) => handleCodeThemeChange(e.target.value)}
+              className="w-full px-3 py-1.5 text-sm border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-800"
+            >
+              <option value="auto">Auto (follow app theme)</option>
+              <optgroup label="Dark">
+                {CODE_THEMES.filter((t) => t.variant === 'dark').map((t) => (
+                  <option key={t.id} value={t.id}>
+                    {t.name}
+                  </option>
+                ))}
+              </optgroup>
+              <optgroup label="Light">
+                {CODE_THEMES.filter((t) => t.variant === 'light').map((t) => (
+                  <option key={t.id} value={t.id}>
+                    {t.name}
+                  </option>
+                ))}
+              </optgroup>
+            </select>
           </div>
 
           <div>

@@ -20,6 +20,7 @@ export function useWorkspaceInit() {
   const [showSettings, setShowSettings] = useState(false)
   const [initialized, setInitialized] = useState(false)
   const setTheme = useUIStore((s) => s.setTheme)
+  const setCodeTheme = useUIStore((s) => s.setCodeTheme)
 
   const trackRecent = useCallback(async (path: string, isDir: boolean) => {
     const key = isDir ? 'recentDirs' : 'recentFiles'
@@ -75,6 +76,7 @@ export function useWorkspaceInit() {
 
       const [
         savedTheme,
+        savedCodeTheme,
         savedWorkspace,
         savedOpenFiles,
         savedActiveFile,
@@ -83,6 +85,7 @@ export function useWorkspaceInit() {
         launchPaths,
       ] = await Promise.all([
         ipc.store.get<ReturnType<typeof useUIStore.getState>['theme']>('theme'),
+        ipc.store.get<string>('codeTheme'),
         ipc.store.get<string | null>('lastWorkspace'),
         ipc.store.get<string[]>('openFiles'),
         ipc.store.get<string | null>('activeFile'),
@@ -92,6 +95,7 @@ export function useWorkspaceInit() {
       ])
 
       if (savedTheme) setTheme(savedTheme)
+      if (savedCodeTheme) setCodeTheme(savedCodeTheme)
       if (savedIgnoreList) useSettingsStore.getState().setIgnoreList(savedIgnoreList)
       if (savedExtensions) useSettingsStore.getState().setMarkdownExtensions(savedExtensions)
 
@@ -150,7 +154,7 @@ export function useWorkspaceInit() {
       setInitialized(true)
     }
     init().catch((err) => logError('useWorkspaceInit:init', err))
-  }, [setTheme, trackRecent])
+  }, [setTheme, setCodeTheme, trackRecent])
 
   return {
     initialized,

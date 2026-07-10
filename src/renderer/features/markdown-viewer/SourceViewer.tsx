@@ -19,7 +19,7 @@ export function SourceViewer({ content }: SourceViewerProps) {
   }, [content])
 
   return (
-    <div className="h-full overflow-auto p-4 bg-gray-50 dark:bg-gray-900">
+    <div className="h-full overflow-auto p-4 source-viewer">
       <pre className="text-sm leading-relaxed">
         <code ref={codeRef} className="language-markdown">
           {content}

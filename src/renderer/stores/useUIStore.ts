@@ -9,6 +9,7 @@ interface UIState {
   outlineWidth: number
   searchPanel: 'none' | 'file' | 'content'
   viewMode: ViewMode
+  codeTheme: string
   pendingContentJump: ContentJumpTarget | null
   pendingAnchorJump: AnchorJumpTarget | null
   setTheme: (theme: ThemeMode) => void
@@ -20,6 +21,7 @@ interface UIState {
   closeSearch: () => void
   setViewMode: (mode: ViewMode) => void
   toggleViewMode: () => void
+  setCodeTheme: (theme: string) => void
   setPendingContentJump: (target: ContentJumpTarget | null) => void
   setPendingAnchorJump: (target: AnchorJumpTarget | null) => void
   reset: () => void
@@ -33,6 +35,7 @@ const initialState = {
   outlineWidth: 224,
   searchPanel: 'none' as const,
   viewMode: 'render' as ViewMode,
+  codeTheme: 'auto',
   pendingContentJump: null as ContentJumpTarget | null,
   pendingAnchorJump: null as AnchorJumpTarget | null,
 }
@@ -48,6 +51,7 @@ export const useUIStore = create<UIState>((set) => ({
   closeSearch: () => set({ searchPanel: 'none' }),
   setViewMode: (mode) => set({ viewMode: mode }),
   toggleViewMode: () => set((s) => ({ viewMode: s.viewMode === 'render' ? 'source' : 'render' })),
+  setCodeTheme: (theme) => set({ codeTheme: theme }),
   setPendingContentJump: (target) => set({ pendingContentJump: target }),
   setPendingAnchorJump: (target) => set({ pendingAnchorJump: target }),
   reset: () => set(initialState),

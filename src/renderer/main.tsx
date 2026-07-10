@@ -5,7 +5,7 @@ import { ErrorBoundary } from './components/ErrorBoundary'
 import { logError } from './logger'
 import './styles/globals.css'
 import 'katex/dist/katex.min.css'
-import 'highlight.js/styles/github-dark.css'
+import './styles/code-theme.css'
 import './lib/highlight'
 
 window.addEventListener('error', (event) => {

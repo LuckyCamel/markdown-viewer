@@ -176,17 +176,13 @@ function App() {
                 </div>
               </>
             ) : (
-              <div className="h-full flex flex-col items-center justify-center p-4 text-center">
-                <p className="text-gray-500 dark:text-gray-400 text-sm">No folder opened</p>
-                <button
-                  onClick={async () => {
-                    const path = await ipc.dialog.openDirectory()
-                    if (path) handleOpenFolder(path)
-                  }}
-                  className="mt-4 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 text-sm"
-                >
-                  Open Folder
-                </button>
+              <div className="p-3">
+                <div className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide px-2 py-1">
+                  Explorer
+                </div>
+                <div className="h-full flex items-center justify-center">
+                  <p className="text-gray-400 dark:text-gray-500 text-xs">No folder opened</p>
+                </div>
               </div>
             )}
           </div>

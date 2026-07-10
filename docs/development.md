@@ -65,7 +65,7 @@ mock IPC E2E 作为 PR 快速回归层：
 1. 更新版本号（**须用户明确许可**，见 `AGENTS.md`）
 2. 更新 [`CHANGELOG.md`](../CHANGELOG.md) `[Unreleased]` 条目
 3. commit 并 push 到 `main`
-4. **打 tag `v*`**（如 `v1.2.2`）并 push — 触发 [`.github/workflows/release.yml`](../.github/workflows/release.yml)
+4. **打 tag `v*`**（如 `v1.2.3`）并 push — 触发 [`.github/workflows/release.yml`](../.github/workflows/release.yml)
 5. 按 [release-checklist.md](release-checklist.md) 手工冒烟
 6. 确认 GitHub Release 含各平台安装包（Windows exe、macOS dmg、Linux deb/AppImage）
 

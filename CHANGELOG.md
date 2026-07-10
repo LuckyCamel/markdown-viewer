@@ -4,9 +4,12 @@
 
 ## [Unreleased]
 
+## [1.2.3] - 2026-07-10
+
 ### 文档
 
-- **文档当前态重设计**：删除 `archive/`、`adr/`、`backlog`、`CONTEXT.md`；`docs/` 仅保留 4 份活文档；根 README 为唯一入口；发布参与文档禁止含未完成规划/任务待办
+- **文档体系纳入版本库**：`docs/` 纳入 Git；新增 `product.md`、`development.md`、`release-checklist.md`；根 README 为文档入口
+- **文档当前态重设计**：删除 `archive/`、`adr/`、`backlog`、`CONTEXT.md`；仅保留 4 份活文档；发布参与文档禁止含未完成规划/任务待办
 
 ## [1.2.2] - 2026-07-09
 

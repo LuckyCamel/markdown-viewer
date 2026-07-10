@@ -1,10 +1,11 @@
-import { useEffect, useMemo } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { useUIStore } from './stores/useUIStore'
 import { useEditorStore } from './features/markdown-viewer/useEditorStore'
 import { useTabStore } from './features/tabs/useTabStore'
 import { useFileStore } from './features/file-tree/useFileStore'
 import { ThemeProvider } from './components/ThemeProvider'
 import { Layout } from './components/Layout'
+import { AboutDialog } from './components/AboutDialog'
 import { WelcomePage } from './features/welcome/WelcomePage'
 import { FileTree } from './features/file-tree/FileTree'
 import { TabBar } from './features/tabs/TabBar'
@@ -25,6 +26,8 @@ import { useMenuEvents } from './hooks/useMenuEvents'
 import { isVisibleFileEntry } from '../shared/settingsDefaults'
 
 function App() {
+  const [showAbout, setShowAbout] = useState(false)
+
   const {
     initialized,
     workspacePath,
@@ -130,74 +133,89 @@ function App() {
     onOpenFileSearch: () => openSearch('file'),
     onOpenContentSearch: () => openSearch('content'),
     onToggleSettings: () => setShowSettings((v) => !v),
+    onShowAbout: () => setShowAbout(true),
   })
 
   return (
     <ThemeProvider>
-      {!workspacePath ? (
-        <WelcomePage onFolderOpen={handleOpenFolder} onFileOpen={handleOpenFile} />
-      ) : (
-        <Layout
-          sidebar={
-            <div>
-              <FileTree rootPath={workspacePath} />
-              <div className="border-t border-gray-200 dark:border-gray-700">
-                {searchPanel === 'file' && (
-                  <FileSearch
-                    files={allFiles}
-                    onSelect={(p) => {
-                      handleOpenFile(p)
-                      closeSearch()
-                    }}
+      <AboutDialog isOpen={showAbout} onClose={() => setShowAbout(false)} />
+      <Layout
+        sidebar={
+          <div>
+            {workspacePath ? (
+              <>
+                <FileTree rootPath={workspacePath} />
+                <div className="border-t border-gray-200 dark:border-gray-700">
+                  {searchPanel === 'file' && (
+                    <FileSearch
+                      files={allFiles}
+                      onSelect={(p) => {
+                        handleOpenFile(p)
+                        closeSearch()
+                      }}
+                    />
+                  )}
+                  {searchPanel === 'content' && (
+                    <ContentSearch
+                      workspacePath={workspacePath}
+                      onSelect={(match) => {
+                        setPendingContentJump({
+                          path: match.path,
+                          line: match.line,
+                          lineContent: match.lineContent,
+                        })
+                        handleOpenFile(match.path)
+                        closeSearch()
+                      }}
+                    />
+                  )}
+                </div>
+              </>
+            ) : (
+              <div className="h-full flex flex-col items-center justify-center p-4 text-center">
+                <p className="text-gray-500 dark:text-gray-400 text-sm">No folder opened</p>
+                <button
+                  onClick={async () => {
+                    const path = await ipc.dialog.openDirectory()
+                    if (path) handleOpenFolder(path)
+                  }}
+                  className="mt-4 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 text-sm"
+                >
+                  Open Folder
+                </button>
+              </div>
+            )}
+          </div>
+        }
+        main={
+          showSettings ? (
+            <SettingsPanel />
+          ) : openFiles.length > 0 ? (
+            <div className="h-full flex flex-col">
+              <TabBar />
+              <div className="flex-1 overflow-y-auto" data-scroll-container>
+                {loadError ? (
+                  <EditorLoadError
+                    message={loadError}
+                    onRetry={() => activeFile && loadContent(activeFile)}
                   />
-                )}
-                {searchPanel === 'content' && (
-                  <ContentSearch
-                    workspacePath={workspacePath}
-                    onSelect={(match) => {
-                      setPendingContentJump({
-                        path: match.path,
-                        line: match.line,
-                        lineContent: match.lineContent,
-                      })
-                      handleOpenFile(match.path)
-                      closeSearch()
-                    }}
-                  />
-                )}
+                ) : content !== undefined ? (
+                  <MarkdownViewer content={content} filePath={activeFile ?? undefined} />
+                ) : loading ? (
+                  <div className="flex items-center justify-center h-full text-gray-500">
+                    Loading...
+                  </div>
+                ) : null}
               </div>
             </div>
-          }
-          main={
-            showSettings ? (
-              <SettingsPanel />
-            ) : openFiles.length > 0 ? (
-              <div className="h-full flex flex-col">
-                <TabBar />
-                <div className="flex-1 overflow-y-auto" data-scroll-container>
-                  {loadError ? (
-                    <EditorLoadError
-                      message={loadError}
-                      onRetry={() => activeFile && loadContent(activeFile)}
-                    />
-                  ) : content !== undefined ? (
-                    <MarkdownViewer content={content} filePath={activeFile ?? undefined} />
-                  ) : loading ? (
-                    <div className="flex items-center justify-center h-full text-gray-500">
-                      Loading...
-                    </div>
-                  ) : null}
-                </div>
-              </div>
-            ) : (
-              <WelcomePage onFolderOpen={handleOpenFolder} onFileOpen={handleOpenFile} />
-            )
-          }
-          outline={content ? <Outline content={content} /> : null}
-          sidebarVisible={sidebarVisible}
-          outlineVisible={outlineVisible}
-        />
-      )}
+          ) : (
+            <WelcomePage onFolderOpen={handleOpenFolder} onFileOpen={handleOpenFile} />
+          )
+        }
+        outline={content ? <Outline content={content} /> : null}
+        sidebarVisible={sidebarVisible}
+        outlineVisible={outlineVisible}
+      />
     </ThemeProvider>
   )
 }

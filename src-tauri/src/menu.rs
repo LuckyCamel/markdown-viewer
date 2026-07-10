@@ -10,6 +10,7 @@ pub const TOGGLE_OUTLINE: &str = "menu_toggle_outline";
 pub const FILE_SEARCH: &str = "menu_file_search";
 pub const CONTENT_SEARCH: &str = "menu_content_search";
 pub const SETTINGS: &str = "menu_settings";
+pub const ABOUT: &str = "menu_about";
 
 /**
  * 构建应用原生菜单并注册点击事件（向前端 emit menu-action）
@@ -23,6 +24,7 @@ pub fn setup_menu(app: &App) -> tauri::Result<()> {
     let toggle_outline = MenuItemBuilder::with_id(TOGGLE_OUTLINE, "Toggle Outline").build(app)?;
     let file_search = MenuItemBuilder::with_id(FILE_SEARCH, "Find File...").build(app)?;
     let content_search = MenuItemBuilder::with_id(CONTENT_SEARCH, "Find in Files...").build(app)?;
+    let about = MenuItemBuilder::with_id(ABOUT, "About Markdown-Viewer").build(app)?;
 
     let file_menu = SubmenuBuilder::new(app, "File")
         .item(&open_folder)
@@ -45,8 +47,12 @@ pub fn setup_menu(app: &App) -> tauri::Result<()> {
         .item(&content_search)
         .build()?;
 
+    let help_menu = SubmenuBuilder::new(app, "Help")
+        .item(&about)
+        .build()?;
+
     let menu = MenuBuilder::new(app)
-        .items(&[&file_menu, &view_menu, &search_menu])
+        .items(&[&file_menu, &view_menu, &search_menu, &help_menu])
         .build()?;
 
     app.set_menu(menu)?;

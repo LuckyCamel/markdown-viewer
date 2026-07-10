@@ -3,6 +3,7 @@ import { listen } from '@tauri-apps/api/event'
 import { useTabStore } from '../features/tabs/useTabStore'
 import { logError } from '../logger'
 import {
+  MENU_ABOUT,
   MENU_CLOSE_TAB,
   MENU_CONTENT_SEARCH,
   MENU_FILE_SEARCH,
@@ -22,6 +23,7 @@ export interface MenuHandlers {
   onOpenFileSearch: () => void
   onOpenContentSearch: () => void
   onToggleSettings: () => void
+  onShowAbout: () => void
 }
 
 /**
@@ -64,6 +66,9 @@ export function useMenuEvents(handlers: MenuHandlers): void {
           break
         case MENU_SETTINGS:
           h.onToggleSettings()
+          break
+        case MENU_ABOUT:
+          h.onShowAbout()
           break
         default:
           break

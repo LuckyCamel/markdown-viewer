@@ -7,6 +7,7 @@ export const MENU_TOGGLE_OUTLINE = 'menu_toggle_outline'
 export const MENU_FILE_SEARCH = 'menu_file_search'
 export const MENU_CONTENT_SEARCH = 'menu_content_search'
 export const MENU_SETTINGS = 'menu_settings'
+export const MENU_ABOUT = 'menu_about'
 
 export type MenuActionId =
   | typeof MENU_OPEN_FOLDER
@@ -17,3 +18,4 @@ export type MenuActionId =
   | typeof MENU_FILE_SEARCH
   | typeof MENU_CONTENT_SEARCH
   | typeof MENU_SETTINGS
+  | typeof MENU_ABOUT

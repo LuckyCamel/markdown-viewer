@@ -10,6 +10,7 @@ import { WelcomePage } from './features/welcome/WelcomePage'
 import { FileTree } from './features/file-tree/FileTree'
 import { TabBar } from './features/tabs/TabBar'
 import { MarkdownViewer } from './features/markdown-viewer/MarkdownViewer'
+import { SourceViewer } from './features/markdown-viewer/SourceViewer'
 import { Outline } from './features/outline/Outline'
 import { FileSearch } from './features/search/FileSearch'
 import { ContentSearch } from './features/search/ContentSearch'
@@ -40,6 +41,7 @@ function App() {
   const sidebarVisible = useUIStore((s) => s.sidebarVisible)
   const outlineVisible = useUIStore((s) => s.outlineVisible)
   const searchPanel = useUIStore((s) => s.searchPanel)
+  const viewMode = useUIStore((s) => s.viewMode)
   const toggleSidebar = useUIStore((s) => s.toggleSidebar)
   const toggleOutline = useUIStore((s) => s.toggleOutline)
   const openSearch = useUIStore((s) => s.openSearch)
@@ -117,6 +119,7 @@ function App() {
     onOpenFileSearch: () => openSearch('file'),
     onOpenContentSearch: () => openSearch('content'),
     onToggleSettings: () => setShowSettings((v) => !v),
+    onToggleViewMode: () => useUIStore.getState().toggleViewMode(),
   })
 
   useMenuEvents({
@@ -134,6 +137,7 @@ function App() {
     onOpenContentSearch: () => openSearch('content'),
     onToggleSettings: () => setShowSettings((v) => !v),
     onShowAbout: () => setShowAbout(true),
+    onToggleViewMode: () => useUIStore.getState().toggleViewMode(),
   })
 
   return (
@@ -200,7 +204,11 @@ function App() {
                     onRetry={() => activeFile && loadContent(activeFile)}
                   />
                 ) : content !== undefined ? (
-                  <MarkdownViewer content={content} filePath={activeFile ?? undefined} />
+                  viewMode === 'source' ? (
+                    <SourceViewer content={content} filePath={activeFile ?? undefined} />
+                  ) : (
+                    <MarkdownViewer content={content} filePath={activeFile ?? undefined} />
+                  )
                 ) : loading ? (
                   <div className="flex items-center justify-center h-full text-gray-500">
                     Loading...

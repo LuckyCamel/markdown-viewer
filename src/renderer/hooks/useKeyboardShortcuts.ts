@@ -15,6 +15,7 @@ interface ShortcutHandlers {
   onOpenFileSearch: () => void
   onOpenContentSearch: () => void
   onToggleSettings: () => void
+  onToggleViewMode: () => void
 }
 
 type HandlerAction =
@@ -24,6 +25,7 @@ type HandlerAction =
   | 'openFileSearch'
   | 'openContentSearch'
   | 'toggleSettings'
+  | 'toggleViewMode'
 
 const ACTION_TO_HANDLER: Record<HandlerAction, keyof ShortcutHandlers> = {
   openFolder: 'onOpenFolder',
@@ -32,6 +34,7 @@ const ACTION_TO_HANDLER: Record<HandlerAction, keyof ShortcutHandlers> = {
   openFileSearch: 'onOpenFileSearch',
   openContentSearch: 'onOpenContentSearch',
   toggleSettings: 'onToggleSettings',
+  toggleViewMode: 'onToggleViewMode',
 }
 
 /**

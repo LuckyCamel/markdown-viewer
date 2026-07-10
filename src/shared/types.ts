@@ -69,3 +69,5 @@ export interface FileChangeEvent {
 }
 
 export type ThemeMode = 'system' | 'light' | 'dark'
+
+export type ViewMode = 'render' | 'source'

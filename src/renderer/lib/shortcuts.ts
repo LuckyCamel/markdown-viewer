@@ -14,6 +14,7 @@ export type ShortcutAction =
   | 'openFileSearch'
   | 'openContentSearch'
   | 'toggleSettings'
+  | 'toggleViewMode'
   | 'closeTab'
   | 'nextTab'
   | 'prevTab'
@@ -65,6 +66,14 @@ export const DEFAULT_SHORTCUTS: Record<ShortcutAction, ShortcutConfig> = {
     key: ',',
     ctrl: true,
     shift: false,
+    alt: false,
+  },
+  toggleViewMode: {
+    id: 'toggleViewMode',
+    label: '切换源码/渲染视图',
+    key: 's',
+    ctrl: true,
+    shift: true,
     alt: false,
   },
   closeTab: {

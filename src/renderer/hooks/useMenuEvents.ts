@@ -12,6 +12,7 @@ import {
   MENU_SETTINGS,
   MENU_TOGGLE_OUTLINE,
   MENU_TOGGLE_SIDEBAR,
+  MENU_TOGGLE_VIEW_MODE,
   type MenuActionId,
 } from '../lib/menuActions'
 
@@ -24,6 +25,7 @@ export interface MenuHandlers {
   onOpenContentSearch: () => void
   onToggleSettings: () => void
   onShowAbout: () => void
+  onToggleViewMode: () => void
 }
 
 /**
@@ -69,6 +71,9 @@ export function useMenuEvents(handlers: MenuHandlers): void {
           break
         case MENU_ABOUT:
           h.onShowAbout()
+          break
+        case MENU_TOGGLE_VIEW_MODE:
+          h.onToggleViewMode()
           break
         default:
           break

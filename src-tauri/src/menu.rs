@@ -11,6 +11,7 @@ pub const FILE_SEARCH: &str = "menu_file_search";
 pub const CONTENT_SEARCH: &str = "menu_content_search";
 pub const SETTINGS: &str = "menu_settings";
 pub const ABOUT: &str = "menu_about";
+pub const TOGGLE_VIEW_MODE: &str = "menu_toggle_view_mode";
 
 /**
  * 构建应用原生菜单并注册点击事件（向前端 emit menu-action）
@@ -25,6 +26,7 @@ pub fn setup_menu(app: &App) -> tauri::Result<()> {
     let file_search = MenuItemBuilder::with_id(FILE_SEARCH, "Find File...").build(app)?;
     let content_search = MenuItemBuilder::with_id(CONTENT_SEARCH, "Find in Files...").build(app)?;
     let about = MenuItemBuilder::with_id(ABOUT, "About Markdown-Viewer").build(app)?;
+    let toggle_view_mode = MenuItemBuilder::with_id(TOGGLE_VIEW_MODE, "Toggle Source View").build(app)?;
 
     let file_menu = SubmenuBuilder::new(app, "File")
         .item(&open_folder)
@@ -40,6 +42,8 @@ pub fn setup_menu(app: &App) -> tauri::Result<()> {
     let view_menu = SubmenuBuilder::new(app, "View")
         .item(&toggle_sidebar)
         .item(&toggle_outline)
+        .separator()
+        .item(&toggle_view_mode)
         .build()?;
 
     let search_menu = SubmenuBuilder::new(app, "Search")

@@ -8,6 +8,7 @@ export const MENU_FILE_SEARCH = 'menu_file_search'
 export const MENU_CONTENT_SEARCH = 'menu_content_search'
 export const MENU_SETTINGS = 'menu_settings'
 export const MENU_ABOUT = 'menu_about'
+export const MENU_TOGGLE_VIEW_MODE = 'menu_toggle_view_mode'
 
 export type MenuActionId =
   | typeof MENU_OPEN_FOLDER
@@ -19,3 +20,4 @@ export type MenuActionId =
   | typeof MENU_CONTENT_SEARCH
   | typeof MENU_SETTINGS
   | typeof MENU_ABOUT
+  | typeof MENU_TOGGLE_VIEW_MODE

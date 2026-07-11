@@ -29,5 +29,5 @@
 |--------|------|
 | Windows 安装包 | GitHub Release 含 `.exe` |
 | macOS 安装包 | GitHub Release 含 `.dmg` |
-| Linux 安装包 | GitHub Release 含 `.deb` 与 AppImage |
+| Linux 安装包 | GitHub Release 含 `.deb` |
 | 版本记录 | [`CHANGELOG.md`](../CHANGELOG.md) 已归档对应版本条目 |

@@ -67,7 +67,7 @@ mock IPC E2E 作为 PR 快速回归层：
 3. commit 并 push 到 `main`
 4. **打 tag `v*`**（如 `v1.2.3`）并 push — 触发 [`.github/workflows/release.yml`](../.github/workflows/release.yml)
 5. 按 [release-checklist.md](release-checklist.md) 手工冒烟
-6. 确认 GitHub Release 含各平台安装包（Windows exe、macOS dmg、Linux deb/AppImage）
+6. 确认 GitHub Release 含各平台安装包（Windows exe、macOS dmg、Linux deb）
 
 > **注意**：仅 push main **不会**触发 Release；必须 push `v*` tag。
 

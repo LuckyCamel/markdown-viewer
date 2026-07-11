@@ -65,7 +65,7 @@
 |------|------|
 | Windows | NSIS `.exe` |
 | macOS | `.dmg` |
-| Linux | `.deb`、AppImage |
+| Linux | `.deb` |
 
 Release 由推送 `v*` tag 触发，详见 [development.md](development.md#发布流程)。
 

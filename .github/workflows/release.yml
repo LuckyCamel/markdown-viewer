@@ -54,14 +54,13 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y libwebkit2gtk-4.1-dev build-essential curl wget file libxdo-dev libssl-dev libayatana-appindicator3-dev librsvg2-dev
       - run: pnpm install --frozen-lockfile
-      - run: pnpm tauri build --bundles deb,appimage
+      - run: pnpm tauri build --bundles deb
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       - name: Stage Linux packages
         run: |
           mkdir -p staging
           cp src-tauri/target/release/bundle/deb/*.deb staging/
-          cp src-tauri/target/release/bundle/appimage/*.AppImage staging/
           ls -lah staging/
       - uses: actions/upload-artifact@v4
         with:

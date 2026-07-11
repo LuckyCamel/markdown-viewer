@@ -4,7 +4,7 @@ export interface ExtractedHeading {
   id: string
 }
 
-const FENCE_LINE = /^(`{3,}|~{3,})(.*)$/
+const FENCE_LINE = /^(`{3,}|~{3,})\s*(.*)$/
 const ATX_HEADING = /^(#{1,6})\s+(.+)$/
 
 /**
@@ -26,11 +26,12 @@ export function extractHeadings(
     if (fenceMatch) {
       const marker = fenceMatch[1][0]
       const length = fenceMatch[1].length
+      const infoString = fenceMatch[2] ?? ''
       if (!inFence) {
         inFence = true
         fenceMarker = marker
         fenceLength = length
-      } else if (marker === fenceMarker && length >= fenceLength) {
+      } else if (marker === fenceMarker && length >= fenceLength && infoString.trim() === '') {
         inFence = false
       }
       continue

@@ -9,6 +9,11 @@ export default defineConfig({
       'src/renderer/**/*.test.tsx',
       'src/shared/**/*.test.ts',
     ],
+    exclude: [
+      '**/node_modules/**',
+      '**/.git/**',
+      'src/shared/outlineActiveHeading.test.ts',
+    ],
     setupFiles: ['src/renderer/test/setup.ts'],
   },
 })

@@ -25,6 +25,7 @@ import { useAnchorJump } from './hooks/useAnchorJump'
 import { useKeyboardShortcuts } from './hooks/useKeyboardShortcuts'
 import { useMenuEvents } from './hooks/useMenuEvents'
 import { isVisibleFileEntry } from '../shared/settingsDefaults'
+import { isMarkdownFile } from '../shared/fileTypes'
 
 function App() {
   const [showAbout, setShowAbout] = useState(false)
@@ -61,7 +62,8 @@ function App() {
     const files: { path: string; name: string }[] = []
     for (const dir of Object.values(entries)) {
       for (const entry of dir) {
-        if (!entry.isDirectory && entry.isMarkdown) {
+        if (entry.isDirectory) continue
+        if (entry.isTextFile !== undefined ? entry.isTextFile : entry.isMarkdown) {
           files.push({ path: entry.path, name: entry.name })
         }
       }
@@ -200,10 +202,14 @@ function App() {
                     onRetry={() => activeFile && loadContent(activeFile)}
                   />
                 ) : content !== undefined ? (
-                  viewMode === 'source' ? (
-                    <SourceViewer content={content} filePath={activeFile ?? undefined} />
+                  activeFile && isMarkdownFile(activeFile) ? (
+                    viewMode === 'source' ? (
+                      <SourceViewer content={content} filePath={activeFile} />
+                    ) : (
+                      <MarkdownViewer content={content} filePath={activeFile} />
+                    )
                   ) : (
-                    <MarkdownViewer content={content} filePath={activeFile ?? undefined} />
+                    <SourceViewer content={content} filePath={activeFile ?? undefined} />
                   )
                 ) : loading ? (
                   <div className="flex items-center justify-center h-full text-gray-500">
@@ -216,7 +222,9 @@ function App() {
             <WelcomePage onFolderOpen={handleOpenFolder} onFileOpen={handleOpenFile} />
           )
         }
-        outline={content ? <Outline content={content} /> : null}
+        outline={
+          activeFile && content && isMarkdownFile(activeFile) ? <Outline content={content} /> : null
+        }
         sidebarVisible={sidebarVisible}
         outlineVisible={outlineVisible}
       />

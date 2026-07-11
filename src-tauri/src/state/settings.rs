@@ -66,12 +66,41 @@ impl SettingsState {
             return true;
         }
         if let Some(ext) = path.extension() {
-            let ext_str = ext.to_string_lossy().to_string();
-            let text_extensions =
-                ["txt", "json", "yaml", "yml", "toml", "rs", "ts", "js", "html", "css"];
+            let ext_str = ext.to_string_lossy().to_string().to_lowercase();
+            let text_extensions = [
+                // 前端/脚本
+                "js", "jsx", "mjs", "cjs", "ts", "tsx",
+                // Python
+                "py", "pyw", "pyi",
+                // Shell
+                "sh", "bash", "zsh",
+                // 数据/配置
+                "json", "jsonc", "yaml", "yml", "toml", "ini", "cfg",
+                // Web
+                "html", "htm", "xml", "svg", "css", "scss", "less",
+                // SQL
+                "sql",
+                // 系统语言
+                "go", "rs", "rust", "java",
+                "c", "h", "cpp", "cc", "cxx", "hpp", "hh",
+                "cs", "csx", "php", "phtml",
+                "rb", "ruby", "swift", "kt", "kts", "dart",
+                // 其他
+                "lua", "pl", "pm", "r", "scala", "hs", "lhs",
+                "txt", "md", "markdown", "mkd",
+            ];
             text_extensions.contains(&ext_str.as_str())
         } else {
-            false
+            // 无扩展名的常见文本文件
+            if let Some(name) = path.file_name() {
+                let name_str = name.to_string_lossy().to_string();
+                matches!(
+                    name_str.as_str(),
+                    "Makefile" | "makefile" | "Dockerfile" | ".dockerignore" | ".gitignore" | ".env" | "LICENSE" | "README"
+                )
+            } else {
+                false
+            }
         }
     }
 

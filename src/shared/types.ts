@@ -4,6 +4,7 @@ export interface FileEntry {
   isDirectory: boolean
   isHidden: boolean
   isMarkdown?: boolean
+  isTextFile?: boolean
 }
 
 export interface FileContent {

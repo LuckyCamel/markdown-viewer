@@ -28,12 +28,14 @@ pub async fn list_directory(
 
         let is_dir = entry.path().is_dir();
         let is_markdown = !is_dir && settings.is_markdown_file(&entry.path());
+        let is_text_file = !is_dir && settings.is_text_file(&entry.path());
         entries.push(serde_json::json!({
             "name": file_name,
             "path": entry.path().to_string_lossy().to_string(),
             "isDirectory": is_dir,
             "isHidden": file_name.starts_with('.'),
             "isMarkdown": is_markdown,
+            "isTextFile": is_text_file,
         }));
     }
 

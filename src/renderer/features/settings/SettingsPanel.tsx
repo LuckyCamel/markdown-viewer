@@ -19,7 +19,11 @@ function parseLines(value: string): string[] {
     .filter(Boolean)
 }
 
-export function SettingsPanel() {
+interface SettingsPanelProps {
+  onClose?: () => void
+}
+
+export function SettingsPanel({ onClose }: SettingsPanelProps) {
   const theme = useUIStore((s) => s.theme)
   const setTheme = useUIStore((s) => s.setTheme)
   const codeTheme = useUIStore((s) => s.codeTheme)
@@ -74,7 +78,30 @@ export function SettingsPanel() {
 
   return (
     <div className="p-6 max-w-lg">
-      <h2 className="text-lg font-semibold mb-4">Settings</h2>
+      <div className="flex items-center justify-between mb-4">
+        <h2 className="text-lg font-semibold">Settings</h2>
+        {onClose && (
+          <button
+            onClick={onClose}
+            className="w-7 h-7 flex items-center justify-center rounded text-gray-500 hover:bg-gray-100 dark:hover:bg-gray-700 hover:text-gray-700 dark:hover:text-gray-200 transition-colors"
+            aria-label="Close settings"
+            title="Close (Esc)"
+          >
+            <svg
+              viewBox="0 0 24 24"
+              className="w-5 h-5"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
+              <line x1="18" y1="6" x2="6" y2="18" />
+              <line x1="6" y1="6" x2="18" y2="18" />
+            </svg>
+          </button>
+        )}
+      </div>
 
       <div className="flex gap-1 mb-6 border-b border-gray-200 dark:border-gray-700">
         {tabs.map((tab) => (

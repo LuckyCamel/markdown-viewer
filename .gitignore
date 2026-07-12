@@ -9,3 +9,4 @@ playwright/
 playwright-report/
 test-results/
 \.sdd/
+candidate_icons/

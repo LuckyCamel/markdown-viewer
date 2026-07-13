@@ -1,19 +1,33 @@
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
+import { getVersion } from '@tauri-apps/api/app'
 
 interface AboutDialogProps {
   isOpen: boolean
   onClose: () => void
 }
 
-const version = '1.2.3'
-
+/**
+ * 关于对话框组件
+ * 从 Tauri API 动态获取应用版本号，避免硬编码
+ */
 export function AboutDialog({ isOpen, onClose }: AboutDialogProps) {
+  const [version, setVersion] = useState('')
+
   useEffect(() => {
     if (!isOpen) return
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Escape') onClose()
     }
     window.addEventListener('keydown', handleKeyDown)
+
+    /**
+     * 异步获取应用版本号
+     * 开发环境下若 Tauri 未启动，降级显示空字符串
+     */
+    getVersion()
+      .then(setVersion)
+      .catch(() => setVersion(''))
+
     return () => window.removeEventListener('keydown', handleKeyDown)
   }, [isOpen, onClose])
 

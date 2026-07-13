@@ -214,6 +214,13 @@ export async function openExternal(url: string): Promise<void> {
   await shellOpen(url)
 }
 
+/**
+ * 在系统文件管理器中显示指定文件或目录所在位置
+ */
+export async function revealPathInDir(path: string): Promise<void> {
+  await invoke('reveal_path', { path })
+}
+
 const ipcEventListeners = new Map<string, Set<(...args: unknown[]) => void>>()
 const ipcEventUnlisteners = new Map<string, UnlistenFn>()
 
@@ -307,6 +314,7 @@ export const ipc = {
   },
   shell: {
     openExternal,
+    revealPathInDir,
   },
   ipc: {
     on: onIpcEvent,

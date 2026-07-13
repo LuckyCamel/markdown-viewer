@@ -33,6 +33,7 @@ declare global {
       directoryTree: Map<string, FileEntry[]>
       dialogResult: string | null
       openExternalCalls: string[]
+      revealPathCalls: string[]
       searchResults: SearchProgress | null
       fileChangeListeners: Map<string, (event: FileChangeEvent, content: string | null) => void>
       searchResultListeners: Set<(result: SearchProgress) => void>
@@ -49,6 +50,7 @@ function ensureE2E() {
       directoryTree: new Map(),
       dialogResult: null,
       openExternalCalls: [],
+      revealPathCalls: [],
       searchResults: null,
       fileChangeListeners: new Map(),
       searchResultListeners: new Set(),
@@ -175,6 +177,14 @@ export async function openExternal(url: string): Promise<void> {
   window.__E2E__.openExternalCalls.push(url)
 }
 
+/**
+ * 在系统文件管理器中显示指定文件或目录所在位置（mock 实现）
+ */
+export async function revealPathInDir(path: string): Promise<void> {
+  ensureE2E()
+  window.__E2E__.revealPathCalls.push(path)
+}
+
 export function onIpcEvent(channel: string, callback: (...args: unknown[]) => void): () => void {
   ensureE2E()
   if (!window.__E2E__.eventListeners.has(channel)) {
@@ -241,6 +251,7 @@ export const ipc = {
   },
   shell: {
     openExternal,
+    revealPathInDir,
   },
   ipc: {
     on: onIpcEvent,

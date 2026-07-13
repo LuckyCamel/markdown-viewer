@@ -1,7 +1,16 @@
+import { useState } from 'react'
 import { basename } from '../../../shared/utils'
 import { useTabStore } from './useTabStore'
 import { useUIStore } from '../../stores/useUIStore'
 import { FileIcon } from '../../components/FileIcon'
+import { ContextMenu, type ContextMenuItem } from '../../components/ContextMenu'
+import { copyPathToClipboard, revealPathInDir } from '../../lib/fileActions'
+
+interface MenuState {
+  x: number
+  y: number
+  path: string
+}
 
 /**
  * TabBar：显示打开的文件标签页，右侧提供源码/渲染切换按钮
@@ -12,11 +21,34 @@ export function TabBar() {
   const isDirty = useTabStore((s) => s.isDirty)
   const setActive = useTabStore((s) => s.setActive)
   const closeFile = useTabStore((s) => s.closeFile)
+  const [menu, setMenu] = useState<MenuState | null>(null)
 
   const viewMode = useUIStore((s) => s.viewMode)
   const setViewMode = useUIStore((s) => s.setViewMode)
 
   if (openFiles.length === 0) return null
+
+  /**
+   * 右键打开上下文菜单：阻止默认菜单并记录目标路径
+   */
+  const handleContextMenu = (e: React.MouseEvent, path: string) => {
+    e.preventDefault()
+    e.stopPropagation()
+    setMenu({ x: e.clientX, y: e.clientY, path })
+  }
+
+  const menuItems: ContextMenuItem[] = menu
+    ? [
+        {
+          label: '复制地址',
+          onClick: () => copyPathToClipboard(menu.path),
+        },
+        {
+          label: '在文件夹中打开',
+          onClick: () => revealPathInDir(menu.path),
+        },
+      ]
+    : []
 
   return (
     <div className="flex items-center border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800">
@@ -34,6 +66,7 @@ export function TabBar() {
               onMouseDown={(e) => {
                 if (e.button === 1) closeFile(filePath)
               }}
+              onContextMenu={(e) => handleContextMenu(e, filePath)}
               className={`
                 flex items-center gap-1.5 px-3 py-1.5 text-sm cursor-pointer border-r border-gray-200 dark:border-gray-700 select-none
                 ${
@@ -94,6 +127,9 @@ export function TabBar() {
           </svg>
         </button>
       </div>
+      {menu && (
+        <ContextMenu x={menu.x} y={menu.y} items={menuItems} onClose={() => setMenu(null)} />
+      )}
     </div>
   )
 }

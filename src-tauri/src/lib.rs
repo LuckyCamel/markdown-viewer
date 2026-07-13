@@ -47,6 +47,7 @@ pub fn run(launch_paths: Vec<String>) {
             commands::settings::update_settings,
             commands::launch::get_launch_paths,
             commands::scope::grant_fs_scope,
+            commands::reveal::reveal_path,
             commands::store::get_setting,
             commands::store::set_setting,
             commands::store::migrate_settings,

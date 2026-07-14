@@ -24,9 +24,13 @@ interface MarkdownViewerProps {
 export function MarkdownViewer({ content, filePath }: MarkdownViewerProps) {
   const components = {
     code({ className, children, ...props }: any) {
-      const text = String(children)
       const isMermaid = className?.includes('language-mermaid')
       if (isMermaid) {
+        const text = Array.isArray(children)
+          ? children.map((c) => (typeof c === 'string' ? c : '')).join('')
+          : typeof children === 'string'
+            ? children
+            : ''
         return <MermaidBlock chart={text} />
       }
       if (className) {
@@ -113,9 +117,8 @@ export function MarkdownViewer({ content, filePath }: MarkdownViewerProps) {
           rehypeHighlight,
         ]}
         components={{ ...markdownHeadingComponents, ...components }}
-      >
-        {content}
-      </ReactMarkdown>
+        children={content}
+      />
     </div>
   )
 }

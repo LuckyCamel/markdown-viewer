@@ -9,8 +9,19 @@ describe('MarkdownViewer', () => {
   })
 
   it('should render GFM table', () => {
-    render(<MarkdownViewer content="| A | B |\n|---|--|\n| 1 | 2 |" />)
-    expect(screen.getByText(/1/)).toBeDefined()
+    const content = '| A | B |\n|---|--|\n| 1 | 2 |'
+    const { container } = render(<MarkdownViewer content={content} />)
+    const table = container.querySelector('table')
+    expect(table).not.toBeNull()
+    expect(table?.querySelector('td')?.textContent).toBe('1')
+  })
+
+  it('should render inline code without backticks', () => {
+    const { container } = render(<MarkdownViewer content="`hello world`" />)
+    const codeElement = container.querySelector('code')
+    expect(codeElement).not.toBeNull()
+    expect(codeElement?.textContent).toBe('hello world')
+    expect(codeElement?.textContent).not.toContain('`')
   })
 
   it('应为标题注入 id 供大纲跳转', () => {
@@ -35,5 +46,14 @@ describe('MarkdownViewer', () => {
     render(<MarkdownViewer content="<u>underline</u>\n<kbd>Ctrl</kbd>" />)
     expect(document.querySelector('u')?.textContent).toBe('underline')
     expect(document.querySelector('kbd')?.textContent).toBe('Ctrl')
+  })
+
+  it('表格中的行内代码应正确渲染，不显示反引号', () => {
+    const content = '| 测试列 |\n|--------|\n| `hello world` |'
+    const { container } = render(<MarkdownViewer content={content} />)
+    const codeElement = container.querySelector('td code')
+    expect(codeElement).not.toBeNull()
+    expect(codeElement?.textContent).toBe('hello world')
+    expect(codeElement?.textContent).not.toContain('`')
   })
 })

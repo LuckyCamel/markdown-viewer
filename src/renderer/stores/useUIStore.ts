@@ -7,23 +7,25 @@ interface UIState {
   outlineVisible: boolean
   sidebarWidth: number
   outlineWidth: number
-  searchPanel: 'none' | 'file' | 'content'
+  searchPanel: 'none' | 'file' | 'content' | 'recent'
   viewMode: ViewMode
   codeTheme: string
   pendingContentJump: ContentJumpTarget | null
   pendingAnchorJump: AnchorJumpTarget | null
+  searchHighlight: { query: string } | null
   setTheme: (theme: ThemeMode) => void
   toggleSidebar: () => void
   toggleOutline: () => void
   setSidebarWidth: (width: number) => void
   setOutlineWidth: (width: number) => void
-  openSearch: (type: 'file' | 'content') => void
+  openSearch: (type: 'file' | 'content' | 'recent') => void
   closeSearch: () => void
   setViewMode: (mode: ViewMode) => void
   toggleViewMode: () => void
   setCodeTheme: (theme: string) => void
   setPendingContentJump: (target: ContentJumpTarget | null) => void
   setPendingAnchorJump: (target: AnchorJumpTarget | null) => void
+  setSearchHighlight: (query: string | null) => void
   reset: () => void
 }
 
@@ -38,6 +40,7 @@ const initialState = {
   codeTheme: 'auto',
   pendingContentJump: null as ContentJumpTarget | null,
   pendingAnchorJump: null as AnchorJumpTarget | null,
+  searchHighlight: null as { query: string } | null,
 }
 
 export const useUIStore = create<UIState>((set) => ({
@@ -54,5 +57,6 @@ export const useUIStore = create<UIState>((set) => ({
   setCodeTheme: (theme) => set({ codeTheme: theme }),
   setPendingContentJump: (target) => set({ pendingContentJump: target }),
   setPendingAnchorJump: (target) => set({ pendingAnchorJump: target }),
+  setSearchHighlight: (query) => set({ searchHighlight: query ? { query } : null }),
   reset: () => set(initialState),
 }))

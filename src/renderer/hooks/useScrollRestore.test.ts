@@ -52,7 +52,9 @@ describe('useScrollRestore', () => {
     renderHook(() => useScrollRestore('/a.md', 'content'))
     fireScroll(250)
     await vi.waitFor(() => {
-      expect(mockStoreSet).toHaveBeenCalledWith('readingPositions', { '/a.md': 250 })
+      expect(mockStoreSet).toHaveBeenCalledWith('readingPositions', {
+        '/a.md': { render: 250, source: 0 },
+      })
     })
   })
 
@@ -64,7 +66,9 @@ describe('useScrollRestore', () => {
     rerender({ file: '/b.md' })
     fireScroll(300)
     await vi.waitFor(() => {
-      expect(mockStoreSet).toHaveBeenCalledWith('readingPositions', { '/b.md': 300 })
+      expect(mockStoreSet).toHaveBeenCalledWith('readingPositions', {
+        '/b.md': { render: 300, source: 0 },
+      })
     })
   })
 
@@ -76,7 +80,7 @@ describe('useScrollRestore', () => {
     await vi.waitFor(() => {
       expect(mockStoreSet).toHaveBeenCalledWith('readingPositions', {
         '/other.md': 100,
-        '/a.md': 250,
+        '/a.md': { render: 250, source: 0 },
       })
     })
   })
@@ -94,10 +98,13 @@ describe('useScrollRestore', () => {
   describe('恢复滚动位置', () => {
     it('从 store 读取位置并设置 scrollTop', async () => {
       setupDOM()
+      const el = document.querySelector(SCROLL_CONTAINER_SELECTOR) as HTMLElement
+      // jsdom 默认 scrollHeight/clientHeight 为 0，需 mock 以触发正常恢复路径
+      Object.defineProperty(el, 'scrollHeight', { value: 1000, configurable: true, writable: true })
+      Object.defineProperty(el, 'clientHeight', { value: 500, configurable: true, writable: true })
       mockStoreGet.mockResolvedValue({ '/a.md': 120 })
       renderHook(() => useScrollRestore('/a.md', 'content'))
       await vi.waitFor(() => {
-        const el = document.querySelector(SCROLL_CONTAINER_SELECTOR) as HTMLElement
         expect(el.scrollTop).toBe(120)
       })
     })

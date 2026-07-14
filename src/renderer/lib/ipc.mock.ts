@@ -90,16 +90,27 @@ export async function getFileInfo(filePath: string): Promise<FileEntry> {
   }
 }
 
+/**
+ * 批量检查文件/目录是否存在（mock 实现，默认全部视为存在）
+ */
+export async function checkExists(paths: string[]): Promise<boolean[]> {
+  return paths.map(() => true)
+}
+
 export async function searchContent(
   _dirPath: string,
   _query: string,
-  _searchId: string,
+  searchId: string,
+  _isRegex: boolean = false,
 ): Promise<void> {
   ensureE2E()
   const results = window.__E2E__.searchResults
   if (results) {
+    // 用传入的 searchId 替换 mock 数据中的 searchId，
+    // 使 ContentSearch 的 handleResult 能匹配并 appendResults
+    const adjusted: SearchProgress = { ...results, searchId }
     for (const cb of window.__E2E__.searchResultListeners) {
-      cb(results)
+      cb(adjusted)
     }
   }
 }
@@ -226,6 +237,7 @@ export const ipc = {
     listDirectory,
     readFile,
     getFileInfo,
+    checkExists,
     updateSettings,
   },
   search: {

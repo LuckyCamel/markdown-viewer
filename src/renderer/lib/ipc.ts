@@ -36,12 +36,20 @@ export async function getFileInfo(filePath: string): Promise<FileEntry> {
   }
 }
 
+/**
+ * 批量检查文件/目录是否存在
+ */
+export async function checkExists(paths: string[]): Promise<boolean[]> {
+  return invoke<boolean[]>('check_files_exist', { paths })
+}
+
 export async function searchContent(
   dirPath: string,
   query: string,
   searchId: string,
+  isRegex: boolean = false,
 ): Promise<void> {
-  await invoke('search_content', { dirPath, query, searchId })
+  await invoke('search_content', { dirPath, query, searchId, isRegex })
 }
 
 export async function cancelSearch(searchId: string): Promise<void> {
@@ -289,6 +297,7 @@ export const ipc = {
     listDirectory,
     readFile,
     getFileInfo,
+    checkExists,
     updateSettings,
   },
   search: {

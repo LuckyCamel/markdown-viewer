@@ -16,6 +16,7 @@ describe('FileSearch', () => {
     render(<FileSearch files={files} onSelect={() => {}} />)
     const input = screen.getByPlaceholderText(/search/i)
     fireEvent.change(input, { target: { value: 'readme' } })
-    expect(screen.getByText('readme.md')).toBeDefined()
+    // 文件名被 <mark> 高亮分割，使用函数匹配器检查 textContent
+    expect(screen.getByText((_, el) => el?.textContent === 'readme.md')).toBeDefined()
   })
 })

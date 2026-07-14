@@ -14,6 +14,7 @@ interface ShortcutHandlers {
   onToggleOutline: () => void
   onOpenFileSearch: () => void
   onOpenContentSearch: () => void
+  onOpenRecentFiles: () => void
   onToggleSettings: () => void
   onToggleViewMode: () => void
 }
@@ -24,6 +25,7 @@ type HandlerAction =
   | 'toggleOutline'
   | 'openFileSearch'
   | 'openContentSearch'
+  | 'openRecentFiles'
   | 'toggleSettings'
   | 'toggleViewMode'
 
@@ -33,6 +35,7 @@ const ACTION_TO_HANDLER: Record<HandlerAction, keyof ShortcutHandlers> = {
   toggleOutline: 'onToggleOutline',
   openFileSearch: 'onOpenFileSearch',
   openContentSearch: 'onOpenContentSearch',
+  openRecentFiles: 'onOpenRecentFiles',
   toggleSettings: 'onToggleSettings',
   toggleViewMode: 'onToggleViewMode',
 }

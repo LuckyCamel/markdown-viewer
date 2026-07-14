@@ -8,6 +8,7 @@ export default defineConfig({
       'src/renderer/**/*.test.ts',
       'src/renderer/**/*.test.tsx',
       'src/shared/**/*.test.ts',
+      'src/shared/**/*.test.tsx',
     ],
     exclude: [
       '**/node_modules/**',

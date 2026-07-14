@@ -3,7 +3,12 @@ import { useSearchStore } from './useSearchStore'
 
 describe('useSearchStore', () => {
   beforeEach(() => {
-    useSearchStore.setState({ query: '', results: null, isSearching: false })
+    useSearchStore.setState({
+      query: '',
+      results: null,
+      isSearching: false,
+      isRegex: false,
+    })
   })
 
   it('初始状态为空', () => {
@@ -11,6 +16,18 @@ describe('useSearchStore', () => {
     expect(s.query).toBe('')
     expect(s.results).toBeNull()
     expect(s.isSearching).toBe(false)
+    expect(s.isRegex).toBe(false)
+  })
+
+  it('isRegex 初始为 false', () => {
+    expect(useSearchStore.getState().isRegex).toBe(false)
+  })
+
+  it('setIsRegex 切换正则模式', () => {
+    useSearchStore.getState().setIsRegex(true)
+    expect(useSearchStore.getState().isRegex).toBe(true)
+    useSearchStore.getState().setIsRegex(false)
+    expect(useSearchStore.getState().isRegex).toBe(false)
   })
 
   it('setQuery 更新查询', () => {
@@ -53,11 +70,17 @@ describe('useSearchStore', () => {
   })
 
   it('reset 清空所有字段', () => {
-    useSearchStore.setState({ query: 'x', results: {} as any, isSearching: true })
+    useSearchStore.setState({
+      query: 'x',
+      results: {} as any,
+      isSearching: true,
+      isRegex: true,
+    })
     useSearchStore.getState().reset()
     const s = useSearchStore.getState()
     expect(s.query).toBe('')
     expect(s.results).toBeNull()
     expect(s.isSearching).toBe(false)
+    expect(s.isRegex).toBe(false)
   })
 })

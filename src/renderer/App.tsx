@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { useUIStore } from './stores/useUIStore'
 import { useEditorStore } from './features/markdown-viewer/useEditorStore'
 import { useTabStore } from './features/tabs/useTabStore'
@@ -14,8 +14,10 @@ import { SourceViewer } from './features/markdown-viewer/SourceViewer'
 import { Outline } from './features/outline/Outline'
 import { FileSearch } from './features/search/FileSearch'
 import { ContentSearch } from './features/search/ContentSearch'
+import { RecentFiles } from './features/search/RecentFiles'
 import { SettingsPanel } from './features/settings/SettingsPanel'
 import { ipc } from './lib/ipc'
+import { logError } from './logger'
 import { useWorkspaceInit } from './hooks/useWorkspaceInit'
 import { useFileWatcher } from './hooks/useFileWatcher'
 import { useScrollRestore } from './hooks/useScrollRestore'
@@ -24,8 +26,13 @@ import { useContentJump } from './hooks/useContentJump'
 import { useAnchorJump } from './hooks/useAnchorJump'
 import { useKeyboardShortcuts } from './hooks/useKeyboardShortcuts'
 import { useMenuEvents } from './hooks/useMenuEvents'
+import { useReadingStats } from './hooks/useReadingStats'
+import { useSearchHighlight } from './hooks/useSearchHighlight'
+import { StatusBar } from './components/StatusBar'
+import { SearchHighlightBar } from './components/SearchHighlightBar'
 import { isVisibleFileEntry } from '../shared/settingsDefaults'
 import { isMarkdownFile } from '../shared/fileTypes'
+import type { RecentEntry } from '../shared/types'
 
 function App() {
   const [showAbout, setShowAbout] = useState(false)
@@ -48,14 +55,29 @@ function App() {
   const openSearch = useUIStore((s) => s.openSearch)
   const closeSearch = useUIStore((s) => s.closeSearch)
   const setPendingContentJump = useUIStore((s) => s.setPendingContentJump)
+  const searchHighlight = useUIStore((s) => s.searchHighlight)
+  const setSearchHighlight = useUIStore((s) => s.setSearchHighlight)
+
+  // 最近文件列表，在打开 recent 面板时从持久化存储加载
+  const [recentFiles, setRecentFiles] = useState<RecentEntry[]>([])
 
   const openFiles = useTabStore((s) => s.openFiles)
   const activeFile = useTabStore((s) => s.activeFile)
+
+  // 滚动容器元素，用 callback ref 在挂载时设置以触发 useSearchHighlight 重新计算
+  const [scrollContainer, setScrollContainer] = useState<HTMLElement | null>(null)
+  // 标记是否正在从内容搜索跳转，避免文件切换时清除高亮
+  const isJumpingRef = useRef(false)
 
   const content = useEditorStore((s) => (activeFile ? s.contents[activeFile] : undefined))
   const loadError = useEditorStore((s) => (activeFile ? s.errors[activeFile] : undefined))
   const loading = useEditorStore((s) => (activeFile ? s.loading[activeFile] : false))
   const loadContent = useEditorStore((s) => s.loadContent)
+
+  const { matchCount, currentIndex, next, prev } = useSearchHighlight(
+    scrollContainer,
+    searchHighlight?.query ?? null,
+  )
 
   const entries = useFileStore((s) => s.entries)
   const allFiles = useMemo(() => {
@@ -76,6 +98,15 @@ function App() {
       loadContent(activeFile)
     }
   }, [activeFile, loadContent])
+
+  // 文件切换时清除搜索高亮（从内容搜索跳转时跳过清除）
+  useEffect(() => {
+    if (isJumpingRef.current) {
+      isJumpingRef.current = false
+      return
+    }
+    setSearchHighlight(null)
+  }, [activeFile, setSearchHighlight])
 
   useEffect(() => {
     if (initialized && activeFile) {
@@ -107,10 +138,22 @@ function App() {
     })
   }, [])
 
+  // 打开最近文件面板时加载持久化的最近文件列表
+  useEffect(() => {
+    if (searchPanel !== 'recent') return
+    ipc.store
+      .get<RecentEntry[]>('recentFiles')
+      .then((entries) => {
+        if (Array.isArray(entries)) setRecentFiles(entries)
+      })
+      .catch((err) => logError('App:loadRecentFiles', err))
+  }, [searchPanel])
+
   useFileWatcher(openFiles, initialized)
-  useScrollRestore(activeFile, content)
+  useScrollRestore(activeFile, content, viewMode)
   useContentJump(activeFile, content)
   useAnchorJump(activeFile, content)
+  const readingStats = useReadingStats(content)
   useKeyboardShortcuts({
     onOpenFolder: async () => {
       const path = await ipc.dialog.openDirectory()
@@ -120,6 +163,7 @@ function App() {
     onToggleOutline: toggleOutline,
     onOpenFileSearch: () => openSearch('file'),
     onOpenContentSearch: () => openSearch('content'),
+    onOpenRecentFiles: () => openSearch('recent'),
     onToggleSettings: () => setShowSettings((v) => !v),
     onToggleViewMode: () => useUIStore.getState().toggleViewMode(),
   })
@@ -165,14 +209,31 @@ function App() {
                     <ContentSearch
                       workspacePath={workspacePath}
                       onSelect={(match) => {
+                        // 仅当目标文件与当前文件不同时设置跳转标志，
+                        // 避免文件切换 useEffect 清除 searchHighlight。
+                        // 若点击的是当前文件，activeFile 不变，effect 不运行，无需标志。
+                        if (useTabStore.getState().activeFile !== match.path) {
+                          isJumpingRef.current = true
+                        }
                         setPendingContentJump({
                           path: match.path,
                           line: match.line,
                           lineContent: match.lineContent,
                         })
+                        setSearchHighlight(match.matchText)
                         handleOpenFile(match.path)
                         closeSearch()
                       }}
+                    />
+                  )}
+                  {searchPanel === 'recent' && (
+                    <RecentFiles
+                      files={recentFiles}
+                      onSelect={(path) => {
+                        handleOpenFile(path)
+                        closeSearch()
+                      }}
+                      onClose={closeSearch}
                     />
                   )}
                 </div>
@@ -195,7 +256,20 @@ function App() {
           ) : openFiles.length > 0 ? (
             <div className="h-full flex flex-col">
               <TabBar />
-              <div className="flex-1 overflow-y-auto" data-scroll-container>
+              {searchHighlight && (
+                <SearchHighlightBar
+                  matchCount={matchCount}
+                  currentIndex={currentIndex}
+                  onNext={next}
+                  onPrev={prev}
+                  onClose={() => setSearchHighlight(null)}
+                />
+              )}
+              <div
+                ref={setScrollContainer}
+                className="flex-1 overflow-y-auto"
+                data-scroll-container
+              >
                 {loadError ? (
                   <EditorLoadError
                     message={loadError}
@@ -217,6 +291,7 @@ function App() {
                   </div>
                 ) : null}
               </div>
+              <StatusBar stats={readingStats} />
             </div>
           ) : (
             <WelcomePage onFolderOpen={handleOpenFolder} onFileOpen={handleOpenFile} />

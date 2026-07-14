@@ -1,4 +1,5 @@
 pub mod directory;
+pub mod files;
 pub mod launch;
 pub mod reveal;
 pub mod scope;

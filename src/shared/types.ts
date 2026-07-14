@@ -49,13 +49,15 @@ export interface AppSettings {
   markdownExtensions: string[]
   recentFiles: RecentEntry[]
   recentDirs: RecentEntry[]
-  readingPositions: Record<string, number>
+  readingPositions: Record<string, { render: number; source: number }>
   lastWorkspace: string | null
   windowBounds: { x?: number; y?: number; width: number; height: number }
   openFiles: string[]
   activeFile: string | null
   sidebarWidth: number
   outlineWidth: number
+  /** 大纲折叠状态：filePath -> 已折叠 headingId 数组 */
+  outlineCollapsed: Record<string, string[]>
 }
 
 export interface RecentEntry {

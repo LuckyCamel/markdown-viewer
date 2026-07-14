@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { FileIcon } from '../../components/FileIcon'
+import { highlightMatchSegments } from '../../../shared/highlightMatch'
 
 interface FileItem {
   path: string
@@ -35,7 +36,9 @@ export function FileSearch({ files, onSelect }: FileSearchProps) {
             className="w-full text-left px-2 py-1 text-sm hover:bg-gray-100 dark:hover:bg-gray-800 rounded flex items-center gap-2"
           >
             <FileIcon name={file.name} size={14} />
-            <span className="truncate">{file.name}</span>
+            <span className="truncate">
+              {query ? highlightMatchSegments(file.name, query) : file.name}
+            </span>
           </button>
         ))}
       </div>

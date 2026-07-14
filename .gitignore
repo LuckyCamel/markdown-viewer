@@ -2,6 +2,7 @@ node_modules/
 out/
 dist/
 release/
+releases/
 *.tsbuildinfo
 .idea/
 coverage/
@@ -10,3 +11,6 @@ playwright-report/
 test-results/
 \.sdd/
 candidate_icons/
+.claude/
+.dev-process/
+debug.log

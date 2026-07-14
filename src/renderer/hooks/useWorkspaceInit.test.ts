@@ -7,6 +7,7 @@ const mockStoreSet = vi.fn()
 const mockUpdateSettings = vi.fn()
 const mockGetLaunchPaths = vi.fn()
 const mockGetFileInfo = vi.fn()
+const mockCheckExists = vi.fn()
 const mockLogError = vi.fn()
 let mockRootPath: string | null = null
 
@@ -29,6 +30,7 @@ vi.mock('../lib/ipc', () => ({
     files: {
       updateSettings: (...args: unknown[]) => mockUpdateSettings(...args),
       getFileInfo: (...args: unknown[]) => mockGetFileInfo(...args),
+      checkExists: (...args: unknown[]) => mockCheckExists(...args),
     },
   },
 }))
@@ -98,6 +100,7 @@ describe('useWorkspaceInit', () => {
     mockStoreSet.mockResolvedValue(undefined)
     mockUpdateSettings.mockResolvedValue(undefined)
     mockGetLaunchPaths.mockResolvedValue([])
+    mockCheckExists.mockResolvedValue([])
   })
 
   describe('初始化', () => {
@@ -166,6 +169,51 @@ describe('useWorkspaceInit', () => {
       expect(mockOpenFile).toHaveBeenCalledWith('/cli/readme.md')
       expect(mockOpenFile).not.toHaveBeenCalledWith('/saved/old.md')
       expect(mockSetRoot).toHaveBeenCalledWith('/cli')
+    })
+
+    it('启动时后台校验最近文件并移除失效条目', async () => {
+      mockStoreGet.mockImplementation(async (key: string) => {
+        if (key === 'recentFiles')
+          return [
+            { path: '/a.md', name: 'a.md', timestamp: 1 },
+            { path: '/b.md', name: 'b.md', timestamp: 2 },
+          ]
+        return undefined
+      })
+      mockCheckExists.mockResolvedValue([true, false])
+
+      const { result } = renderHook(() => useWorkspaceInit())
+      await vi.waitFor(() => {
+        expect(result.current.initialized).toBe(true)
+      })
+
+      // 校验在后台异步执行，等待 checkExists 与回写完成
+      await vi.waitFor(() => {
+        expect(mockCheckExists).toHaveBeenCalledWith(['/a.md', '/b.md'])
+      })
+      await vi.waitFor(() => {
+        expect(mockStoreSet).toHaveBeenCalledWith('recentFiles', [
+          { path: '/a.md', name: 'a.md', timestamp: 1 },
+        ])
+      })
+    })
+
+    it('最近条目全部存在时不触发回写', async () => {
+      mockStoreGet.mockImplementation(async (key: string) => {
+        if (key === 'recentDirs') return [{ path: '/dir1', name: 'dir1', timestamp: 1 }]
+        return undefined
+      })
+      mockCheckExists.mockResolvedValue([true])
+
+      const { result } = renderHook(() => useWorkspaceInit())
+      await vi.waitFor(() => {
+        expect(result.current.initialized).toBe(true)
+      })
+      await vi.waitFor(() => {
+        expect(mockCheckExists).toHaveBeenCalledWith(['/dir1'])
+      })
+      // 全部存在时不应为 recentDirs 触发回写
+      expect(mockStoreSet).not.toHaveBeenCalledWith('recentDirs', expect.anything())
     })
   })
 

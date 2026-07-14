@@ -7,12 +7,29 @@ import { useSearchStore } from '../features/search/useSearchStore'
 import { ipc, ensureStoreMigrated } from '../lib/ipc'
 import { logError } from '../logger'
 import { dirname } from '../../shared/utils'
+import type { RecentEntry } from '../../shared/types'
 
 /**
  * 授权路径供 plugin-fs 读取；失败仅记录日志
  */
 function grantPaths(paths: string[]): void {
   ipc.scope.grantFsScope(paths).catch((err) => logError('useWorkspaceInit:grantFsScope', err))
+}
+
+/**
+ * 校验最近文件/目录条目是否存在，移除失效条目并回写存储
+ */
+async function validateRecentEntries(
+  entries: RecentEntry[] | undefined,
+  key: string,
+): Promise<RecentEntry[]> {
+  if (!entries || entries.length === 0) return []
+  const exists = await ipc.files.checkExists(entries.map((e) => e.path))
+  const valid = entries.filter((_, i) => exists[i])
+  if (valid.length !== entries.length) {
+    await ipc.store.set(key, valid)
+  }
+  return valid
 }
 
 export function useWorkspaceInit() {
@@ -83,6 +100,8 @@ export function useWorkspaceInit() {
         savedIgnoreList,
         savedExtensions,
         launchPaths,
+        savedRecentFiles,
+        savedRecentDirs,
       ] = await Promise.all([
         ipc.store.get<ReturnType<typeof useUIStore.getState>['theme']>('theme'),
         ipc.store.get<string>('codeTheme'),
@@ -92,6 +111,8 @@ export function useWorkspaceInit() {
         ipc.store.get<string[]>('ignoreList'),
         ipc.store.get<string[]>('markdownExtensions'),
         ipc.app.getLaunchPaths(),
+        ipc.store.get<RecentEntry[]>('recentFiles'),
+        ipc.store.get<RecentEntry[]>('recentDirs'),
       ])
 
       if (savedTheme) setTheme(savedTheme)
@@ -151,6 +172,15 @@ export function useWorkspaceInit() {
           if (savedActiveFile) useTabStore.getState().setActive(savedActiveFile)
         }
       }
+
+      // 后台校验最近文件/目录，移除失效条目；不阻塞 UI 恢复
+      validateRecentEntries(savedRecentFiles, 'recentFiles').catch((err) =>
+        logError('useWorkspaceInit:validateRecentFiles', err),
+      )
+      validateRecentEntries(savedRecentDirs, 'recentDirs').catch((err) =>
+        logError('useWorkspaceInit:validateRecentDirs', err),
+      )
+
       setInitialized(true)
     }
     init().catch((err) => logError('useWorkspaceInit:init', err))

@@ -9,16 +9,24 @@ use crate::state::{SearchState, SettingsState};
 
 /**
  * 在目录中搜索内容（增量 emit + 结果上限）
+ *
+ * is_regex=true 时需要 regex crate 支持；当前构建未启用该依赖，
+ * 直接返回错误提示，前端可在 mock 环境下模拟正则搜索。
  */
 #[tauri::command]
 pub async fn search_content(
     dir_path: String,
     query: String,
     search_id: String,
+    is_regex: bool,
     window: Window,
     settings: State<'_, SettingsState>,
     search_state: State<'_, SearchState>,
 ) -> Result<(), String> {
+    if is_regex {
+        return Err("正则搜索未启用：缺少 regex 依赖".to_string());
+    }
+
     {
         let mut cancelled = search_state.cancelled_ids.lock().unwrap();
         cancelled.remove(&search_id);

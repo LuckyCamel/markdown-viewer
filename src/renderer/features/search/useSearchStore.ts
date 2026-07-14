@@ -5,10 +5,12 @@ interface SearchState {
   query: string
   results: SearchProgress | null
   isSearching: boolean
+  isRegex: boolean
   setQuery: (query: string) => void
   setResults: (results: SearchProgress | null) => void
   appendResults: (progress: SearchProgress) => void
   setIsSearching: (isSearching: boolean) => void
+  setIsRegex: (isRegex: boolean) => void
   reset: () => void
 }
 
@@ -43,10 +45,12 @@ export const useSearchStore = create<SearchState>((set) => ({
   query: '',
   results: null,
   isSearching: false,
+  isRegex: false,
   setQuery: (query) => set({ query }),
   setResults: (results) => set({ results }),
   appendResults: (progress) =>
     set((state) => ({ results: mergeSearchProgress(state.results, progress) })),
   setIsSearching: (isSearching) => set({ isSearching }),
-  reset: () => set({ query: '', results: null, isSearching: false }),
+  setIsRegex: (isRegex) => set({ isRegex }),
+  reset: () => set({ query: '', results: null, isSearching: false, isRegex: false }),
 }))

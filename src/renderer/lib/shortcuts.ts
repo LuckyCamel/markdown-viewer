@@ -13,6 +13,7 @@ export type ShortcutAction =
   | 'toggleOutline'
   | 'openFileSearch'
   | 'openContentSearch'
+  | 'openRecentFiles'
   | 'toggleSettings'
   | 'toggleViewMode'
   | 'closeTab'
@@ -58,6 +59,14 @@ export const DEFAULT_SHORTCUTS: Record<ShortcutAction, ShortcutConfig> = {
     key: 'f',
     ctrl: true,
     shift: true,
+    alt: false,
+  },
+  openRecentFiles: {
+    id: 'openRecentFiles',
+    label: '快速切换最近文件',
+    key: 'e',
+    ctrl: true,
+    shift: false,
     alt: false,
   },
   toggleSettings: {

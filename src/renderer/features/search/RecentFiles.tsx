@@ -1,4 +1,5 @@
 import { useEffect, useReducer, useRef } from 'react'
+import { t } from '../../../shared/i18n'
 import type { RecentEntry } from '../../../shared/types'
 
 /** 最多展示的最近文件条目数 */
@@ -28,13 +29,13 @@ function getParentDir(path: string): string {
  */
 function formatRelativeTime(timestamp: number, now: number): string {
   const diffMs = now - timestamp
-  if (diffMs < 60_000) return '刚刚'
+  if (diffMs < 60_000) return t('recent.justNow')
   const diffMin = Math.floor(diffMs / 60_000)
-  if (diffMin < 60) return `${diffMin} 分钟前`
+  if (diffMin < 60) return t('recent.minutesAgo').replace('{n}', String(diffMin))
   const diffHour = Math.floor(diffMin / 60)
-  if (diffHour < 24) return `${diffHour} 小时前`
+  if (diffHour < 24) return t('recent.hoursAgo').replace('{n}', String(diffHour))
   const diffDay = Math.floor(diffHour / 24)
-  return `${diffDay} 天前`
+  return t('recent.daysAgo').replace('{n}', String(diffDay))
 }
 
 /**
@@ -86,13 +87,13 @@ export function RecentFiles({ files, onSelect, onClose }: RecentFilesProps) {
   const now = Date.now()
 
   if (visible.length === 0) {
-    return <div className="p-3 text-sm text-gray-500 dark:text-gray-400">暂无最近文件</div>
+    return <div className="p-3 text-sm text-gray-500 dark:text-gray-400">{t('recent.noFiles')}</div>
   }
 
   return (
     <div className="p-2" role="listbox">
       <div className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide px-2 py-1">
-        最近文件
+        {t('recent.title')}
       </div>
       <div className="mt-1 max-h-64 overflow-y-auto">
         {visible.map((file, i) => (

@@ -7,6 +7,7 @@ import { useSearchStore } from '../features/search/useSearchStore'
 import { ipc, ensureStoreMigrated } from '../lib/ipc'
 import { logError } from '../logger'
 import { dirname } from '../../shared/utils'
+import { setLocale, type Locale } from '../../shared/i18n'
 import type { RecentEntry } from '../../shared/types'
 
 /**
@@ -19,7 +20,7 @@ function grantPaths(paths: string[]): void {
 /**
  * 校验最近文件/目录条目是否存在，移除失效条目并回写存储
  */
-async function validateRecentEntries(
+export async function validateRecentEntries(
   entries: RecentEntry[] | undefined,
   key: string,
 ): Promise<RecentEntry[]> {
@@ -131,12 +132,20 @@ export function useWorkspaceInit() {
         ipc.app.getLaunchPaths(),
         ipc.store.get<RecentEntry[]>('recentFiles'),
         ipc.store.get<RecentEntry[]>('recentDirs'),
+        ipc.store.get<string>('locale').then((locale) => {
+          if (locale === 'en-US' || locale === 'zh-CN') {
+            setLocale(locale as Locale)
+          }
+        }),
       ])
 
       if (savedTheme) setTheme(savedTheme)
       if (savedCodeTheme) setCodeTheme(savedCodeTheme)
       if (savedIgnoreList) useSettingsStore.getState().setIgnoreList(savedIgnoreList)
       if (savedExtensions) useSettingsStore.getState().setMarkdownExtensions(savedExtensions)
+
+      // 加载文件排序设置
+      await useFileStore.getState().loadSortSettings()
 
       const ignoreList = useSettingsStore.getState().ignoreList
       const markdownExtensions = useSettingsStore.getState().markdownExtensions

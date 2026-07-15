@@ -7,6 +7,7 @@ import { ipc } from '../../lib/ipc'
 import { logError } from '../../logger'
 import type { ThemeMode } from '../../../shared/types'
 import { CODE_THEMES } from '../../lib/codeThemes'
+import { t, setLocale, getLocale, type Locale } from '../../../shared/i18n'
 
 import { parseExtensionLines, formatExtensionLines } from '../../../shared/parseExtensionLines'
 
@@ -36,10 +37,35 @@ export function SettingsPanel({ onClose }: SettingsPanelProps) {
   const saveToDisk = useSettingsStore((s) => s.saveToDisk)
   const rootPath = useFileStore((s) => s.rootPath)
   const [activeTab, setActiveTab] = useState<SettingsTab>('general')
+  // 语言切换后强制刷新面板，使 t() 文案立即生效
+  const [, setLocaleTick] = useState(0)
 
   useEffect(() => {
     loadFromDisk().catch((err) => logError('SettingsPanel:loadFromDisk', err))
   }, [loadFromDisk])
+
+  /**
+   * 切换界面语言：更新 i18n 当前语言、持久化到 store 并触发面板重渲染
+   */
+  const handleLocaleChange = async (locale: Locale) => {
+    setLocale(locale)
+    await ipc.store.set('locale', locale).catch((err) => logError('SettingsPanel:setLocale', err))
+    setLocaleTick((n) => n + 1)
+  }
+
+  /**
+   * 根据主题模式返回本地化标签
+   */
+  const themeModeLabel = (mode: ThemeMode): string => {
+    switch (mode) {
+      case 'system':
+        return t('settings.themeSystem')
+      case 'light':
+        return t('settings.themeLight')
+      case 'dark':
+        return t('settings.themeDark')
+    }
+  }
 
   const handleThemeChange = async (newTheme: ThemeMode) => {
     setTheme(newTheme)
@@ -72,20 +98,20 @@ export function SettingsPanel({ onClose }: SettingsPanelProps) {
   }
 
   const tabs: { id: SettingsTab; label: string }[] = [
-    { id: 'general', label: 'General' },
-    { id: 'shortcuts', label: 'Shortcuts' },
+    { id: 'general', label: t('settings.general') },
+    { id: 'shortcuts', label: t('settings.shortcuts') },
   ]
 
   return (
     <div className="p-6 max-w-lg">
       <div className="flex items-center justify-between mb-4">
-        <h2 className="text-lg font-semibold">Settings</h2>
+        <h2 className="text-lg font-semibold">{t('settings.title')}</h2>
         {onClose && (
           <button
             onClick={onClose}
             className="w-7 h-7 flex items-center justify-center rounded text-gray-500 hover:bg-gray-100 dark:hover:bg-gray-700 hover:text-gray-700 dark:hover:text-gray-200 transition-colors"
-            aria-label="Close settings"
-            title="Close (Esc)"
+            aria-label={t('settings.close')}
+            title={t('settings.closeShortcut')}
           >
             <svg
               viewBox="0 0 24 24"
@@ -121,8 +147,22 @@ export function SettingsPanel({ onClose }: SettingsPanelProps) {
 
       {activeTab === 'general' && (
         <div className="space-y-6">
+          <div className="setting-item">
+            <label className="setting-label block text-sm font-medium mb-2">
+              {t('settings.language')}
+            </label>
+            <select
+              value={getLocale()}
+              onChange={(e) => handleLocaleChange(e.target.value as Locale)}
+              className="w-full px-3 py-1.5 text-sm border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-800"
+            >
+              <option value="zh-CN">中文</option>
+              <option value="en-US">English</option>
+            </select>
+          </div>
+
           <div>
-            <label className="block text-sm font-medium mb-2">Theme</label>
+            <label className="block text-sm font-medium mb-2">{t('settings.theme')}</label>
             <div className="flex gap-2">
               {(['system', 'light', 'dark'] as ThemeMode[]).map((mode) => (
                 <button
@@ -134,31 +174,31 @@ export function SettingsPanel({ onClose }: SettingsPanelProps) {
                       : 'border-gray-300 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-800'
                   }`}
                 >
-                  {mode.charAt(0).toUpperCase() + mode.slice(1)}
+                  {themeModeLabel(mode)}
                 </button>
               ))}
             </div>
           </div>
 
           <div>
-            <label className="block text-sm font-medium mb-2">Code Theme</label>
+            <label className="block text-sm font-medium mb-2">{t('settings.codeTheme')}</label>
             <select
               value={codeTheme}
               onChange={(e) => handleCodeThemeChange(e.target.value)}
               className="w-full px-3 py-1.5 text-sm border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-800"
             >
-              <option value="auto">Auto (follow app theme)</option>
-              <optgroup label="Dark">
-                {CODE_THEMES.filter((t) => t.variant === 'dark').map((t) => (
-                  <option key={t.id} value={t.id}>
-                    {t.name}
+              <option value="auto">{t('settings.codeThemeAuto')}</option>
+              <optgroup label={t('settings.codeThemeDark')}>
+                {CODE_THEMES.filter((c) => c.variant === 'dark').map((c) => (
+                  <option key={c.id} value={c.id}>
+                    {c.name}
                   </option>
                 ))}
               </optgroup>
-              <optgroup label="Light">
-                {CODE_THEMES.filter((t) => t.variant === 'light').map((t) => (
-                  <option key={t.id} value={t.id}>
-                    {t.name}
+              <optgroup label={t('settings.codeThemeLight')}>
+                {CODE_THEMES.filter((c) => c.variant === 'light').map((c) => (
+                  <option key={c.id} value={c.id}>
+                    {c.name}
                   </option>
                 ))}
               </optgroup>
@@ -166,7 +206,9 @@ export function SettingsPanel({ onClose }: SettingsPanelProps) {
           </div>
 
           <div>
-            <label className="block text-sm font-medium mb-2">Markdown Extensions</label>
+            <label className="block text-sm font-medium mb-2">
+              {t('settings.markdownExtensions')}
+            </label>
             <textarea
               value={formatExtensionLines(markdownExtensions)}
               onChange={(e) => handleSettingsChange('extensions', e.target.value)}
@@ -174,24 +216,19 @@ export function SettingsPanel({ onClose }: SettingsPanelProps) {
               className="w-full px-3 py-1.5 text-sm border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-800"
               placeholder={'.md\n.markdown'}
             />
-            <p className="text-xs text-gray-500 mt-1">
-              File extensions to show in the file tree. Use an empty line for no-extension text
-              files (e.g., README, LICENSE).
-            </p>
+            <p className="text-xs text-gray-500 mt-1">{t('settings.markdownExtensionsHint')}</p>
           </div>
 
           <div>
-            <label className="block text-sm font-medium mb-2">Ignore List</label>
+            <label className="block text-sm font-medium mb-2">{t('settings.ignoreList')}</label>
             <textarea
               value={ignoreList.join('\n')}
               onChange={(e) => handleSettingsChange('ignoreList', e.target.value)}
               rows={4}
               className="w-full px-3 py-1.5 text-sm border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-800"
-              placeholder="Enter directory/file names to ignore (one per line)"
+              placeholder={t('settings.ignoreListPlaceholder')}
             />
-            <p className="text-xs text-gray-500 mt-1">
-              Directories and files matching these names will be hidden in the file tree.
-            </p>
+            <p className="text-xs text-gray-500 mt-1">{t('settings.ignoreListHint')}</p>
           </div>
         </div>
       )}

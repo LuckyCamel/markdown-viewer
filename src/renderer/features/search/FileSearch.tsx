@@ -15,7 +15,10 @@ interface FileSearchProps {
 export function FileSearch({ files, onSelect }: FileSearchProps) {
   const [query, setQuery] = useState('')
   const filtered = query
-    ? files.filter((f) => f.name.toLowerCase().includes(query.toLowerCase()))
+    ? files.filter((f) => {
+        const q = query.toLowerCase()
+        return f.name.toLowerCase().includes(q) || f.path.toLowerCase().includes(q)
+      })
     : files.slice(0, 50)
 
   return (

@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { headingToId } from '../../../shared/headingId'
 import { scrollToElementInContainer } from '../../../shared/scrollContainer'
 import { extractHeadings } from '../../../shared/extractHeadings'
@@ -36,9 +36,15 @@ export function Outline({ content }: OutlineProps) {
   const toggleCollapse = useOutlineStore((s) => s.toggleCollapse)
   const collapseAll = useOutlineStore((s) => s.collapseAll)
   const expandAll = useOutlineStore((s) => s.expandAll)
+  const loadCollapsed = useOutlineStore((s) => s.loadCollapsed)
 
   const [menu, setMenu] = useState<{ x: number; y: number; headingId: string } | null>(null)
   const [feedback, setFeedback] = useState<string | null>(null)
+
+  // 文件切换时从持久化存储恢复折叠状态
+  useEffect(() => {
+    loadCollapsed(filePath)
+  }, [filePath, loadCollapsed])
 
   const collapsedSet = new Set(collapsedArray)
   const visibleHeadings = filterVisibleHeadings(headings, collapsedSet)

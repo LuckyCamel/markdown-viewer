@@ -1776,10 +1776,11 @@ dependencies = [
 
 [[package]]
 name = "markdown-viewer"
-version = "1.2.10"
+version = "1.2.11"
 dependencies = [
  "log",
  "notify",
+ "regex",
  "serde",
  "serde_json",
  "tauri",

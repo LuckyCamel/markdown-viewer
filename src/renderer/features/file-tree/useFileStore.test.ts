@@ -7,6 +7,8 @@ const mockCreateFile = vi.fn()
 const mockCreateDirectory = vi.fn()
 const mockRename = vi.fn()
 const mockMoveToTrash = vi.fn()
+const mockStoreGet = vi.fn()
+const mockStoreSet = vi.fn()
 
 vi.mock('../../lib/ipc', () => ({
   ipc: {
@@ -16,6 +18,10 @@ vi.mock('../../lib/ipc', () => ({
       createDirectory: (...args: unknown[]) => mockCreateDirectory(...args),
       rename: (...args: unknown[]) => mockRename(...args),
       moveToTrash: (...args: unknown[]) => mockMoveToTrash(...args),
+    },
+    store: {
+      get: (...args: unknown[]) => mockStoreGet(...args),
+      set: (...args: unknown[]) => mockStoreSet(...args),
     },
   },
 }))
@@ -42,6 +48,8 @@ describe('useFileStore', () => {
       sortDirection: 'asc',
     })
     vi.clearAllMocks()
+    mockStoreGet.mockResolvedValue(undefined)
+    mockStoreSet.mockResolvedValue(undefined)
   })
 
   describe('setRoot', () => {
@@ -273,6 +281,34 @@ describe('useFileStore', () => {
       useFileStore.getState().setRoot('/workspace1')
       expect(useFileStore.getState().isRoot('/workspace1')).toBe(true)
       expect(useFileStore.getState().isRoot('/other')).toBe(false)
+    })
+  })
+
+  /**
+   * 目录缓存行为测试：验证缓存命中时不触发 IPC，以及 refreshDirectory 清缓存后重新加载
+   */
+  describe('directory cache', () => {
+    it('命中缓存时不触发 IPC 调用', async () => {
+      mockListDirectory.mockResolvedValue([entry('a.md')])
+      await useFileStore.getState().loadChildren('/cached')
+      expect(mockListDirectory).toHaveBeenCalledTimes(1)
+
+      // 仅清除 entries 但不清除缓存，再次加载应命中缓存而不触发 IPC
+      useFileStore.setState({ entries: {} })
+      await useFileStore.getState().loadChildren('/cached')
+      expect(mockListDirectory).toHaveBeenCalledTimes(1)
+      expect(useFileStore.getState().entries['/cached']).toHaveLength(1)
+    })
+
+    it('refreshDirectory 清除缓存后重新加载', async () => {
+      mockListDirectory.mockResolvedValue([entry('a.md')])
+      await useFileStore.getState().loadChildren('/refresh-test')
+      expect(mockListDirectory).toHaveBeenCalledTimes(1)
+
+      mockListDirectory.mockResolvedValue([entry('a.md'), entry('b.md')])
+      await useFileStore.getState().refreshDirectory('/refresh-test')
+      expect(mockListDirectory).toHaveBeenCalledTimes(2)
+      expect(useFileStore.getState().entries['/refresh-test']).toHaveLength(2)
     })
   })
 })

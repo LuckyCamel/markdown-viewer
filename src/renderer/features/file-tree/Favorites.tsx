@@ -19,6 +19,7 @@ interface MenuState {
 export function Favorites() {
   const items = useFavoritesStore((s) => s.items)
   const remove = useFavoritesStore((s) => s.remove)
+  const reorder = useFavoritesStore((s) => s.reorder)
   const [menu, setMenu] = useState<MenuState | null>(null)
   const [collapsed, setCollapsed] = useState(false)
 
@@ -68,23 +69,45 @@ export function Favorites() {
           {items.length === 0 ? (
             <div className="px-3 py-2 text-xs text-gray-400">暂无收藏</div>
           ) : (
-            items.map((item) => (
-              <button
+            items.map((item, index) => (
+              <div
                 key={item.path}
-                onClick={() => handleClick(item)}
-                onContextMenu={(e) => handleContextMenu(e, item)}
-                className="w-full text-left px-2 py-0.5 text-sm hover:bg-gray-100 dark:hover:bg-gray-800 flex items-center gap-1.5"
-                style={{ paddingLeft: '8px' }}
+                className="group flex items-center hover:bg-gray-100 dark:hover:bg-gray-800"
               >
-                <span className="w-3 flex-shrink-0" />
-                <FileIcon
-                  name={item.name}
-                  isDirectory={item.isDirectory}
-                  isOpen={false}
-                  size={16}
-                />
-                <span className="truncate">{item.name}</span>
-              </button>
+                <button
+                  onClick={() => handleClick(item)}
+                  onContextMenu={(e) => handleContextMenu(e, item)}
+                  className="flex-1 text-left px-2 py-0.5 text-sm flex items-center gap-1.5 min-w-0"
+                  style={{ paddingLeft: '8px' }}
+                >
+                  <span className="w-3 flex-shrink-0" />
+                  <FileIcon
+                    name={item.name}
+                    isDirectory={item.isDirectory}
+                    isOpen={false}
+                    size={16}
+                  />
+                  <span className="truncate">{item.name}</span>
+                </button>
+                <div className="flex items-center pr-1 opacity-0 group-hover:opacity-100">
+                  <button
+                    title="上移"
+                    onClick={() => reorder(index, index - 1)}
+                    disabled={index === 0}
+                    className="px-1 text-xs text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 disabled:opacity-30 disabled:cursor-not-allowed"
+                  >
+                    ↑
+                  </button>
+                  <button
+                    title="下移"
+                    onClick={() => reorder(index, index + 1)}
+                    disabled={index === items.length - 1}
+                    className="px-1 text-xs text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 disabled:opacity-30 disabled:cursor-not-allowed"
+                  >
+                    ↓
+                  </button>
+                </div>
+              </div>
             ))
           )}
         </div>

@@ -46,6 +46,7 @@ const mockSetRoot = vi.fn()
 const mockAddRoot = vi.fn()
 const mockRemoveRoot = vi.fn()
 const mockReset = vi.fn()
+const mockLoadSortSettings = vi.fn()
 
 vi.mock('../stores/useUIStore', () => {
   const actual = { getState: vi.fn(() => ({ setTheme: mockSetTheme })) }
@@ -94,6 +95,7 @@ vi.mock('../features/file-tree/useFileStore', () => ({
         mockRootPaths = mockRootPaths.filter((p) => p !== path)
         if (mockRootPath === path) mockRootPath = mockRootPaths[0] ?? null
       },
+      loadSortSettings: (...args: unknown[]) => mockLoadSortSettings(...args),
       get rootPath() {
         return mockRootPath
       },
@@ -121,6 +123,7 @@ describe('useWorkspaceInit', () => {
     mockUpdateSettings.mockResolvedValue(undefined)
     mockGetLaunchPaths.mockResolvedValue([])
     mockCheckExists.mockResolvedValue([])
+    mockLoadSortSettings.mockResolvedValue(undefined)
   })
 
   describe('初始化', () => {

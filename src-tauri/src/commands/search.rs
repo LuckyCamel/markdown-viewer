@@ -1,8 +1,9 @@
 use std::path::Path;
 
+use regex::Regex;
 use tauri::{Emitter, State, Window};
 
-use crate::search::matcher::find_matches_in_file;
+use crate::search::matcher::{find_matches_in_file, find_matches_in_file_regex};
 use crate::search::types::SearchProgress;
 use crate::search::{walk_dir, MAX_MATCHES, SEARCH_EMIT_INTERVAL};
 use crate::state::{SearchState, SettingsState};
@@ -10,8 +11,7 @@ use crate::state::{SearchState, SettingsState};
 /**
  * 在目录中搜索内容（增量 emit + 结果上限）
  *
- * is_regex=true 时需要 regex crate 支持；当前构建未启用该依赖，
- * 直接返回错误提示，前端可在 mock 环境下模拟正则搜索。
+ * is_regex=true 时使用 regex crate 进行正则搜索。
  */
 #[tauri::command]
 pub async fn search_content(
@@ -23,8 +23,9 @@ pub async fn search_content(
     settings: State<'_, SettingsState>,
     search_state: State<'_, SearchState>,
 ) -> Result<(), String> {
+    // 正则搜索时预编译 pattern，编译失败立即返回错误
     if is_regex {
-        return Err("正则搜索未启用：缺少 regex 依赖".to_string());
+        let _ = Regex::new(&query).map_err(|e| format!("正则编译失败: {}", e))?;
     }
 
     {
@@ -116,7 +117,12 @@ pub async fn search_content(
         }
 
         if !truncated {
-            for m in find_matches_in_file(file_path, &query, &query_lower) {
+            let file_matches = if is_regex {
+                find_matches_in_file_regex(file_path, &query)
+            } else {
+                find_matches_in_file(file_path, &query, &query_lower)
+            };
+            for m in file_matches {
                 if all_matches.len() >= MAX_MATCHES {
                     truncated = true;
                     break;

@@ -11,7 +11,7 @@ export function StatusBar({ stats }: StatusBarProps) {
   if (!stats) return null
   return (
     <div className="flex items-center gap-4 px-3 py-1 text-xs text-gray-500 dark:text-gray-400 border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900">
-      <span>{stats.words} 字</span>
+      <span>约 {stats.words} 字</span>
       <span>·</span>
       <span>{stats.readTimeMin} 分钟阅读</span>
     </div>

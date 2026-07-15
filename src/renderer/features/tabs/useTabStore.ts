@@ -10,6 +10,7 @@ interface TabState {
   isDirty: (filePath: string) => boolean
   openFile: (filePath: string) => void
   closeFile: (filePath: string) => void
+  renameFile: (oldPath: string, newPath: string) => void
   setActive: (filePath: string) => void
   markDirty: (filePath: string) => void
   clearDirty: (filePath: string) => void
@@ -50,6 +51,27 @@ export const useTabStore = create<TabState>((set, get) => ({
     const nextActive =
       activeFile === filePath ? next[Math.min(idx, next.length - 1)] || null : activeFile
     purgeEditorCache([filePath])
+    set({ openFiles: next, activeFile: nextActive, dirtyFiles: nextDirty })
+  },
+  renameFile: (oldPath, newPath) => {
+    const { openFiles, activeFile, dirtyFiles } = get()
+    // 旧路径未打开则无需处理
+    if (!openFiles.includes(oldPath)) return
+    const next = openFiles.map((f) => (f === oldPath ? newPath : f))
+    const nextActive = activeFile === oldPath ? newPath : activeFile
+    // 迁移 dirty 标记
+    const nextDirty = new Set(dirtyFiles)
+    if (nextDirty.has(oldPath)) {
+      nextDirty.delete(oldPath)
+      nextDirty.add(newPath)
+    }
+    // 迁移编辑器缓存（保留未保存内容）
+    const editor = useEditorStore.getState()
+    const cached = editor.contents[oldPath]
+    if (cached !== undefined) {
+      editor.setContent(newPath, cached)
+      editor.removeContent(oldPath)
+    }
     set({ openFiles: next, activeFile: nextActive, dirtyFiles: nextDirty })
   },
   setActive: (filePath) => set({ activeFile: filePath }),

@@ -17,10 +17,11 @@ import { Outline } from './features/outline/Outline'
 import { FileSearch } from './features/search/FileSearch'
 import { ContentSearch } from './features/search/ContentSearch'
 import { RecentFiles } from './features/search/RecentFiles'
+import { useSearchStore } from './features/search/useSearchStore'
 import { SettingsPanel } from './features/settings/SettingsPanel'
 import { ipc } from './lib/ipc'
 import { logError } from './logger'
-import { useWorkspaceInit } from './hooks/useWorkspaceInit'
+import { useWorkspaceInit, validateRecentEntries } from './hooks/useWorkspaceInit'
 import { useFileWatcher } from './hooks/useFileWatcher'
 import { useScrollRestore } from './hooks/useScrollRestore'
 import { EditorLoadError } from './features/markdown-viewer/EditorLoadError'
@@ -142,14 +143,15 @@ function App() {
     useFavoritesStore.getState().loadFavorites()
   }, [])
 
-  // 打开最近文件面板时加载持久化的最近文件列表
+  // 打开最近文件面板时加载持久化的最近文件列表，并校验失效条目
   useEffect(() => {
     if (searchPanel !== 'recent') return
     ipc.store
       .get<RecentEntry[]>('recentFiles')
-      .then((entries) => {
-        if (Array.isArray(entries)) setRecentFiles(entries)
-      })
+      .then((entries) =>
+        validateRecentEntries(Array.isArray(entries) ? entries : [], 'recentFiles'),
+      )
+      .then((valid) => setRecentFiles(valid))
       .catch((err) => logError('App:loadRecentFiles', err))
   }, [searchPanel])
 
@@ -170,6 +172,9 @@ function App() {
     onOpenRecentFiles: () => openSearch('recent'),
     onToggleSettings: () => setShowSettings((v) => !v),
     onToggleViewMode: () => useUIStore.getState().toggleViewMode(),
+    onSearchHighlightNext: next,
+    onSearchHighlightPrev: prev,
+    onSearchHighlightClose: () => setSearchHighlight(null),
   })
 
   useMenuEvents({
@@ -229,7 +234,7 @@ function App() {
                           line: match.line,
                           lineContent: match.lineContent,
                         })
-                        setSearchHighlight(match.matchText)
+                        setSearchHighlight(match.matchText, useSearchStore.getState().isRegex)
                         handleOpenFile(match.path)
                         closeSearch()
                       }}

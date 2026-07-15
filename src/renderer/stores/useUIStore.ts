@@ -12,7 +12,7 @@ interface UIState {
   codeTheme: string
   pendingContentJump: ContentJumpTarget | null
   pendingAnchorJump: AnchorJumpTarget | null
-  searchHighlight: { query: string } | null
+  searchHighlight: { query: string; isRegex: boolean } | null
   setTheme: (theme: ThemeMode) => void
   toggleSidebar: () => void
   toggleOutline: () => void
@@ -25,7 +25,7 @@ interface UIState {
   setCodeTheme: (theme: string) => void
   setPendingContentJump: (target: ContentJumpTarget | null) => void
   setPendingAnchorJump: (target: AnchorJumpTarget | null) => void
-  setSearchHighlight: (query: string | null) => void
+  setSearchHighlight: (query: string | null, isRegex?: boolean) => void
   reset: () => void
 }
 
@@ -40,7 +40,7 @@ const initialState = {
   codeTheme: 'auto',
   pendingContentJump: null as ContentJumpTarget | null,
   pendingAnchorJump: null as AnchorJumpTarget | null,
-  searchHighlight: null as { query: string } | null,
+  searchHighlight: null as { query: string; isRegex: boolean } | null,
 }
 
 export const useUIStore = create<UIState>((set) => ({
@@ -57,6 +57,7 @@ export const useUIStore = create<UIState>((set) => ({
   setCodeTheme: (theme) => set({ codeTheme: theme }),
   setPendingContentJump: (target) => set({ pendingContentJump: target }),
   setPendingAnchorJump: (target) => set({ pendingAnchorJump: target }),
-  setSearchHighlight: (query) => set({ searchHighlight: query ? { query } : null }),
+  setSearchHighlight: (query, isRegex) =>
+    set({ searchHighlight: query ? { query, isRegex: !!isRegex } : null }),
   reset: () => set(initialState),
 }))

@@ -3,6 +3,8 @@ import type { FileEntry } from '../../../shared/types'
 import { ipc } from '../../lib/ipc'
 import { logError } from '../../logger'
 import { sortFileEntries, type SortMode, type SortDirection } from '../../../shared/fileSort'
+import { useTabStore } from '../tabs/useTabStore'
+import { useFavoritesStore } from './useFavoritesStore'
 
 const CACHE_TTL = 5 * 60 * 1000
 
@@ -66,6 +68,7 @@ interface FileTreeState {
   deleteEntry: (path: string) => Promise<void>
   refreshDirectory: (dirPath: string) => Promise<void>
   setSort: (mode: SortMode, direction?: SortDirection) => void
+  loadSortSettings: () => Promise<void>
   getSortedEntries: (dirPath: string) => FileEntry[]
 }
 
@@ -164,6 +167,8 @@ export const useFileStore = create<FileTreeState>((set, get) => ({
 
   /**
    * 重命名文件/文件夹
+   *
+   * 成功后通知 tabStore 更新已打开标签页的路径，保持编辑状态。
    */
   renameEntry: async (oldPath, newName) => {
     try {
@@ -178,6 +183,8 @@ export const useFileStore = create<FileTreeState>((set, get) => ({
           entries: { ...s.entries, [parentDir]: updated },
         }
       })
+      // 通知 tabStore 更新已打开标签页的路径
+      useTabStore.getState().renameFile(oldPath, newEntry.path)
     } catch (err) {
       logError('useFileStore:renameEntry', err)
       throw err
@@ -186,6 +193,8 @@ export const useFileStore = create<FileTreeState>((set, get) => ({
 
   /**
    * 删除文件/文件夹（移至回收站）
+   *
+   * 成功后关闭对应标签页并从收藏夹移除，避免引用失效路径。
    */
   deleteEntry: async (path) => {
     try {
@@ -200,6 +209,9 @@ export const useFileStore = create<FileTreeState>((set, get) => ({
           entries: { ...s.entries, [parentDir]: updated },
         }
       })
+      // 关闭对应标签页并从收藏夹移除
+      useTabStore.getState().closeFile(path)
+      useFavoritesStore.getState().remove(path)
     } catch (err) {
       logError('useFileStore:deleteEntry', err)
       throw err
@@ -221,13 +233,37 @@ export const useFileStore = create<FileTreeState>((set, get) => ({
   },
 
   /**
-   * 设置排序方式
+   * 设置排序方式并持久化到 store
    */
   setSort: (mode, direction) => {
     set((s) => ({
       sortMode: mode,
       sortDirection: direction ?? s.sortDirection,
     }))
+    ipc.store.set('fileSortMode', mode).catch((err) => logError('useFileStore:setSort:mode', err))
+    if (direction) {
+      ipc.store
+        .set('fileSortDirection', direction)
+        .catch((err) => logError('useFileStore:setSort:direction', err))
+    }
+  },
+
+  /**
+   * 从持久化存储加载排序设置
+   */
+  loadSortSettings: async () => {
+    try {
+      const savedMode = await ipc.store.get<SortMode>('fileSortMode')
+      const savedDirection = await ipc.store.get<SortDirection>('fileSortDirection')
+      if (savedMode) {
+        set({ sortMode: savedMode })
+      }
+      if (savedDirection) {
+        set({ sortDirection: savedDirection })
+      }
+    } catch (err) {
+      logError('useFileStore:loadSortSettings', err)
+    }
   },
 
   /**

@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { useTabStore } from '../features/tabs/useTabStore'
+import { useUIStore } from '../stores/useUIStore'
 import {
   DEFAULT_SHORTCUTS,
   loadShortcuts,
@@ -17,6 +18,12 @@ interface ShortcutHandlers {
   onOpenRecentFiles: () => void
   onToggleSettings: () => void
   onToggleViewMode: () => void
+  /** 搜索高亮：跳转到下一个匹配 */
+  onSearchHighlightNext?: () => void
+  /** 搜索高亮：跳转到上一个匹配 */
+  onSearchHighlightPrev?: () => void
+  /** 搜索高亮：关闭高亮 */
+  onSearchHighlightClose?: () => void
 }
 
 type HandlerAction =
@@ -97,10 +104,28 @@ export function useKeyboardShortcuts(handlers: ShortcutHandlers) {
           const handlerKey = ACTION_TO_HANDLER[action as HandlerAction]
           if (handlerKey) {
             e.preventDefault()
-            handlersRef.current[handlerKey]()
+            handlersRef.current[handlerKey]?.()
           }
           return
         }
+      }
+
+      // 搜索高亮导航快捷键（独立于可配置快捷键）
+      if (key === 'F3') {
+        e.preventDefault()
+        if (e.shiftKey) {
+          handlersRef.current.onSearchHighlightPrev?.()
+        } else {
+          handlersRef.current.onSearchHighlightNext?.()
+        }
+        return
+      }
+
+      // 存在搜索高亮时，Escape 关闭高亮
+      if (key === 'Escape' && useUIStore.getState().searchHighlight) {
+        e.preventDefault()
+        handlersRef.current.onSearchHighlightClose?.()
+        return
       }
     }
 

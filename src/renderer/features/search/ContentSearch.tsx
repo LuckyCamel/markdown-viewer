@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import { ipc } from '../../lib/ipc'
 import { useSearchStore } from './useSearchStore'
 import { logError } from '../../logger'
+import { t } from '../../../shared/i18n'
 import type { SearchMatch, SearchProgress } from '../../../shared/types'
 
 const SEARCH_DEBOUNCE_MS = 300
@@ -89,7 +90,7 @@ export function ContentSearch({ rootPaths, onSelect }: ContentSearchProps) {
       <div className="flex gap-2">
         <input
           type="text"
-          placeholder="Search content..."
+          placeholder={t('search.contentPlaceholder')}
           value={query}
           onChange={(e) => setQuery(e.target.value)}
           className="flex-1 px-3 py-1.5 text-sm border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-800 focus:outline-none focus:ring-1 focus:ring-blue-500"
@@ -98,7 +99,7 @@ export function ContentSearch({ rootPaths, onSelect }: ContentSearchProps) {
         <button
           type="button"
           onClick={() => setIsRegex(!isRegex)}
-          title="正则模式"
+          title={t('search.regexMode')}
           className={`px-2 py-1.5 text-sm rounded border whitespace-nowrap ${
             isRegex
               ? 'bg-blue-500 text-white border-blue-500'
@@ -111,12 +112,15 @@ export function ContentSearch({ rootPaths, onSelect }: ContentSearchProps) {
       {error && <div className="mt-2 text-xs text-red-600 dark:text-red-400">{error}</div>}
       {isSearching && (
         <div className="mt-2 text-xs text-gray-500">
-          Searching... {results?.searchedFiles ?? 0}/{results?.totalFiles ?? 0} files
+          {t('search.searching')} {results?.searchedFiles ?? 0}/{results?.totalFiles ?? 0}{' '}
+          {t('search.files')}
         </div>
       )}
       {results?.truncated && (
         <div className="mt-2 text-xs text-amber-600 dark:text-amber-400">
-          仅显示前 {results.matchLimit ?? 500} 条匹配结果
+          {t('search.truncatedPrefix')}
+          {results.matchLimit ?? 500}
+          {t('search.truncatedSuffix')}
         </div>
       )}
       <div className="mt-2 max-h-64 overflow-y-auto">

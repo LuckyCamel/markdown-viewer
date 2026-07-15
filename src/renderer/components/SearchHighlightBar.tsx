@@ -1,3 +1,5 @@
+import { t } from '../../shared/i18n'
+
 interface SearchHighlightBarProps {
   matchCount: number
   currentIndex: number
@@ -27,26 +29,38 @@ export function SearchHighlightBar({
     <div className="flex items-center gap-2 px-3 py-1.5 text-xs bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 shadow-sm">
       {hasMatches ? (
         <>
-          <span className="text-gray-600 dark:text-gray-300">{matchCount} 个匹配</span>
+          <span className="text-gray-600 dark:text-gray-300">
+            {t('search.matches').replace('{count}', String(matchCount))}
+          </span>
           <span className="text-gray-400">·</span>
           <span className="text-gray-600 dark:text-gray-300">
             {currentIndex + 1}/{matchCount}
           </span>
           <div className="flex items-center gap-1 ml-auto">
-            <button type="button" aria-label="上一个" onClick={onPrev} className={BUTTON_CLASS}>
+            <button
+              type="button"
+              aria-label={t('search.previous')}
+              onClick={onPrev}
+              className={BUTTON_CLASS}
+            >
               ↑
             </button>
-            <button type="button" aria-label="下一个" onClick={onNext} className={BUTTON_CLASS}>
+            <button
+              type="button"
+              aria-label={t('search.next')}
+              onClick={onNext}
+              className={BUTTON_CLASS}
+            >
               ↓
             </button>
           </div>
         </>
       ) : (
-        <span className="text-gray-500 dark:text-gray-400">无匹配</span>
+        <span className="text-gray-500 dark:text-gray-400">{t('search.noMatches')}</span>
       )}
       <button
         type="button"
-        aria-label="关闭"
+        aria-label={t('search.close')}
         onClick={onClose}
         className={`${BUTTON_CLASS} ml-auto`}
       >

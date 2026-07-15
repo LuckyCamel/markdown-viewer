@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { ipc } from '../../lib/ipc'
 import { logError } from '../../logger'
+import { t } from '../../../shared/i18n'
 import type { RecentEntry } from '../../../shared/types'
 
 interface WelcomePageProps {
@@ -48,28 +49,26 @@ export function WelcomePage({ onFolderOpen, onAddToWorkspace, onFileOpen }: Welc
   return (
     <div className="h-full flex flex-col items-center justify-center gap-6 p-8">
       <h1 className="text-3xl font-bold">Markdown-Viewer</h1>
-      <p className="text-gray-500 dark:text-gray-400">
-        Open a folder to browse and preview markdown files
-      </p>
+      <p className="text-gray-500 dark:text-gray-400">{t('welcome.hint')}</p>
       <div className="flex gap-4">
         <button
           onClick={handleOpenFolder}
           className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
         >
-          Open Folder
+          {t('menu.openFolder')}
         </button>
         <button
           onClick={handleOpenFile}
           className="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded hover:bg-gray-100 dark:hover:bg-gray-800"
         >
-          Open File
+          {t('menu.openFile')}
         </button>
       </div>
       {(recentFiles.length > 0 || recentDirs.length > 0) && (
         <div className="w-full max-w-md space-y-4">
           {recentFiles.length > 0 && (
             <div>
-              <h2 className="text-sm font-medium text-gray-500 mb-2">Recent Files</h2>
+              <h2 className="text-sm font-medium text-gray-500 mb-2">{t('menu.recentFiles')}</h2>
               <ul className="space-y-1">
                 {recentFiles.map((file) => (
                   <li key={file.path}>
@@ -87,7 +86,9 @@ export function WelcomePage({ onFolderOpen, onAddToWorkspace, onFileOpen }: Welc
           )}
           {recentDirs.length > 0 && (
             <div>
-              <h2 className="text-sm font-medium text-gray-500 mb-2">Recent Workspaces</h2>
+              <h2 className="text-sm font-medium text-gray-500 mb-2">
+                {t('welcome.recentWorkspaces')}
+              </h2>
               <ul className="space-y-1">
                 {recentDirs.map((dir) => (
                   <li key={dir.path} className="flex items-center gap-2">
@@ -106,7 +107,7 @@ export function WelcomePage({ onFolderOpen, onAddToWorkspace, onFileOpen }: Welc
                     {onAddToWorkspace && (
                       <button
                         onClick={() => onAddToWorkspace(dir.path)}
-                        title="Add to Workspace"
+                        title={t('welcome.addToWorkspace')}
                         className="text-xs px-1.5 py-0.5 rounded border border-gray-300 dark:border-gray-600 text-gray-500 hover:bg-gray-100 dark:hover:bg-gray-800"
                       >
                         +

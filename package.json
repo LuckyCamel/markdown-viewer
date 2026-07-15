@@ -1,6 +1,6 @@
 {
   "name": "markdown-viewer",
-  "version": "1.2.11",
+  "version": "1.2.12",
   "packageManager": "pnpm@9.15.9",
   "description": "A cross-platform Markdown viewer built with Tauri",
   "desktopName": "markdown-viewer",

@@ -1,6 +1,6 @@
 [package]
 name = "markdown-viewer"
-version = "1.2.11"
+version = "1.2.12"
 description = "Markdown Viewer"
 authors = ["Markdown Viewer Team"]
 license = "MIT"
@@ -25,3 +25,4 @@ tauri-plugin-fs = "2.5.1"
 tauri-plugin-dialog = "2.7.1"
 tauri-plugin-shell = "2.3.5"
 trash = "3"
+regex = "1"

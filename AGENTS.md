@@ -26,6 +26,12 @@
 - `src-tauri/Cargo.toml` — Rust 依赖管理
 - `src/renderer/main.tsx` — 渲染进程入口
 - `src/renderer/components/ErrorBoundary.tsx` — React 错误边界
+- `src/renderer/components/ThemeProvider.tsx` — 主题与阅读设置注入
 - `src/renderer/lib/ipc.ts` — 前端 IPC 适配器（封装 Tauri API）
+- `src/renderer/lib/themes.ts` — 主题定义与解析（6 套内置主题）
+- `src/renderer/lib/fonts.ts` — 系统字体选择列表
+- `src/renderer/styles/themes.css` — 主题 CSS 变量
+- `src/renderer/stores/useUIStore.ts` — 全局 UI 状态（主题、布局、搜索）
+- `src/renderer/features/settings/useSettingsStore.ts` — 阅读设置状态
 - `src/renderer/hooks/useKeyboardShortcuts.ts` — 键盘快捷键
 - `src/renderer/hooks/useMenuEvents.ts` — 原生菜单事件分发

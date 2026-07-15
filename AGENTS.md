@@ -35,3 +35,11 @@
 - `src/renderer/features/settings/useSettingsStore.ts` — 阅读设置状态
 - `src/renderer/hooks/useKeyboardShortcuts.ts` — 键盘快捷键
 - `src/renderer/hooks/useMenuEvents.ts` — 原生菜单事件分发
+- `src/renderer/components/CommandPalette.tsx` — 命令面板 UI（Ctrl+Shift+P 唤起）
+- `src/renderer/features/commands/commands.ts` — 命令注册中心（单例）
+- `src/renderer/features/commands/fuzzyMatch.ts` — 模糊匹配函数
+- `src/renderer/features/commands/useRegisterCommands.ts` — 启动时注册命令
+- `src/renderer/stores/useCommandStore.ts` — 命令面板显示状态
+- `src/renderer/lib/exporter.ts` — HTML / PDF 导出工具
+- `src/renderer/lib/dailyNote.ts` — 每日笔记创建/打开
+- `src-tauri/src/commands/export.rs` — `save_text_file` Rust command

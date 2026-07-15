@@ -4,6 +4,28 @@
 
 ## [Unreleased]
 
+### 新增
+
+- **命令面板**（Ctrl+Shift+P）：模态弹窗 + 模糊匹配命令注册中心，支持注册、注销、动态加载命令
+  - 13 条内置命令：切换侧边栏/大纲/视图、文件/内容/最近文件搜索、关闭标签、设置、打开命令面板、打开今日笔记、导出 PDF/HTML、打开文件夹
+  - 键盘操作：↑↓ 选择、Enter 执行、Escape 关闭；点击遮罩关闭
+- **导出功能**：
+  - **HTML 导出**：通过 `react-dom/server` 静态渲染当前 Markdown 为独立 HTML 文档，含基础主题样式
+  - **PDF 导出**：调用 `window.print()` 触发浏览器原生打印，由用户选择"另存为 PDF"
+  - Rust 新增 `save_text_file` command 用于保存文本到任意路径
+- **每日笔记**：`File > Today's Note` 与命令面板入口，自动在 `notes/YYYY-MM-DD.md` 创建并打开当日笔记
+
+### 变更
+
+- 原生 File 菜单新增 `Today's Note`、`Export as PDF...`、`Export as HTML...` 子项
+- `useMenuEvents` 新增 `onExportPdf`、`onExportHtml`、`onOpenTodaysNote` 处理器
+- i18n 新增 `commandPalette.placeholder`、`commandPalette.noResults`、`commandPalette.openDialog` 翻译键
+
+### 测试
+
+- 单元测试 353 个（48 个测试文件）：新增 fuzzyMatch 7 个、commands 4 个、CommandPalette 9 个、exporter 2 个、dailyNote 4 个
+- E2E 测试 45 个：新增 command-palette.spec.ts 含 3 个场景（唤起、关闭、过滤）
+
 ## [1.2.13] - 2026-07-15
 
 ### 新增

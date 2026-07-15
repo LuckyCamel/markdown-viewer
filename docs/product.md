@@ -43,6 +43,8 @@
 | Ctrl+Tab | 下一个标签 |
 | Ctrl+Shift+Tab | 上一个标签 |
 | Ctrl+, | 打开设置 |
+| Ctrl+Shift+S | 切换源码/渲染视图 |
+| Ctrl+Shift+P | 唤起命令面板 |
 
 快捷键可在设置面板自定义（`ShortcutEditor`）。实现见 `useKeyboardShortcuts`。
 

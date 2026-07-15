@@ -10,6 +10,7 @@ const mockGetFileInfo = vi.fn()
 const mockCheckExists = vi.fn()
 const mockLogError = vi.fn()
 let mockRootPath: string | null = null
+let mockRootPaths: string[] = []
 
 const mockGrantFsScope = vi.fn()
 const mockEnsureStoreMigrated = vi.fn()
@@ -42,6 +43,8 @@ const mockOpenFile = vi.fn()
 const mockSetActive = vi.fn()
 const mockCloseAll = vi.fn()
 const mockSetRoot = vi.fn()
+const mockAddRoot = vi.fn()
+const mockRemoveRoot = vi.fn()
 const mockReset = vi.fn()
 
 vi.mock('../stores/useUIStore', () => {
@@ -77,9 +80,25 @@ vi.mock('../features/file-tree/useFileStore', () => ({
       setRoot: (path: string) => {
         mockSetRoot(path)
         mockRootPath = path
+        mockRootPaths = [path]
+      },
+      addRoot: (path: string) => {
+        mockAddRoot(path)
+        if (!mockRootPaths.includes(path)) {
+          mockRootPaths.push(path)
+        }
+        if (!mockRootPath) mockRootPath = path
+      },
+      removeRoot: (path: string) => {
+        mockRemoveRoot(path)
+        mockRootPaths = mockRootPaths.filter((p) => p !== path)
+        if (mockRootPath === path) mockRootPath = mockRootPaths[0] ?? null
       },
       get rootPath() {
         return mockRootPath
+      },
+      get rootPaths() {
+        return mockRootPaths
       },
     }),
   },
@@ -96,6 +115,7 @@ describe('useWorkspaceInit', () => {
     mockEnsureStoreMigrated.mockResolvedValue(undefined)
     mockGrantFsScope.mockResolvedValue(undefined)
     mockRootPath = null
+    mockRootPaths = []
     mockStoreGet.mockResolvedValue(undefined)
     mockStoreSet.mockResolvedValue(undefined)
     mockUpdateSettings.mockResolvedValue(undefined)
@@ -253,6 +273,25 @@ describe('useWorkspaceInit', () => {
       expect(mockStoreSet).toHaveBeenCalledWith('lastWorkspace', '/projects')
       expect(mockOpenFile).toHaveBeenCalledWith('/projects/readme.md')
       expect(result.current.workspacePath).toBe('/projects')
+    })
+  })
+
+  describe('handleAddFolderToWorkspace', () => {
+    it('应添加文件夹到当前工作区', async () => {
+      const { result } = renderHook(() => useWorkspaceInit())
+      await act(async () => result.current.handleOpenFolder('/workspace1'))
+      await act(async () => result.current.handleAddFolderToWorkspace('/workspace2'))
+      expect(mockAddRoot).toHaveBeenCalledWith('/workspace2')
+      expect(mockGrantFsScope).toHaveBeenCalledWith(expect.arrayContaining(['/workspace2']))
+    })
+
+    it('应记录到最近目录', async () => {
+      const { result } = renderHook(() => useWorkspaceInit())
+      await act(async () => result.current.handleAddFolderToWorkspace('/workspace2'))
+      expect(mockStoreSet).toHaveBeenCalledWith(
+        'recentDirs',
+        expect.arrayContaining([expect.objectContaining({ path: '/workspace2' })]),
+      )
     })
   })
 })

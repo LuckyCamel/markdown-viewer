@@ -41,6 +41,10 @@ pub fn run(launch_paths: Vec<String>) {
         .invoke_handler(tauri::generate_handler![
             commands::directory::list_directory,
             commands::files::check_files_exist,
+            commands::files::create_file,
+            commands::files::create_directory,
+            commands::files::rename_entry,
+            commands::trash::move_to_trash,
             commands::search::search_content,
             commands::search::cancel_search,
             commands::watcher::watch_file,

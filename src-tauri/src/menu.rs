@@ -3,6 +3,7 @@ use tauri::{App, Emitter};
 
 /** 菜单项 ID：与前端 `menuActions.ts` 保持一致 */
 pub const OPEN_FOLDER: &str = "menu_open_folder";
+pub const ADD_FOLDER_TO_WORKSPACE: &str = "menu_add_folder_to_workspace";
 pub const OPEN_FILE: &str = "menu_open_file";
 pub const CLOSE_TAB: &str = "menu_close_tab";
 pub const TOGGLE_SIDEBAR: &str = "menu_toggle_sidebar";
@@ -18,6 +19,8 @@ pub const TOGGLE_VIEW_MODE: &str = "menu_toggle_view_mode";
  */
 pub fn setup_menu(app: &App) -> tauri::Result<()> {
     let open_folder = MenuItemBuilder::with_id(OPEN_FOLDER, "Open Folder...").build(app)?;
+    let add_folder_to_workspace =
+        MenuItemBuilder::with_id(ADD_FOLDER_TO_WORKSPACE, "Add Folder to Workspace...").build(app)?;
     let open_file = MenuItemBuilder::with_id(OPEN_FILE, "Open File...").build(app)?;
     let close_tab = MenuItemBuilder::with_id(CLOSE_TAB, "Close Tab").build(app)?;
     let settings = MenuItemBuilder::with_id(SETTINGS, "Settings...").build(app)?;
@@ -30,6 +33,7 @@ pub fn setup_menu(app: &App) -> tauri::Result<()> {
 
     let file_menu = SubmenuBuilder::new(app, "File")
         .item(&open_folder)
+        .item(&add_folder_to_workspace)
         .item(&open_file)
         .separator()
         .item(&close_tab)

@@ -5,6 +5,8 @@ export interface FileEntry {
   isHidden: boolean
   isMarkdown?: boolean
   isTextFile?: boolean
+  modified?: number
+  size?: number
 }
 
 export interface FileContent {

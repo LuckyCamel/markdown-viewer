@@ -7,7 +7,7 @@ import type { SearchMatch, SearchProgress } from '../../../shared/types'
 const SEARCH_DEBOUNCE_MS = 300
 
 interface ContentSearchProps {
-  workspacePath: string
+  rootPaths: string[]
   onSelect: (match: SearchMatch) => void
 }
 
@@ -18,7 +18,7 @@ function createSearchId(generation: number): string {
   return `search-${generation}-${Date.now()}`
 }
 
-export function ContentSearch({ workspacePath, onSelect }: ContentSearchProps) {
+export function ContentSearch({ rootPaths, onSelect }: ContentSearchProps) {
   const [query, setQuery] = useState('')
   const [error, setError] = useState<string | null>(null)
   const results = useSearchStore((s) => s.results)
@@ -59,7 +59,7 @@ export function ContentSearch({ workspacePath, onSelect }: ContentSearchProps) {
       }
 
       unsubscribe = ipc.search.onResult(handleResult)
-      ipc.search.searchContent(workspacePath, query, searchId, isRegex).catch((err) => {
+      ipc.search.searchContent(rootPaths, query, searchId, isRegex).catch((err) => {
         if (generation === searchGenerationRef.current) {
           logError('ContentSearch:searchContent', err)
           setIsSearching(false)
@@ -80,7 +80,7 @@ export function ContentSearch({ workspacePath, onSelect }: ContentSearchProps) {
       unsubscribe?.()
       setIsSearching(false)
     }
-  }, [query, workspacePath, isRegex, setResults, appendResults, setIsSearching])
+  }, [query, rootPaths, isRegex, setResults, appendResults, setIsSearching])
 
   const matches = results?.matches || []
 

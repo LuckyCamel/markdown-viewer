@@ -97,8 +97,111 @@ export async function checkExists(paths: string[]): Promise<boolean[]> {
   return paths.map(() => true)
 }
 
+/**
+ * 新建文件（mock 实现）
+ */
+export async function createFile(dirPath: string, name: string): Promise<FileEntry> {
+  ensureE2E()
+  const path = `${dirPath}/${name}`
+  const isMarkdown = /\.(md|markdown)$/i.test(name) || !name.includes('.')
+  const entry: FileEntry = {
+    name,
+    path,
+    isDirectory: false,
+    isHidden: name.startsWith('.'),
+    isMarkdown,
+  }
+  const entries = window.__E2E__.directoryTree.get(dirPath) || []
+  window.__E2E__.directoryTree.set(dirPath, [...entries, entry])
+  window.__E2E__.files.set(path, '')
+  return entry
+}
+
+/**
+ * 新建文件夹（mock 实现）
+ */
+export async function createDirectory(dirPath: string, name: string): Promise<FileEntry> {
+  ensureE2E()
+  const path = `${dirPath}/${name}`
+  const entry: FileEntry = {
+    name,
+    path,
+    isDirectory: true,
+    isHidden: name.startsWith('.'),
+  }
+  const entries = window.__E2E__.directoryTree.get(dirPath) || []
+  window.__E2E__.directoryTree.set(dirPath, [...entries, entry])
+  window.__E2E__.directoryTree.set(path, [])
+  return entry
+}
+
+/**
+ * 重命名文件/文件夹（mock 实现）
+ */
+export async function renameEntry(oldPath: string, newName: string): Promise<FileEntry> {
+  ensureE2E()
+  const parts = oldPath.split('/')
+  const oldName = parts.pop() || ''
+  const dirPath = parts.join('/')
+  const newPath = `${dirPath}/${newName}`
+
+  const entries = window.__E2E__.directoryTree.get(dirPath) || []
+  const oldEntry = entries.find((e) => e.path === oldPath)
+  const isDir = oldEntry?.isDirectory ?? false
+
+  const newEntry: FileEntry = {
+    ...(oldEntry || {}),
+    name: newName,
+    path: newPath,
+    isDirectory: isDir,
+    isHidden: newName.startsWith('.'),
+  } as FileEntry
+
+  const newEntries = entries.map((e) => (e.path === oldPath ? newEntry : e))
+  window.__E2E__.directoryTree.set(dirPath, newEntries)
+
+  if (!isDir) {
+    const content = window.__E2E__.files.get(oldPath)
+    if (content !== undefined) {
+      window.__E2E__.files.set(newPath, content)
+      window.__E2E__.files.delete(oldPath)
+    }
+  } else {
+    const children = window.__E2E__.directoryTree.get(oldPath)
+    if (children) {
+      window.__E2E__.directoryTree.set(newPath, children)
+      window.__E2E__.directoryTree.delete(oldPath)
+    }
+  }
+
+  return newEntry
+}
+
+/**
+ * 移至回收站（mock 实现）
+ */
+export async function moveToTrash(path: string): Promise<void> {
+  ensureE2E()
+  const parts = path.split('/')
+  const name = parts.pop() || ''
+  const dirPath = parts.join('/')
+
+  const entries = window.__E2E__.directoryTree.get(dirPath) || []
+  const entry = entries.find((e) => e.path === path)
+  const isDir = entry?.isDirectory ?? false
+
+  const newEntries = entries.filter((e) => e.path !== path)
+  window.__E2E__.directoryTree.set(dirPath, newEntries)
+
+  if (!isDir) {
+    window.__E2E__.files.delete(path)
+  } else {
+    window.__E2E__.directoryTree.delete(path)
+  }
+}
+
 export async function searchContent(
-  _dirPath: string,
+  _rootPaths: string[],
   _query: string,
   searchId: string,
   _isRegex: boolean = false,
@@ -239,6 +342,10 @@ export const ipc = {
     getFileInfo,
     checkExists,
     updateSettings,
+    createFile,
+    createDirectory,
+    rename: renameEntry,
+    moveToTrash,
   },
   search: {
     searchContent,

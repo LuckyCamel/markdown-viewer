@@ -3,18 +3,43 @@ import { useFileStore } from './useFileStore'
 import type { FileEntry } from '../../../shared/types'
 
 const mockListDirectory = vi.fn()
+const mockCreateFile = vi.fn()
+const mockCreateDirectory = vi.fn()
+const mockRename = vi.fn()
+const mockMoveToTrash = vi.fn()
 
 vi.mock('../../lib/ipc', () => ({
-  ipc: { files: { listDirectory: (...args: unknown[]) => mockListDirectory(...args) } },
+  ipc: {
+    files: {
+      listDirectory: (...args: unknown[]) => mockListDirectory(...args),
+      createFile: (...args: unknown[]) => mockCreateFile(...args),
+      createDirectory: (...args: unknown[]) => mockCreateDirectory(...args),
+      rename: (...args: unknown[]) => mockRename(...args),
+      moveToTrash: (...args: unknown[]) => mockMoveToTrash(...args),
+    },
+  },
 }))
 
-function entry(name: string, isDir = false): FileEntry {
-  return { name, path: `/root/${name}`, isDirectory: isDir, isHidden: name.startsWith('.') }
+function entry(name: string, isDir = false, parent = '/root'): FileEntry {
+  return {
+    name,
+    path: `${parent}/${name}`,
+    isDirectory: isDir,
+    isHidden: name.startsWith('.'),
+  }
 }
 
 describe('useFileStore', () => {
   beforeEach(() => {
-    useFileStore.setState({ entries: {}, expanded: {}, loading: {}, rootPath: null })
+    useFileStore.setState({
+      entries: {},
+      expanded: {},
+      loading: {},
+      rootPath: null,
+      rootPaths: [],
+      sortMode: 'name',
+      sortDirection: 'asc',
+    })
     vi.clearAllMocks()
   })
 
@@ -73,6 +98,180 @@ describe('useFileStore', () => {
       await useFileStore.getState().toggleExpand('/sub')
       expect(useFileStore.getState().expanded['/sub']).toBeUndefined()
       expect(mockListDirectory).not.toHaveBeenCalled()
+    })
+  })
+
+  describe('createFile', () => {
+    it('新建文件成功后添加到父目录 entries', async () => {
+      mockListDirectory.mockResolvedValue([entry('a.md')])
+      await useFileStore.getState().loadChildren('/root')
+      const newFile = entry('new.md')
+      mockCreateFile.mockResolvedValue(newFile)
+
+      await useFileStore.getState().createFile('/root', 'new.md')
+
+      expect(mockCreateFile).toHaveBeenCalledWith('/root', 'new.md')
+      const entries = useFileStore.getState().entries['/root']
+      expect(entries).toHaveLength(2)
+      expect(entries.find((e) => e.name === 'new.md')).toBeDefined()
+    })
+  })
+
+  describe('createDirectory', () => {
+    it('新建文件夹成功后添加到父目录 entries', async () => {
+      mockListDirectory.mockResolvedValue([entry('a.md')])
+      await useFileStore.getState().loadChildren('/root')
+      const newDir = entry('newdir', true)
+      mockCreateDirectory.mockResolvedValue(newDir)
+
+      await useFileStore.getState().createDirectory('/root', 'newdir')
+
+      expect(mockCreateDirectory).toHaveBeenCalledWith('/root', 'newdir')
+      const entries = useFileStore.getState().entries['/root']
+      expect(entries).toHaveLength(2)
+      expect(entries.find((e) => e.name === 'newdir' && e.isDirectory)).toBeDefined()
+    })
+  })
+
+  describe('renameEntry', () => {
+    it('重命名文件后更新 entries 中的路径和名称', async () => {
+      mockListDirectory.mockResolvedValue([entry('old.md')])
+      await useFileStore.getState().loadChildren('/root')
+      const renamed = entry('new.md')
+      mockRename.mockResolvedValue(renamed)
+
+      await useFileStore.getState().renameEntry('/root/old.md', 'new.md')
+
+      expect(mockRename).toHaveBeenCalledWith('/root/old.md', 'new.md')
+      const entries = useFileStore.getState().entries['/root']
+      expect(entries.find((e) => e.name === 'old.md')).toBeUndefined()
+      expect(entries.find((e) => e.name === 'new.md')).toBeDefined()
+    })
+  })
+
+  describe('deleteEntry', () => {
+    it('删除文件后从 entries 中移除', async () => {
+      mockListDirectory.mockResolvedValue([entry('a.md'), entry('b.md')])
+      await useFileStore.getState().loadChildren('/root')
+      mockMoveToTrash.mockResolvedValue(undefined)
+
+      await useFileStore.getState().deleteEntry('/root/a.md')
+
+      expect(mockMoveToTrash).toHaveBeenCalledWith('/root/a.md')
+      const entries = useFileStore.getState().entries['/root']
+      expect(entries).toHaveLength(1)
+      expect(entries.find((e) => e.name === 'a.md')).toBeUndefined()
+    })
+  })
+
+  describe('refreshDirectory', () => {
+    it('刷新目录重新加载子条目', async () => {
+      mockListDirectory.mockResolvedValue([entry('a.md')])
+      await useFileStore.getState().loadChildren('/root')
+      expect(useFileStore.getState().entries['/root']).toHaveLength(1)
+
+      mockListDirectory.mockResolvedValue([entry('a.md'), entry('b.md'), entry('c.md')])
+      await useFileStore.getState().refreshDirectory('/root')
+
+      expect(mockListDirectory).toHaveBeenCalledTimes(2)
+      expect(useFileStore.getState().entries['/root']).toHaveLength(3)
+    })
+
+    it('刷新时保持目录展开状态', async () => {
+      mockListDirectory.mockResolvedValue([])
+      useFileStore.setState({ expanded: { '/root': true } })
+      await useFileStore.getState().refreshDirectory('/root')
+      expect(useFileStore.getState().expanded['/root']).toBe(true)
+    })
+  })
+
+  describe('sortMode', () => {
+    it('默认排序方式为 name 升序', () => {
+      expect(useFileStore.getState().sortMode).toBe('name')
+      expect(useFileStore.getState().sortDirection).toBe('asc')
+    })
+
+    it('setSort 应更新排序方式', () => {
+      useFileStore.getState().setSort('modified', 'desc')
+      expect(useFileStore.getState().sortMode).toBe('modified')
+      expect(useFileStore.getState().sortDirection).toBe('desc')
+    })
+
+    it('加载目录后应按当前排序方式返回条目', async () => {
+      const entries = [entry('b.md'), entry('a.md'), entry('sub', true), entry('c.md')]
+      mockListDirectory.mockResolvedValue(entries)
+      useFileStore.getState().setSort('name', 'asc')
+
+      await useFileStore.getState().loadChildren('/root')
+      const result = useFileStore.getState().getSortedEntries('/root')
+
+      expect(result.map((e) => e.name)).toEqual(['sub', 'a.md', 'b.md', 'c.md'])
+    })
+
+    it('切换排序方式后 getSortedEntries 返回新顺序', async () => {
+      const entries = [
+        { ...entry('old.md'), modified: 1000 },
+        { ...entry('new.md'), modified: 3000 },
+        { ...entry('mid.md'), modified: 2000 },
+      ]
+      mockListDirectory.mockResolvedValue(entries)
+      await useFileStore.getState().loadChildren('/root')
+
+      useFileStore.getState().setSort('modified', 'desc')
+      const result = useFileStore.getState().getSortedEntries('/root')
+      expect(result.map((e) => e.name)).toEqual(['new.md', 'mid.md', 'old.md'])
+    })
+  })
+
+  describe('多根目录', () => {
+    it('默认 rootPaths 为空数组', () => {
+      expect(useFileStore.getState().rootPaths).toEqual([])
+    })
+
+    it('setRoot 会替换 rootPaths 为单元素', async () => {
+      mockListDirectory.mockResolvedValue([entry('a.md')])
+      useFileStore.getState().setRoot('/workspace1')
+      expect(useFileStore.getState().rootPaths).toEqual(['/workspace1'])
+      expect(useFileStore.getState().rootPath).toBe('/workspace1')
+    })
+
+    it('addRoot 追加根目录', async () => {
+      mockListDirectory.mockResolvedValue([entry('a.md')])
+      useFileStore.getState().setRoot('/workspace1')
+      mockListDirectory.mockResolvedValue([entry('b.md')])
+      await useFileStore.getState().addRoot('/workspace2')
+      expect(useFileStore.getState().rootPaths).toEqual(['/workspace1', '/workspace2'])
+    })
+
+    it('addRoot 已存在的路径不重复添加', async () => {
+      mockListDirectory.mockResolvedValue([entry('a.md')])
+      useFileStore.getState().setRoot('/workspace1')
+      await useFileStore.getState().addRoot('/workspace1')
+      expect(useFileStore.getState().rootPaths).toEqual(['/workspace1'])
+    })
+
+    it('removeRoot 移除指定根目录', async () => {
+      mockListDirectory.mockResolvedValue([])
+      useFileStore.getState().setRoot('/workspace1')
+      await useFileStore.getState().addRoot('/workspace2')
+      useFileStore.getState().removeRoot('/workspace1')
+      expect(useFileStore.getState().rootPaths).toEqual(['/workspace2'])
+      expect(useFileStore.getState().rootPath).toBe('/workspace2')
+    })
+
+    it('removeRoot 最后一个根目录时 rootPath 为 null', () => {
+      mockListDirectory.mockResolvedValue([])
+      useFileStore.getState().setRoot('/workspace1')
+      useFileStore.getState().removeRoot('/workspace1')
+      expect(useFileStore.getState().rootPaths).toEqual([])
+      expect(useFileStore.getState().rootPath).toBeNull()
+    })
+
+    it('isRoot 判断路径是否为根目录', () => {
+      mockListDirectory.mockResolvedValue([])
+      useFileStore.getState().setRoot('/workspace1')
+      expect(useFileStore.getState().isRoot('/workspace1')).toBe(true)
+      expect(useFileStore.getState().isRoot('/other')).toBe(false)
     })
   })
 })

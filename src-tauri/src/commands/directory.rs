@@ -1,5 +1,6 @@
 use std::fs;
 use std::path::Path;
+use std::time::UNIX_EPOCH;
 
 use tauri::State;
 
@@ -26,17 +27,34 @@ pub async fn list_directory(
             continue;
         }
 
-        let is_dir = entry.path().is_dir();
-        let is_markdown = !is_dir && settings.is_markdown_file(&entry.path());
-        let is_text_file = !is_dir && settings.is_text_file(&entry.path());
-        entries.push(serde_json::json!({
+        let file_path = entry.path();
+        let is_dir = file_path.is_dir();
+        let is_markdown = !is_dir && settings.is_markdown_file(&file_path);
+        let is_text_file = !is_dir && settings.is_text_file(&file_path);
+
+        let metadata = entry.metadata().ok();
+        let modified = metadata.as_ref().and_then(|m| m.modified().ok()).and_then(|t| {
+            t.duration_since(UNIX_EPOCH).ok().map(|d| d.as_secs_f64() * 1000.0)
+        });
+        let size = if is_dir { None } else { metadata.as_ref().map(|m| m.len()) };
+
+        let mut entry_json = serde_json::json!({
             "name": file_name,
-            "path": entry.path().to_string_lossy().to_string(),
+            "path": file_path.to_string_lossy().to_string(),
             "isDirectory": is_dir,
             "isHidden": file_name.starts_with('.'),
             "isMarkdown": is_markdown,
             "isTextFile": is_text_file,
-        }));
+        });
+
+        if let Some(m) = modified {
+            entry_json["modified"] = serde_json::json!(m);
+        }
+        if let Some(s) = size {
+            entry_json["size"] = serde_json::json!(s);
+        }
+
+        entries.push(entry_json);
     }
 
     entries.sort_by(|a, b| {

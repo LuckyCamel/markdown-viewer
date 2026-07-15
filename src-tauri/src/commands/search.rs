@@ -15,7 +15,7 @@ use crate::state::{SearchState, SettingsState};
  */
 #[tauri::command]
 pub async fn search_content(
-    dir_path: String,
+    dir_paths: Vec<String>,
     query: String,
     search_id: String,
     is_regex: bool,
@@ -32,11 +32,12 @@ pub async fn search_content(
         cancelled.remove(&search_id);
     }
 
-    let path = Path::new(&dir_path);
-    settings.ensure_under_allowed_root(path)?;
-
     let mut all_files = Vec::new();
-    walk_dir(path, &mut all_files, &settings);
+    for dir_path in &dir_paths {
+        let path = Path::new(dir_path);
+        settings.ensure_under_allowed_root(path)?;
+        walk_dir(path, &mut all_files, &settings);
+    }
 
     let filtered_files: Vec<_> = all_files
         .into_iter()

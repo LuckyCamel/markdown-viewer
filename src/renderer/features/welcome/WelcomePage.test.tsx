@@ -53,8 +53,19 @@ describe('WelcomePage', () => {
     expect(onFileOpen).toHaveBeenCalledWith('/docs/readme.md')
   })
 
-  it('应展示最近打开的文件夹', async () => {
+  it('应展示最近打开的工作区', async () => {
     render(<WelcomePage />)
+    expect(await screen.findByText('Recent Workspaces')).toBeDefined()
     expect(await screen.findByRole('button', { name: 'docs' })).toBeDefined()
+  })
+
+  it('应支持将工作区添加到当前工作区', async () => {
+    const onAddToWorkspace = vi.fn()
+    render(<WelcomePage onAddToWorkspace={onAddToWorkspace} />)
+
+    const addButton = await screen.findByRole('button', { name: '+' })
+    fireEvent.click(addButton)
+
+    expect(onAddToWorkspace).toHaveBeenCalledWith('/docs')
   })
 })

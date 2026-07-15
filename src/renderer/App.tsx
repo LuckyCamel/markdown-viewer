@@ -8,6 +8,8 @@ import { Layout } from './components/Layout'
 import { AboutDialog } from './components/AboutDialog'
 import { WelcomePage } from './features/welcome/WelcomePage'
 import { FileTree } from './features/file-tree/FileTree'
+import { Favorites } from './features/file-tree/Favorites'
+import { useFavoritesStore } from './features/file-tree/useFavoritesStore'
 import { TabBar } from './features/tabs/TabBar'
 import { MarkdownViewer } from './features/markdown-viewer/MarkdownViewer'
 import { SourceViewer } from './features/markdown-viewer/SourceViewer'
@@ -43,6 +45,7 @@ function App() {
     showSettings,
     setShowSettings,
     handleOpenFolder,
+    handleAddFolderToWorkspace,
     handleOpenFile,
   } = useWorkspaceInit()
 
@@ -136,6 +139,7 @@ function App() {
     ipc.store.get<number>('outlineWidth').then((w) => {
       if (typeof w === 'number') useUIStore.getState().setOutlineWidth(w)
     })
+    useFavoritesStore.getState().loadFavorites()
   }, [])
 
   // 打开最近文件面板时加载持久化的最近文件列表
@@ -173,6 +177,10 @@ function App() {
       const path = await ipc.dialog.openDirectory()
       if (path) handleOpenFolder(path)
     },
+    onAddFolderToWorkspace: async () => {
+      const path = await ipc.dialog.openDirectory()
+      if (path) handleAddFolderToWorkspace(path)
+    },
     onOpenFile: async () => {
       const path = await ipc.dialog.openFile()
       if (path) handleOpenFile(path)
@@ -194,7 +202,8 @@ function App() {
           <div>
             {workspacePath ? (
               <>
-                <FileTree rootPath={workspacePath} />
+                <Favorites />
+                <FileTree />
                 <div className="border-t border-gray-200 dark:border-gray-700">
                   {searchPanel === 'file' && (
                     <FileSearch
@@ -207,7 +216,7 @@ function App() {
                   )}
                   {searchPanel === 'content' && (
                     <ContentSearch
-                      workspacePath={workspacePath}
+                      rootPaths={useFileStore.getState().rootPaths}
                       onSelect={(match) => {
                         // 仅当目标文件与当前文件不同时设置跳转标志，
                         // 避免文件切换 useEffect 清除 searchHighlight。
@@ -294,7 +303,11 @@ function App() {
               <StatusBar stats={readingStats} />
             </div>
           ) : (
-            <WelcomePage onFolderOpen={handleOpenFolder} onFileOpen={handleOpenFile} />
+            <WelcomePage
+              onFolderOpen={handleOpenFolder}
+              onAddToWorkspace={handleAddFolderToWorkspace}
+              onFileOpen={handleOpenFile}
+            />
           )
         }
         outline={

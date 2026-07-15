@@ -5,10 +5,11 @@ import type { RecentEntry } from '../../../shared/types'
 
 interface WelcomePageProps {
   onFolderOpen?: (path: string) => void
+  onAddToWorkspace?: (path: string) => void
   onFileOpen?: (path: string) => void
 }
 
-export function WelcomePage({ onFolderOpen, onFileOpen }: WelcomePageProps) {
+export function WelcomePage({ onFolderOpen, onAddToWorkspace, onFileOpen }: WelcomePageProps) {
   const [recentFiles, setRecentFiles] = useState<RecentEntry[]>([])
   const [recentDirs, setRecentDirs] = useState<RecentEntry[]>([])
 
@@ -86,10 +87,10 @@ export function WelcomePage({ onFolderOpen, onFileOpen }: WelcomePageProps) {
           )}
           {recentDirs.length > 0 && (
             <div>
-              <h2 className="text-sm font-medium text-gray-500 mb-2">Recent Folders</h2>
+              <h2 className="text-sm font-medium text-gray-500 mb-2">Recent Workspaces</h2>
               <ul className="space-y-1">
                 {recentDirs.map((dir) => (
-                  <li key={dir.path}>
+                  <li key={dir.path} className="flex items-center gap-2">
                     <button
                       onClick={() => {
                         ipc.store
@@ -97,11 +98,20 @@ export function WelcomePage({ onFolderOpen, onFileOpen }: WelcomePageProps) {
                           .catch((err) => logError('WelcomePage:setLastWorkspace', err))
                         onFolderOpen?.(dir.path)
                       }}
-                      className="text-sm text-blue-600 dark:text-blue-400 hover:underline truncate max-w-full block text-left"
+                      className="flex-1 text-sm text-blue-600 dark:text-blue-400 hover:underline truncate text-left"
                       title={dir.path}
                     >
                       {dir.name}
                     </button>
+                    {onAddToWorkspace && (
+                      <button
+                        onClick={() => onAddToWorkspace(dir.path)}
+                        title="Add to Workspace"
+                        className="text-xs px-1.5 py-0.5 rounded border border-gray-300 dark:border-gray-600 text-gray-500 hover:bg-gray-100 dark:hover:bg-gray-800"
+                      >
+                        +
+                      </button>
+                    )}
                   </li>
                 ))}
               </ul>

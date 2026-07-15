@@ -67,6 +67,24 @@ export function useWorkspaceInit() {
   )
 
   /**
+   * 将文件夹添加到当前工作区（多工作区模式）
+   */
+  const handleAddFolderToWorkspace = useCallback(
+    async (path: string) => {
+      grantPaths([path])
+      await useFileStore.getState().addRoot(path)
+      if (!workspacePath) {
+        setWorkspacePath(path)
+        ipc.store
+          .set('lastWorkspace', path)
+          .catch((err) => logError('useWorkspaceInit:setLastWorkspace', err))
+      }
+      trackRecent(path, true).catch((err) => logError('useWorkspaceInit:trackRecent', err))
+    },
+    [trackRecent, workspacePath],
+  )
+
+  /**
    * 打开文件；若无 workspace 则以文件父目录作为工作区
    */
   const handleOpenFile = useCallback(
@@ -192,6 +210,7 @@ export function useWorkspaceInit() {
     showSettings,
     setShowSettings,
     handleOpenFolder,
+    handleAddFolderToWorkspace,
     handleOpenFile,
   }
 }

@@ -43,13 +43,44 @@ export async function checkExists(paths: string[]): Promise<boolean[]> {
   return invoke<boolean[]>('check_files_exist', { paths })
 }
 
+/**
+ * 新建文件
+ */
+export async function createFile(dirPath: string, name: string): Promise<FileEntry> {
+  return invoke<FileEntry>('create_file', { dirPath, name })
+}
+
+/**
+ * 新建文件夹
+ */
+export async function createDirectory(dirPath: string, name: string): Promise<FileEntry> {
+  return invoke<FileEntry>('create_directory', { dirPath, name })
+}
+
+/**
+ * 重命名文件/文件夹
+ */
+export async function renameEntry(oldPath: string, newName: string): Promise<FileEntry> {
+  return invoke<FileEntry>('rename_entry', { oldPath, newName })
+}
+
+/**
+ * 将文件/文件夹移至回收站
+ */
+export async function moveToTrash(path: string): Promise<void> {
+  await invoke('move_to_trash', { path })
+}
+
+/**
+ * 在多个根目录中搜索内容
+ */
 export async function searchContent(
-  dirPath: string,
+  rootPaths: string[],
   query: string,
   searchId: string,
   isRegex: boolean = false,
 ): Promise<void> {
-  await invoke('search_content', { dirPath, query, searchId, isRegex })
+  await invoke('search_content', { dirPaths: rootPaths, query, searchId, isRegex })
 }
 
 export async function cancelSearch(searchId: string): Promise<void> {
@@ -299,6 +330,10 @@ export const ipc = {
     getFileInfo,
     checkExists,
     updateSettings,
+    createFile,
+    createDirectory,
+    rename: renameEntry,
+    moveToTrash,
   },
   search: {
     searchContent,

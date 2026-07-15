@@ -4,6 +4,20 @@
 
 ## [Unreleased]
 
+### 新增
+
+- 文件树操作闭环：新建文件/文件夹、重命名、删除（移至回收站）、刷新
+- 文件排序：支持按名称、修改时间、大小排序，目录始终排在前面
+- 收藏夹功能：添加/移除收藏、收藏夹列表、右键菜单操作
+- 多工作区基础：支持添加多个工作区根目录、根目录右键移除
+- 原生菜单新增「Add Folder to Workspace...」菜单项
+
+### 变更
+
+- FileTree 组件支持多根目录渲染，每个根目录独立显示
+- FileEntry 类型扩展 modified、size 元数据字段
+- useFileStore 扩展 rootPaths、addRoot、removeRoot、isRoot 等多工作区 API
+
 ## [1.2.7] - 2026-07-12
 
 ### 新增

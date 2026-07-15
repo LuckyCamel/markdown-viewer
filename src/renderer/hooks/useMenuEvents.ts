@@ -4,6 +4,7 @@ import { useTabStore } from '../features/tabs/useTabStore'
 import { logError } from '../logger'
 import {
   MENU_ABOUT,
+  MENU_ADD_FOLDER_TO_WORKSPACE,
   MENU_CLOSE_TAB,
   MENU_CONTENT_SEARCH,
   MENU_FILE_SEARCH,
@@ -18,6 +19,7 @@ import {
 
 export interface MenuHandlers {
   onOpenFolder: () => void
+  onAddFolderToWorkspace: () => void
   onOpenFile: () => void
   onToggleSidebar: () => void
   onToggleOutline: () => void
@@ -45,6 +47,9 @@ export function useMenuEvents(handlers: MenuHandlers): void {
       switch (id) {
         case MENU_OPEN_FOLDER:
           h.onOpenFolder()
+          break
+        case MENU_ADD_FOLDER_TO_WORKSPACE:
+          h.onAddFolderToWorkspace()
           break
         case MENU_OPEN_FILE:
           h.onOpenFile()

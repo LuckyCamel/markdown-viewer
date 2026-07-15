@@ -106,7 +106,16 @@ export function MarkdownViewer({ content, filePath }: MarkdownViewerProps) {
   }
 
   return (
-    <div className="prose dark:prose-invert max-w-none p-6">
+    <div
+      className="prose dark:prose-invert p-6"
+      style={{
+        fontSize: 'var(--font-size, 14px)',
+        lineHeight: 'var(--line-height, 1.6)',
+        maxWidth: 'var(--content-max-width, none)',
+        fontFamily: 'var(--font-family, inherit)',
+        margin: '0 auto',
+      }}
+    >
       <ReactMarkdown
         remarkPlugins={[remarkGfm, remarkMath]}
         rehypePlugins={[

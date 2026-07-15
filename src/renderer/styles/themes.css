@@ -1,0 +1,127 @@
+/**
+ * 内置主题 CSS 变量定义
+ *
+ * 使用方式：在 <html> 元素上设置 data-theme 属性
+ * 例如：<html data-theme="light-warm">
+ */
+
+/* 浅色默认主题 */
+:root[data-theme='light-default'],
+:root:not([data-theme]) {
+  --color-bg: #ffffff;
+  --color-bg-secondary: #f9fafb;
+  --color-bg-tertiary: #f3f4f6;
+  --color-text: #1f2937;
+  --color-text-secondary: #6b7280;
+  --color-text-muted: #9ca3af;
+  --color-accent: #3b82f6;
+  --color-accent-hover: #2563eb;
+  --color-border: #e5e7eb;
+  --color-border-light: #f3f4f6;
+  --color-code-bg: #f3f4f6;
+  --color-code-border: #e5e7eb;
+  --color-sidebar-bg: #f9fafb;
+  --color-sidebar-border: #e5e7eb;
+  --color-hover-bg: #f3f4f6;
+  --color-active-bg: #e5e7eb;
+}
+
+/* 浅色护眼主题 */
+:root[data-theme='light-warm'] {
+  --color-bg: #fdf6e3;
+  --color-bg-secondary: #f5eed6;
+  --color-bg-tertiary: #efe4c9;
+  --color-text: #3d3d3d;
+  --color-text-secondary: #666666;
+  --color-text-muted: #999999;
+  --color-accent: #b45a04;
+  --color-accent-hover: #d4722f;
+  --color-border: #e0d6c0;
+  --color-border-light: #efe4c9;
+  --color-code-bg: #f5eed6;
+  --color-code-border: #e0d6c0;
+  --color-sidebar-bg: #f5eed6;
+  --color-sidebar-border: #e0d6c0;
+  --color-hover-bg: #efe4c9;
+  --color-active-bg: #e0d6c0;
+}
+
+/* 浅色清爽主题 */
+:root[data-theme='light-cool'] {
+  --color-bg: #f0f7ff;
+  --color-bg-secondary: #e6f2ff;
+  --color-bg-tertiary: #d9ecff;
+  --color-text: #1e3a5f;
+  --color-text-secondary: #4a6d8c;
+  --color-text-muted: #7a9bb8;
+  --color-accent: #0066cc;
+  --color-accent-hover: #0052a3;
+  --color-border: #c9ddf0;
+  --color-border-light: #d9ecff;
+  --color-code-bg: #e6f2ff;
+  --color-code-border: #c9ddf0;
+  --color-sidebar-bg: #e6f2ff;
+  --color-sidebar-border: #c9ddf0;
+  --color-hover-bg: #d9ecff;
+  --color-active-bg: #c9ddf0;
+}
+
+/* 深色默认主题 */
+:root[data-theme='dark-default'] {
+  --color-bg: #1f2937;
+  --color-bg-secondary: #111827;
+  --color-bg-tertiary: #374151;
+  --color-text: #f9fafb;
+  --color-text-secondary: #d1d5db;
+  --color-text-muted: #9ca3af;
+  --color-accent: #60a5fa;
+  --color-accent-hover: #93c5fd;
+  --color-border: #374151;
+  --color-border-light: #4b5563;
+  --color-code-bg: #111827;
+  --color-code-border: #374151;
+  --color-sidebar-bg: #111827;
+  --color-sidebar-border: #374151;
+  --color-hover-bg: #374151;
+  --color-active-bg: #4b5563;
+}
+
+/* 深色纯黑主题（OLED） */
+:root[data-theme='dark-oled'] {
+  --color-bg: #000000;
+  --color-bg-secondary: #0d0d0d;
+  --color-bg-tertiary: #1a1a1a;
+  --color-text: #ffffff;
+  --color-text-secondary: #b3b3b3;
+  --color-text-muted: #666666;
+  --color-accent: #4da6ff;
+  --color-accent-hover: #80c0ff;
+  --color-border: #333333;
+  --color-border-light: #262626;
+  --color-code-bg: #0d0d0d;
+  --color-code-border: #333333;
+  --color-sidebar-bg: #0d0d0d;
+  --color-sidebar-border: #333333;
+  --color-hover-bg: #1a1a1a;
+  --color-active-bg: #333333;
+}
+
+/* 深色护眼主题 */
+:root[data-theme='dark-sepia'] {
+  --color-bg: #2d2820;
+  --color-bg-secondary: #242018;
+  --color-bg-tertiary: #3d3528;
+  --color-text: #e8dcc8;
+  --color-text-secondary: #c4b8a4;
+  --color-text-muted: #8a8070;
+  --color-accent: #d4a574;
+  --color-accent-hover: #e4b584;
+  --color-border: #4d4538;
+  --color-border-light: #3d3528;
+  --color-code-bg: #242018;
+  --color-code-border: #4d4538;
+  --color-sidebar-bg: #242018;
+  --color-sidebar-border: #4d4538;
+  --color-hover-bg: #3d3528;
+  --color-active-bg: #4d4538;
+}

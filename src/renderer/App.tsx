@@ -140,6 +140,9 @@ function App() {
     ipc.store.get<number>('outlineWidth').then((w) => {
       if (typeof w === 'number') useUIStore.getState().setOutlineWidth(w)
     })
+    ipc.store.get<string>('themeId').then((id) => {
+      if (id) useUIStore.getState().setThemeId(id as import('./lib/themes').ThemeId)
+    })
     useFavoritesStore.getState().loadFavorites()
   }, [])
 

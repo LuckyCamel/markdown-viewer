@@ -1,8 +1,10 @@
 import { create } from 'zustand'
 import type { ThemeMode, ContentJumpTarget, AnchorJumpTarget, ViewMode } from '../../shared/types'
+import type { ThemeId } from '../lib/themes'
 
 interface UIState {
   theme: ThemeMode
+  themeId: ThemeId | null
   sidebarVisible: boolean
   outlineVisible: boolean
   sidebarWidth: number
@@ -14,6 +16,7 @@ interface UIState {
   pendingAnchorJump: AnchorJumpTarget | null
   searchHighlight: { query: string; isRegex: boolean } | null
   setTheme: (theme: ThemeMode) => void
+  setThemeId: (themeId: ThemeId | null) => void
   toggleSidebar: () => void
   toggleOutline: () => void
   setSidebarWidth: (width: number) => void
@@ -31,6 +34,7 @@ interface UIState {
 
 const initialState = {
   theme: 'system' as ThemeMode,
+  themeId: null as ThemeId | null,
   sidebarVisible: true,
   outlineVisible: true,
   sidebarWidth: 256,
@@ -46,6 +50,7 @@ const initialState = {
 export const useUIStore = create<UIState>((set) => ({
   ...initialState,
   setTheme: (theme) => set({ theme }),
+  setThemeId: (themeId) => set({ themeId }),
   toggleSidebar: () => set((s) => ({ sidebarVisible: !s.sidebarVisible })),
   toggleOutline: () => set((s) => ({ outlineVisible: !s.outlineVisible })),
   setSidebarWidth: (width) => set({ sidebarWidth: width }),

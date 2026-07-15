@@ -76,3 +76,19 @@ export interface FileChangeEvent {
 export type ThemeMode = 'system' | 'light' | 'dark'
 
 export type ViewMode = 'render' | 'source'
+
+/**
+ * 阅读设置：控制 Markdown 渲染区域的字体、行高、宽度等
+ */
+export interface ReadingSettings {
+  /** 正文字体大小（px），范围 12-24，默认 14 */
+  fontSize: number
+  /** 行高，范围 1.0-2.5，默认 1.6 */
+  lineHeight: number
+  /** 内容区域最大宽度（px），null 表示无限制 */
+  contentMaxWidth: number | null
+  /** 正文字体（空字符串表示系统默认） */
+  fontFamily: string
+  /** 代码字体（空字符串表示系统等宽） */
+  codeFontFamily: string
+}

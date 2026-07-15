@@ -86,6 +86,11 @@ const zhCN: Record<TranslationKey, string> = {
   'outline.outline': '大纲',
   'outline.collapse': '折叠',
   'outline.expand': '展开',
+  'outline.collapseAll': '全部折叠',
+  'outline.expandAll': '全部展开',
+  'outline.copyAnchor': '复制锚点链接',
+  'outline.anchorCopied': '已复制锚点链接',
+  'outline.noHeadings': '暂无标题',
 
   'tab.newTab': '新建标签',
   'tab.duplicate': '复制标签',

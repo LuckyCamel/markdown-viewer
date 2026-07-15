@@ -65,7 +65,7 @@ test.describe('Search Highlight', () => {
     await clickSearchResult(page, 'doc.md')
 
     // 高亮工具栏出现，并显示匹配数
-    await expect(page.getByText(/^\d+ 个匹配$/)).toBeVisible({ timeout: 8000 })
+    await expect(page.getByText(/^\d+ matches$/)).toBeVisible({ timeout: 8000 })
 
     // 文档内出现 mark 元素
     await expect(page.locator('[data-scroll-container] mark[data-search-highlight]')).toHaveCount(
@@ -113,21 +113,21 @@ test.describe('Search Highlight', () => {
     await clickSearchResult(page, 'doc.md')
 
     // 等待高亮出现
-    await expect(page.getByText(/^\d+ 个匹配$/)).toBeVisible({ timeout: 8000 })
+    await expect(page.getByText(/^\d+ matches$/)).toBeVisible({ timeout: 8000 })
 
     // 初始位置 1/3
     await expect(page.getByText(/^1\/3$/)).toBeVisible({ timeout: 5000 })
 
     // 点击下一个
-    await page.locator('[aria-label="下一个"]').click()
+    await page.locator('[aria-label="Next"]').click()
     await expect(page.getByText(/^2\/3$/)).toBeVisible({ timeout: 5000 })
 
     // 点击下一个到末尾
-    await page.locator('[aria-label="下一个"]').click()
+    await page.locator('[aria-label="Next"]').click()
     await expect(page.getByText(/^3\/3$/)).toBeVisible({ timeout: 5000 })
 
     // 再次点击应循环回到 1/3
-    await page.locator('[aria-label="下一个"]').click()
+    await page.locator('[aria-label="Next"]').click()
     await expect(page.getByText(/^1\/3$/)).toBeVisible({ timeout: 5000 })
 
     ws.cleanup()
@@ -176,7 +176,7 @@ test.describe('Search Highlight', () => {
     )
 
     // 点击关闭按钮
-    await page.locator('[aria-label="关闭"]').click()
+    await page.locator('[aria-label="Close"]').click()
 
     // mark 元素应被清除
     await expect(page.locator('[data-scroll-container] mark[data-search-highlight]')).toHaveCount(

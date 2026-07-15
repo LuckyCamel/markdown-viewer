@@ -25,7 +25,7 @@ test.describe('Outline Collapse', () => {
 
     // H1 应有折叠箭头，子级 H2 可见
     const h1Row = outline.locator('div', { hasText: 'Title' }).first()
-    const arrowButton = h1Row.locator('button[aria-label="折叠"]')
+    const arrowButton = h1Row.locator('button[aria-label="Collapse"]')
     await expect(arrowButton).toBeVisible({ timeout: 5000 })
 
     await expect(outline.getByText('Sub A')).toBeVisible()
@@ -39,7 +39,7 @@ test.describe('Outline Collapse', () => {
     await expect(outline.getByText('Sub B')).not.toBeVisible({ timeout: 3000 })
 
     // 再次点击展开
-    const expandButton = h1Row.locator('button[aria-label="展开"]')
+    const expandButton = h1Row.locator('button[aria-label="Expand"]')
     await expect(expandButton).toBeVisible()
     await expandButton.click()
 
@@ -62,7 +62,7 @@ test.describe('Outline Collapse', () => {
     await expect(outline).toBeVisible({ timeout: 10000 })
 
     // 全部折叠
-    await outline.getByRole('button', { name: '全部折叠' }).click()
+    await outline.getByRole('button', { name: 'Collapse All' }).click()
 
     // 二级、三级标题应被隐藏
     await expect(outline.getByText('H2a')).not.toBeVisible({ timeout: 3000 })
@@ -70,7 +70,7 @@ test.describe('Outline Collapse', () => {
     await expect(outline.getByText('H2b')).not.toBeVisible({ timeout: 3000 })
 
     // 全部展开
-    await outline.getByRole('button', { name: '全部展开' }).click()
+    await outline.getByRole('button', { name: 'Expand All' }).click()
 
     await expect(outline.getByText('H2a')).toBeVisible({ timeout: 3000 })
     await expect(outline.getByText('H3')).toBeVisible({ timeout: 3000 })
@@ -96,12 +96,12 @@ test.describe('Outline Collapse', () => {
     await titleItem.click({ button: 'right' })
 
     // 上下文菜单应出现"复制锚点链接"
-    await expect(page.getByText('复制锚点链接')).toBeVisible({ timeout: 3000 })
+    await expect(page.getByText('Copy anchor link')).toBeVisible({ timeout: 3000 })
 
     // 点击菜单项
-    await page.getByText('复制锚点链接').click()
+    await page.getByText('Copy anchor link').click()
     // 应出现反馈提示
-    await expect(page.getByText('已复制锚点链接')).toBeVisible({ timeout: 3000 })
+    await expect(page.getByText('Anchor link copied')).toBeVisible({ timeout: 3000 })
 
     ws.cleanup()
   })

@@ -8,6 +8,7 @@ import { useOutlineStore } from './useOutlineStore'
 import { useTabStore } from '../tabs/useTabStore'
 import { ContextMenu } from '../../components/ContextMenu'
 import { copyPathToClipboard } from '../../lib/fileActions'
+import { t } from '../../../shared/i18n'
 
 interface HeadingItem {
   level: number
@@ -77,12 +78,12 @@ export function Outline({ content }: OutlineProps) {
    */
   const handleCopyAnchor = async (headingId: string) => {
     await copyPathToClipboard('#' + headingId)
-    setFeedback('已复制锚点链接')
+    setFeedback(t('outline.anchorCopied'))
     setTimeout(() => setFeedback(null), FEEDBACK_DURATION)
   }
 
   if (headings.length === 0) {
-    return <div className="p-4 text-sm text-gray-500">No headings found</div>
+    return <div className="p-4 text-sm text-gray-500">{t('outline.noHeadings')}</div>
   }
 
   return (
@@ -92,13 +93,13 @@ export function Outline({ content }: OutlineProps) {
           onClick={() => collapseAll(filePath, collapsibleIds)}
           className="text-xs px-2 py-1 rounded hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-600 dark:text-gray-400"
         >
-          全部折叠
+          {t('outline.collapseAll')}
         </button>
         <button
           onClick={() => expandAll(filePath)}
           className="text-xs px-2 py-1 rounded hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-600 dark:text-gray-400"
         >
-          全部展开
+          {t('outline.expandAll')}
         </button>
         {feedback && (
           <span className="ml-auto text-xs text-green-600 dark:text-green-400">{feedback}</span>
@@ -117,7 +118,7 @@ export function Outline({ content }: OutlineProps) {
             {hasChildren ? (
               <button
                 onClick={() => toggleCollapse(filePath, h.id)}
-                aria-label={collapsed ? '展开' : '折叠'}
+                aria-label={collapsed ? t('outline.expand') : t('outline.collapse')}
                 className="shrink-0 w-5 h-5 flex items-center justify-center text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 rounded text-xs"
               >
                 {collapsed ? '▶' : '▼'}
@@ -148,7 +149,9 @@ export function Outline({ content }: OutlineProps) {
         <ContextMenu
           x={menu.x}
           y={menu.y}
-          items={[{ label: '复制锚点链接', onClick: () => handleCopyAnchor(menu.headingId) }]}
+          items={[
+            { label: t('outline.copyAnchor'), onClick: () => handleCopyAnchor(menu.headingId) },
+          ]}
           onClose={() => setMenu(null)}
         />
       )}

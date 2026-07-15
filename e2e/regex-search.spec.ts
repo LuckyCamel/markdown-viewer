@@ -24,7 +24,7 @@ test.describe('Regex Content Search', () => {
     await expect(input).toBeVisible({ timeout: 10000 })
 
     // .* 按钮初始为非激活态
-    const regexBtn = page.locator('button[title="正则模式"]')
+    const regexBtn = page.locator('button[title="Regex mode"]')
     await expect(regexBtn).toBeVisible()
 
     // 点击切换为正则模式
@@ -102,7 +102,7 @@ test.describe('Regex Content Search', () => {
     await expect(input).toBeVisible({ timeout: 10000 })
 
     // 开启正则模式
-    const regexBtn = page.locator('button[title="正则模式"]')
+    const regexBtn = page.locator('button[title="Regex mode"]')
     await regexBtn.click()
 
     // 输入查询；E2E mock 不抛错，所以此处仅校验 UI 状态保持正则激活

@@ -92,6 +92,7 @@ export async function launchApp(
     await page.addInitScript(
       ({ dirPath, fileContents, entries }) => {
         localStorage.clear()
+        localStorage.setItem('locale', 'en-US')
         window.__E2E__ = {
           files: new Map(Object.entries(fileContents)),
           directoryTree: new Map([[dirPath, entries]]),
@@ -113,6 +114,7 @@ export async function launchApp(
   } else {
     await page.addInitScript(() => {
       localStorage.clear()
+      localStorage.setItem('locale', 'en-US')
       window.__E2E__ = {
         files: new Map(),
         directoryTree: new Map(),

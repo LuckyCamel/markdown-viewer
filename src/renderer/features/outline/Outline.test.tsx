@@ -14,7 +14,7 @@ describe('Outline', () => {
 
   it('should show no headings message', () => {
     render(<Outline content="Plain text without headings" />)
-    expect(screen.getByText('No headings found')).toBeDefined()
+    expect(screen.getByText('暂无标题')).toBeDefined()
   })
 
   it('不应把代码块内的 # 标题识别为大纲条目', () => {

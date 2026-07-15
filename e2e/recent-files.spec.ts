@@ -22,7 +22,7 @@ test.describe('Recent Files Panel', () => {
     await page.keyboard.press('Control+e')
 
     // 面板标题可见
-    await expect(page.getByText('最近文件')).toBeVisible({ timeout: 5000 })
+    await expect(page.getByText('Recent Files')).toBeVisible({ timeout: 5000 })
 
     ws.cleanup()
   })
@@ -53,7 +53,7 @@ test.describe('Recent Files Panel', () => {
 
     // 打开面板（重新触发以加载最新数据）
     await page.keyboard.press('Control+e')
-    await expect(page.getByText('最近文件')).toBeVisible({ timeout: 5000 })
+    await expect(page.getByText('Recent Files')).toBeVisible({ timeout: 5000 })
 
     // 第一项应为 beta.md（按时间倒序）
     const firstItem = page.locator('[role="option"]').first()
@@ -75,7 +75,7 @@ test.describe('Recent Files Panel', () => {
     await openWorkspace(page, ws.dirPath)
 
     await page.keyboard.press('Control+e')
-    await expect(page.getByText('暂无最近文件')).toBeVisible({ timeout: 5000 })
+    await expect(page.getByText('No recent files')).toBeVisible({ timeout: 5000 })
 
     ws.cleanup()
   })

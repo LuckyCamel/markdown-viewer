@@ -87,6 +87,11 @@ const enUS: Record<TranslationKey, string> = {
   'outline.outline': 'Outline',
   'outline.collapse': 'Collapse',
   'outline.expand': 'Expand',
+  'outline.collapseAll': 'Collapse All',
+  'outline.expandAll': 'Expand All',
+  'outline.copyAnchor': 'Copy anchor link',
+  'outline.anchorCopied': 'Anchor link copied',
+  'outline.noHeadings': 'No headings found',
 
   'tab.newTab': 'New Tab',
   'tab.duplicate': 'Duplicate',

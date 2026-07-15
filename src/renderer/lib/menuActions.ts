@@ -10,6 +10,9 @@ export const MENU_CONTENT_SEARCH = 'menu_content_search'
 export const MENU_SETTINGS = 'menu_settings'
 export const MENU_ABOUT = 'menu_about'
 export const MENU_TOGGLE_VIEW_MODE = 'menu_toggle_view_mode'
+export const MENU_EXPORT_PDF = 'menu_export_pdf'
+export const MENU_EXPORT_HTML = 'menu_export_html'
+export const MENU_OPEN_TODAYS_NOTE = 'menu_open_todays_note'
 
 export type MenuActionId =
   | typeof MENU_OPEN_FOLDER
@@ -23,3 +26,6 @@ export type MenuActionId =
   | typeof MENU_SETTINGS
   | typeof MENU_ABOUT
   | typeof MENU_TOGGLE_VIEW_MODE
+  | typeof MENU_EXPORT_PDF
+  | typeof MENU_EXPORT_HTML
+  | typeof MENU_OPEN_TODAYS_NOTE

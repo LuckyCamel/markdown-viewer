@@ -7,9 +7,12 @@ import {
   MENU_ADD_FOLDER_TO_WORKSPACE,
   MENU_CLOSE_TAB,
   MENU_CONTENT_SEARCH,
+  MENU_EXPORT_HTML,
+  MENU_EXPORT_PDF,
   MENU_FILE_SEARCH,
   MENU_OPEN_FILE,
   MENU_OPEN_FOLDER,
+  MENU_OPEN_TODAYS_NOTE,
   MENU_SETTINGS,
   MENU_TOGGLE_OUTLINE,
   MENU_TOGGLE_SIDEBAR,
@@ -28,6 +31,9 @@ export interface MenuHandlers {
   onToggleSettings: () => void
   onShowAbout: () => void
   onToggleViewMode: () => void
+  onExportPdf?: () => void
+  onExportHtml?: () => void
+  onOpenTodaysNote?: () => void
 }
 
 /**
@@ -79,6 +85,15 @@ export function useMenuEvents(handlers: MenuHandlers): void {
           break
         case MENU_TOGGLE_VIEW_MODE:
           h.onToggleViewMode()
+          break
+        case MENU_EXPORT_PDF:
+          h.onExportPdf?.()
+          break
+        case MENU_EXPORT_HTML:
+          h.onExportHtml?.()
+          break
+        case MENU_OPEN_TODAYS_NOTE:
+          h.onOpenTodaysNote?.()
           break
         default:
           break

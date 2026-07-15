@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useUIStore } from './stores/useUIStore'
 import { useEditorStore } from './features/markdown-viewer/useEditorStore'
 import { useTabStore } from './features/tabs/useTabStore'
@@ -6,6 +6,9 @@ import { useFileStore } from './features/file-tree/useFileStore'
 import { ThemeProvider } from './components/ThemeProvider'
 import { Layout } from './components/Layout'
 import { AboutDialog } from './components/AboutDialog'
+import { CommandPalette } from './components/CommandPalette'
+import { useRegisterCommands } from './features/commands/useRegisterCommands'
+import { useCommandStore } from './stores/useCommandStore'
 import { WelcomePage } from './features/welcome/WelcomePage'
 import { FileTree } from './features/file-tree/FileTree'
 import { Favorites } from './features/file-tree/Favorites'
@@ -20,6 +23,8 @@ import { RecentFiles } from './features/search/RecentFiles'
 import { useSearchStore } from './features/search/useSearchStore'
 import { SettingsPanel } from './features/settings/SettingsPanel'
 import { ipc } from './lib/ipc'
+import { exportAsHtml, exportAsPdf } from './lib/exporter'
+import { openTodaysNote } from './lib/dailyNote'
 import { logError } from './logger'
 import { useWorkspaceInit, validateRecentEntries } from './hooks/useWorkspaceInit'
 import { useFileWatcher } from './hooks/useFileWatcher'
@@ -163,28 +168,58 @@ function App() {
   useContentJump(activeFile, content)
   useAnchorJump(activeFile, content)
   const readingStats = useReadingStats(content)
+  const showCommandPalette = useCommandStore((s) => s.show)
+  const toggleSettingsPanel = useCallback(() => setShowSettings((v) => !v), [])
+
+  // 稳定的 handler 引用，避免 useRegisterCommands 频繁重新注册
+  const handleOpenFolderViaDialog = useCallback(async () => {
+    const path = await ipc.dialog.openDirectory()
+    if (path) handleOpenFolder(path)
+  }, [handleOpenFolder])
+  const handleExportPdf = useCallback(() => {
+    if (!activeFile || content === undefined) return
+    exportAsPdf()
+  }, [activeFile, content])
+  const handleExportHtml = useCallback(async () => {
+    if (!activeFile || content === undefined) return
+    try {
+      await exportAsHtml(content, activeFile)
+    } catch (err) {
+      logError('App:exportHtml', err)
+    }
+  }, [activeFile, content])
+  const handleOpenDailyNote = useCallback(async () => {
+    try {
+      await openTodaysNote()
+    } catch (err) {
+      logError('App:openTodaysNote', err)
+    }
+  }, [])
+
+  useRegisterCommands({
+    openFolder: handleOpenFolderViaDialog,
+    toggleSettings: toggleSettingsPanel,
+    exportPdf: handleExportPdf,
+    exportHtml: handleExportHtml,
+    openDailyNote: handleOpenDailyNote,
+  })
   useKeyboardShortcuts({
-    onOpenFolder: async () => {
-      const path = await ipc.dialog.openDirectory()
-      if (path) handleOpenFolder(path)
-    },
+    onOpenFolder: handleOpenFolderViaDialog,
     onToggleSidebar: toggleSidebar,
     onToggleOutline: toggleOutline,
     onOpenFileSearch: () => openSearch('file'),
     onOpenContentSearch: () => openSearch('content'),
     onOpenRecentFiles: () => openSearch('recent'),
-    onToggleSettings: () => setShowSettings((v) => !v),
+    onToggleSettings: toggleSettingsPanel,
     onToggleViewMode: () => useUIStore.getState().toggleViewMode(),
+    onOpenCommandPalette: showCommandPalette,
     onSearchHighlightNext: next,
     onSearchHighlightPrev: prev,
     onSearchHighlightClose: () => setSearchHighlight(null),
   })
 
   useMenuEvents({
-    onOpenFolder: async () => {
-      const path = await ipc.dialog.openDirectory()
-      if (path) handleOpenFolder(path)
-    },
+    onOpenFolder: handleOpenFolderViaDialog,
     onAddFolderToWorkspace: async () => {
       const path = await ipc.dialog.openDirectory()
       if (path) handleAddFolderToWorkspace(path)
@@ -197,14 +232,18 @@ function App() {
     onToggleOutline: toggleOutline,
     onOpenFileSearch: () => openSearch('file'),
     onOpenContentSearch: () => openSearch('content'),
-    onToggleSettings: () => setShowSettings((v) => !v),
+    onToggleSettings: toggleSettingsPanel,
     onShowAbout: () => setShowAbout(true),
     onToggleViewMode: () => useUIStore.getState().toggleViewMode(),
+    onExportPdf: handleExportPdf,
+    onExportHtml: handleExportHtml,
+    onOpenTodaysNote: handleOpenDailyNote,
   })
 
   return (
     <ThemeProvider>
       <AboutDialog isOpen={showAbout} onClose={() => setShowAbout(false)} />
+      <CommandPalette />
       <Layout
         sidebar={
           <div>

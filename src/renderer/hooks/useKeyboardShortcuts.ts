@@ -18,6 +18,8 @@ interface ShortcutHandlers {
   onOpenRecentFiles: () => void
   onToggleSettings: () => void
   onToggleViewMode: () => void
+  /** 唤起命令面板（Ctrl+Shift+P，固定不可配置） */
+  onOpenCommandPalette?: () => void
   /** 搜索高亮：跳转到下一个匹配 */
   onSearchHighlightNext?: () => void
   /** 搜索高亮：跳转到上一个匹配 */
@@ -125,6 +127,13 @@ export function useKeyboardShortcuts(handlers: ShortcutHandlers) {
       if (key === 'Escape' && useUIStore.getState().searchHighlight) {
         e.preventDefault()
         handlersRef.current.onSearchHighlightClose?.()
+        return
+      }
+
+      // Ctrl+Shift+P 唤起命令面板（固定不可配置，避免占用可配置快捷键）
+      if (ctrl && e.shiftKey && !e.altKey && key.toLowerCase() === 'p') {
+        e.preventDefault()
+        handlersRef.current.onOpenCommandPalette?.()
         return
       }
     }

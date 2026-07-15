@@ -56,6 +56,8 @@ pub fn run(launch_paths: Vec<String>) {
             commands::store::get_setting,
             commands::store::set_setting,
             commands::store::migrate_settings,
+            commands::export::save_text_file,
+            commands::export::export_pdf,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

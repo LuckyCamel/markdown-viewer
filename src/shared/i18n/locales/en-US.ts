@@ -122,6 +122,10 @@ const enUS: Record<TranslationKey, string> = {
   'welcome.recentWorkspaces': 'Recent Workspaces',
   'welcome.addToWorkspace': 'Add to Workspace',
 
+  'commandPalette.placeholder': 'Type a command name to search…',
+  'commandPalette.noResults': 'No matching commands found',
+  'commandPalette.openDialog': 'Open Command Palette',
+
   'error.fileNotFound': 'File not found',
   'error.fileOpenFailed': 'Failed to open file',
   'error.permissionDenied': 'Permission denied',

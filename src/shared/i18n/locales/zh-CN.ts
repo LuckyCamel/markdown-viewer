@@ -121,6 +121,10 @@ const zhCN: Record<TranslationKey, string> = {
   'welcome.recentWorkspaces': '最近的工作区',
   'welcome.addToWorkspace': '添加到工作区',
 
+  'commandPalette.placeholder': '输入命令名称以搜索…',
+  'commandPalette.noResults': '未找到匹配的命令',
+  'commandPalette.openDialog': '打开命令面板',
+
   'error.fileNotFound': '文件未找到',
   'error.fileOpenFailed': '文件打开失败',
   'error.permissionDenied': '权限不足',

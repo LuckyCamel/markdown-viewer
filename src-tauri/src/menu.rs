@@ -13,6 +13,9 @@ pub const CONTENT_SEARCH: &str = "menu_content_search";
 pub const SETTINGS: &str = "menu_settings";
 pub const ABOUT: &str = "menu_about";
 pub const TOGGLE_VIEW_MODE: &str = "menu_toggle_view_mode";
+pub const EXPORT_PDF: &str = "menu_export_pdf";
+pub const EXPORT_HTML: &str = "menu_export_html";
+pub const OPEN_TODAYS_NOTE: &str = "menu_open_todays_note";
 
 /**
  * 构建应用原生菜单并注册点击事件（向前端 emit menu-action）
@@ -30,13 +33,20 @@ pub fn setup_menu(app: &App) -> tauri::Result<()> {
     let content_search = MenuItemBuilder::with_id(CONTENT_SEARCH, "Find in Files...").build(app)?;
     let about = MenuItemBuilder::with_id(ABOUT, "About Markdown-Viewer").build(app)?;
     let toggle_view_mode = MenuItemBuilder::with_id(TOGGLE_VIEW_MODE, "Toggle Source View").build(app)?;
+    let export_pdf = MenuItemBuilder::with_id(EXPORT_PDF, "Export as PDF...").build(app)?;
+    let export_html = MenuItemBuilder::with_id(EXPORT_HTML, "Export as HTML...").build(app)?;
+    let open_todays_note = MenuItemBuilder::with_id(OPEN_TODAYS_NOTE, "Today's Note").build(app)?;
 
     let file_menu = SubmenuBuilder::new(app, "File")
         .item(&open_folder)
         .item(&add_folder_to_workspace)
         .item(&open_file)
+        .item(&open_todays_note)
         .separator()
         .item(&close_tab)
+        .separator()
+        .item(&export_pdf)
+        .item(&export_html)
         .separator()
         .item(&settings)
         .separator()

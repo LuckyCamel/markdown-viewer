@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
-import { useFileStore } from './useFileStore'
+import { useFileStore, clearDirectoryCache } from './useFileStore'
 import type { FileEntry } from '../../../shared/types'
 
 const mockListDirectory = vi.fn()
@@ -31,6 +31,7 @@ function entry(name: string, isDir = false, parent = '/root'): FileEntry {
 
 describe('useFileStore', () => {
   beforeEach(() => {
+    clearDirectoryCache()
     useFileStore.setState({
       entries: {},
       expanded: {},

@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef } from 'react'
-import hljs from '../../lib/highlight'
+import { highlightElement } from '../../lib/highlight'
 import { getHighlightLanguage } from '../../../shared/fileTypes'
 
 interface SourceViewerProps {
@@ -25,7 +25,7 @@ export function SourceViewer({ content, filePath }: SourceViewerProps) {
 
   useEffect(() => {
     if (codeRef.current) {
-      hljs.highlightElement(codeRef.current)
+      highlightElement(codeRef.current)
     }
   }, [content, languageClass])
 

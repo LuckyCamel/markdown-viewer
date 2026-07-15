@@ -1,3 +1,4 @@
+use std::env;
 use std::fs::File;
 use std::io::{BufRead, BufReader};
 use std::path::Path;
@@ -38,3 +39,61 @@ pub fn find_matches_in_file(
     }
     matches
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use std::fs::write;
+    use std::path::PathBuf;
+
+    fn create_test_file(content: &str) -> PathBuf {
+        let path = env::temp_dir().join("test_search_file.txt");
+        write(&path, content).unwrap();
+        path
+    }
+
+    #[test]
+    fn finds_exact_matches() {
+        let path = create_test_file("hello world\nhello rust\nhello world again");
+        let matches = find_matches_in_file(&path, "hello", "hello");
+        assert_eq!(matches.len(), 3);
+        assert_eq!(matches[0].line, 1);
+        assert_eq!(matches[1].line, 2);
+        assert_eq!(matches[2].line, 3);
+        std::fs::remove_file(path).ok();
+    }
+
+    #[test]
+    fn matches_case_insensitive() {
+        let path = create_test_file("Hello World\nHELLO RUST\nhello again");
+        let matches = find_matches_in_file(&path, "hello", "hello");
+        assert_eq!(matches.len(), 3);
+        std::fs::remove_file(path).ok();
+    }
+
+    #[test]
+    fn returns_empty_for_nonexistent_file() {
+        let matches = find_matches_in_file(Path::new("/nonexistent/file.txt"), "test", "test");
+        assert!(matches.is_empty());
+    }
+
+    #[test]
+    fn returns_empty_for_no_matches() {
+        let path = create_test_file("hello world\ntest content");
+        let matches = find_matches_in_file(&path, "xyz", "xyz");
+        assert!(matches.is_empty());
+        std::fs::remove_file(path).ok();
+    }
+
+    #[test]
+    fn includes_context_around_match() {
+        let path = create_test_file("this is a long line containing the word test somewhere");
+        let matches = find_matches_in_file(&path, "test", "test");
+        assert!(!matches.is_empty());
+        assert!(matches[0].line_content.contains("test"));
+        assert!(matches[0].line_content.len() > 4);
+        std::fs::remove_file(path).ok();
+    }
+}
+
+

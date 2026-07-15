@@ -7,6 +7,7 @@ import { FileIcon } from '../../components/FileIcon'
 import { ContextMenu, type ContextMenuItem } from '../../components/ContextMenu'
 import { copyPathToClipboard, revealPathInDir } from '../../lib/fileActions'
 import { useFavoritesStore } from './useFavoritesStore'
+import { t } from '../../../shared/i18n'
 import type { FileEntry } from '../../../shared/types'
 
 interface MenuState {
@@ -179,36 +180,38 @@ export function FileTree() {
             ]
           : []),
         {
-          label: '新建文件',
+          label: t('fileTree.newFile'),
           onClick: () =>
             handleCreateFile(menu.isDirectory ? menu.path : menu.path.replace(/[^/\\]+$/, '')),
         },
         {
-          label: '新建文件夹',
+          label: t('fileTree.newFolder'),
           onClick: () =>
             handleCreateDirectory(menu.isDirectory ? menu.path : menu.path.replace(/[^/\\]+$/, '')),
         },
         { onClick: undefined, label: '' },
         {
-          label: '重命名',
+          label: t('fileTree.rename'),
           onClick: () => handleRename(menu.path),
         },
         {
-          label: '删除',
+          label: t('fileTree.delete'),
           onClick: () => handleDelete(menu.path),
         },
         ...(menu.isDirectory
           ? [
               { onClick: undefined, label: '' } as ContextMenuItem,
               {
-                label: '刷新',
+                label: t('fileTree.refresh'),
                 onClick: () => handleRefresh(menu.path),
               } as ContextMenuItem,
             ]
           : []),
         { onClick: undefined, label: '' },
         {
-          label: useFavoritesStore.getState().has(menu.path) ? '从收藏夹移除' : '添加到收藏夹',
+          label: useFavoritesStore.getState().has(menu.path)
+            ? t('fileTree.removeFromFavorites')
+            : t('fileTree.addToFavorites'),
           onClick: () => {
             const favorites = useFavoritesStore.getState()
             if (favorites.has(menu.path)) {

@@ -156,4 +156,45 @@ mod tests {
         assert!(settings.is_markdown_file(Path::new("guide.md")));
         assert!(!settings.is_markdown_file(Path::new("image.png")));
     }
+
+    #[test]
+    fn ignores_hidden_files_by_default() {
+        let settings = SettingsState::default();
+        assert!(settings.is_ignored(".git"));
+        assert!(settings.is_ignored("node_modules"));
+        assert!(settings.is_ignored("__pycache__"));
+        assert!(settings.is_ignored(".DS_Store"));
+    }
+
+    #[test]
+    fn does_not_ignore_non_matching_files() {
+        let settings = SettingsState::default();
+        assert!(!settings.is_ignored("README.md"));
+        assert!(!settings.is_ignored("src"));
+        assert!(!settings.is_ignored(".vscode"));
+    }
+
+    #[test]
+    fn is_text_file_matches_common_extensions() {
+        let settings = SettingsState::default();
+        assert!(settings.is_text_file(Path::new("main.rs")));
+        assert!(settings.is_text_file(Path::new("app.tsx")));
+        assert!(settings.is_text_file(Path::new("config.json")));
+        assert!(settings.is_text_file(Path::new("Dockerfile")));
+        assert!(settings.is_text_file(Path::new("Makefile")));
+        assert!(!settings.is_text_file(Path::new("image.png")));
+        assert!(!settings.is_text_file(Path::new("archive.zip")));
+    }
+
+    #[test]
+    fn add_allowed_root_deduplicates() {
+        let settings = SettingsState::default();
+        let path1 = PathBuf::from("/home/user/docs");
+        let path2 = PathBuf::from("/home/user/docs");
+        settings.add_allowed_root(path1.clone());
+        settings.add_allowed_root(path2);
+        let roots = settings.allowed_roots.lock().unwrap();
+        assert_eq!(roots.len(), 1);
+        assert_eq!(roots[0], path1);
+    }
 }

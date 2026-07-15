@@ -4,9 +4,42 @@ import { ipc } from '../../lib/ipc'
 import { logError } from '../../logger'
 import { sortFileEntries, type SortMode, type SortDirection } from '../../../shared/fileSort'
 
-/**
- * 获取父目录路径
- */
+const CACHE_TTL = 5 * 60 * 1000
+
+interface DirectoryCacheEntry {
+  entries: FileEntry[]
+  timestamp: number
+}
+
+const directoryCache = new Map<string, DirectoryCacheEntry>()
+
+function getCachedEntries(path: string): FileEntry[] | null {
+  const entry = directoryCache.get(path)
+  if (!entry) return null
+  if (Date.now() - entry.timestamp > CACHE_TTL) {
+    directoryCache.delete(path)
+    return null
+  }
+  return entry.entries
+}
+
+function setCachedEntries(path: string, entries: FileEntry[]) {
+  directoryCache.set(path, { entries, timestamp: Date.now() })
+}
+
+function invalidateCache(path: string) {
+  directoryCache.delete(path)
+  directoryCache.forEach((_, key) => {
+    if (key.startsWith(path)) {
+      directoryCache.delete(key)
+    }
+  })
+}
+
+export function clearDirectoryCache() {
+  directoryCache.clear()
+}
+
 function getParentDir(path: string): string {
   const parts = path.split(/[\\/]/)
   parts.pop()
@@ -61,11 +94,18 @@ export const useFileStore = create<FileTreeState>((set, get) => ({
     }
   },
   loadChildren: async (dirPath) => {
-    const { loading } = get()
+    const { loading, entries } = get()
     if (loading[dirPath]) return
+    const cached = getCachedEntries(dirPath)
+    if (cached) {
+      set((s) => ({ entries: { ...s.entries, [dirPath]: cached } }))
+      return
+    }
+    if (entries[dirPath]) return
     set((s) => ({ loading: { ...s.loading, [dirPath]: true } }))
     try {
       const entries = await ipc.files.listDirectory(dirPath)
+      setCachedEntries(dirPath, entries)
       set((s) => {
         const next = { ...s.loading }
         delete next[dirPath]
@@ -90,6 +130,7 @@ export const useFileStore = create<FileTreeState>((set, get) => ({
   createFile: async (dirPath, name) => {
     try {
       const newEntry = await ipc.files.createFile(dirPath, name)
+      invalidateCache(dirPath)
       set((s) => {
         const existing = s.entries[dirPath] || []
         return {
@@ -108,6 +149,7 @@ export const useFileStore = create<FileTreeState>((set, get) => ({
   createDirectory: async (dirPath, name) => {
     try {
       const newEntry = await ipc.files.createDirectory(dirPath, name)
+      invalidateCache(dirPath)
       set((s) => {
         const existing = s.entries[dirPath] || []
         return {
@@ -127,6 +169,8 @@ export const useFileStore = create<FileTreeState>((set, get) => ({
     try {
       const newEntry = await ipc.files.rename(oldPath, newName)
       const parentDir = getParentDir(oldPath)
+      invalidateCache(parentDir)
+      invalidateCache(oldPath)
       set((s) => {
         const existing = s.entries[parentDir] || []
         const updated = existing.map((e) => (e.path === oldPath ? newEntry : e))
@@ -147,6 +191,8 @@ export const useFileStore = create<FileTreeState>((set, get) => ({
     try {
       await ipc.files.moveToTrash(path)
       const parentDir = getParentDir(path)
+      invalidateCache(parentDir)
+      invalidateCache(path)
       set((s) => {
         const existing = s.entries[parentDir] || []
         const updated = existing.filter((e) => e.path !== path)
@@ -165,6 +211,7 @@ export const useFileStore = create<FileTreeState>((set, get) => ({
    */
   refreshDirectory: async (dirPath) => {
     const { loadChildren } = get()
+    invalidateCache(dirPath)
     set((s) => {
       const nextEntries = { ...s.entries }
       delete nextEntries[dirPath]

@@ -131,8 +131,11 @@ Tauri Rust 后端 + Web 前端，通过 IPC 通信。
 
 ### 4.4 编辑保存流程（Edit 模式）
 ```
+App 挂载 useEditorSession(activeMarkdownPath, content)
+  → 路径变化：reset()；内容首次就绪：reset({ content }) seed，避免误标 dirty
 用户编辑 CodeMirror
-  → useEditorPersistence hook 监听内容变更
+  → useEditorStore.setContent
+  → useEditorPersistence 监听内容变更
     → 1.5s 防抖
       → ipc.files.getMtime(path)          // 检查磁盘修改时间
         → 若磁盘 mtime > 上次保存 mtime → 冲突，显示 ConflictBanner
@@ -140,6 +143,8 @@ Tauri Rust 后端 + Web 前端，通过 IPC 通信。
           → invoke('save_file', ...)
             → Rust files::save_file 写入磁盘，返回新 mtime
           ← 更新 lastSavedMtime、lastSavedContent，状态 = saved
+Ctrl+S / StatusBar 状态均消费 session.forceSave / session.saveStatus
+EditorPane 仅聚合 Toolbar + ConflictBanner + Editor UI
 ```
 
 ### 4.5 冲突检测流程
@@ -147,11 +152,11 @@ Tauri Rust 后端 + Web 前端，通过 IPC 通信。
 自动保存 / Ctrl+S 触发保存
   → 先获取磁盘 mtime
     → 磁盘 mtime > 上次保存 mtime？
-      → 是：saveStatus = 'conflict'，显示 ConflictBanner
+      → 是：saveStatus = 'conflict'，EditorPane 显示 ConflictBanner
         → 用户选择：
-          - 加载磁盘：读取磁盘内容，更新编辑器
-          - 保留我的：关闭横幅，状态回到 dirty
-          - 稍后处理：关闭横幅，状态保持 conflict
+          - 加载磁盘：session.loadDisk → 读盘 + setContent
+          - 保留我的：session.keepMine → force save
+          - 稍后处理：仅 UI 关闭横幅，status 保持 conflict
       → 否：正常保存，更新 mtime 和内容缓存
 ```
 

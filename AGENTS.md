@@ -42,4 +42,6 @@
 - `src/renderer/stores/useCommandStore.ts` — 命令面板显示状态
 - `src/renderer/lib/exporter.ts` — HTML / PDF 导出工具
 - `src/renderer/lib/dailyNote.ts` — 每日笔记创建/打开
+- `src/renderer/features/markdown-viewer/useEditorSession.ts` — 编辑会话（seed/reset、保存、冲突）
+- `src/renderer/features/markdown-viewer/useEditorPersistence.ts` — 防抖保存与 mtime 冲突状态机
 - `src-tauri/src/commands/export.rs` — `save_text_file` Rust command

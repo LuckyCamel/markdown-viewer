@@ -1,4 +1,4 @@
-import { useRef } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { EditorView } from '@codemirror/view'
 import { Editor } from './Editor'
 import { EditorToolbar } from './EditorToolbar'
@@ -12,24 +12,37 @@ interface EditorPaneProps {
   saveStatus: SaveStatus
   onLoadDisk: () => void
   onKeepMine: () => void
-  onLater: () => void
 }
 
+/**
+ * 编辑 UI 聚合：工具栏 + 冲突条 + CodeMirror。
+ * 会话/持久化由 useEditorSession 在上层处理。
+ */
 export function EditorPane({
   filePath,
   content,
   saveStatus,
   onLoadDisk,
   onKeepMine,
-  onLater,
 }: EditorPaneProps) {
   const editorRef = useRef<{ view: EditorView | null }>(null)
+  const [conflictDismissed, setConflictDismissed] = useState(false)
+
+  useEffect(() => {
+    if (saveStatus !== 'conflict') {
+      setConflictDismissed(false)
+    }
+  }, [saveStatus])
 
   return (
     <>
-      <EditorToolbar view={editorRef.current?.view as any} />
-      {saveStatus === 'conflict' && (
-        <ConflictBanner onLoadDisk={onLoadDisk} onKeepMine={onKeepMine} onLater={onLater} />
+      <EditorToolbar view={editorRef.current?.view ?? null} />
+      {saveStatus === 'conflict' && !conflictDismissed && (
+        <ConflictBanner
+          onLoadDisk={onLoadDisk}
+          onKeepMine={onKeepMine}
+          onLater={() => setConflictDismissed(true)}
+        />
       )}
       <Editor
         ref={editorRef}

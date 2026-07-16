@@ -17,7 +17,7 @@ import { TabBar } from './features/tabs/TabBar'
 import { MarkdownViewer } from './features/markdown-viewer/MarkdownViewer'
 import { SourceViewer } from './features/markdown-viewer/SourceViewer'
 import { EditorPane } from './features/markdown-viewer/EditorPane'
-import { useEditorPersistence } from './features/markdown-viewer/useEditorPersistence'
+import { useEditorSession } from './features/markdown-viewer/useEditorSession'
 import { Outline } from './features/outline/Outline'
 import { FileSearch } from './features/search/FileSearch'
 import { ContentSearch } from './features/search/ContentSearch'
@@ -171,35 +171,12 @@ function App() {
   useAnchorJump(activeFile, content)
   const readingStats = useReadingStats(content)
 
-  const {
-    status: saveStatus,
-    save: forceSave,
-    loadDiskVersion,
-    reset: resetPersistence,
-  } = useEditorPersistence(activeFile, content ?? '')
-
-  const prevActiveFile = useMemo(() => activeFile, [activeFile])
-
-  useEffect(() => {
-    if (activeFile !== prevActiveFile) {
-      resetPersistence()
-    }
-  }, [activeFile, prevActiveFile, resetPersistence])
-
-  const handleForceSave = useCallback(async () => {
-    await forceSave()
-  }, [forceSave])
-
-  const handleLoadDiskVersion = useCallback(async () => {
-    const diskContent = await loadDiskVersion()
-    if (diskContent !== null && activeFile) {
-      useEditorStore.getState().setContent(activeFile, diskContent)
-    }
-  }, [loadDiskVersion, activeFile])
-
-  const handleKeepMine = useCallback(() => {
-    forceSave()
-  }, [forceSave])
+  // 活动 Markdown 的编辑会话（任意视图模式均挂载，保证 StatusBar / Ctrl+S 可用）
+  const sessionFilePath = activeFile && isMarkdownFile(activeFile) ? activeFile : null
+  const { saveStatus, forceSave, loadDisk, keepMine } = useEditorSession(
+    sessionFilePath,
+    content ?? '',
+  )
 
   const showCommandPalette = useCommandStore((s) => s.show)
   const toggleSettingsPanel = useCallback(() => setShowSettings((v) => !v), [])
@@ -249,7 +226,9 @@ function App() {
     onSearchHighlightNext: next,
     onSearchHighlightPrev: prev,
     onSearchHighlightClose: () => setSearchHighlight(null),
-    onSave: handleForceSave,
+    onSave: () => {
+      void forceSave()
+    },
   })
 
   useMenuEvents({
@@ -372,9 +351,10 @@ function App() {
                         filePath={activeFile}
                         content={content}
                         saveStatus={saveStatus}
-                        onLoadDisk={handleLoadDiskVersion}
-                        onKeepMine={handleKeepMine}
-                        onLater={() => {}}
+                        onLoadDisk={() => {
+                          void loadDisk()
+                        }}
+                        onKeepMine={keepMine}
                       />
                     ) : viewMode === 'source' ? (
                       <SourceViewer content={content} filePath={activeFile} />

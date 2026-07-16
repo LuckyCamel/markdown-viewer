@@ -26,7 +26,7 @@ describe('useEditorPersistence', () => {
     vi.useRealTimers()
   })
 
-  it('should reset state when reset is called', () => {
+  it('should reset state when reset is called without seed', () => {
     const { result } = renderHook(() => useEditorPersistence('/test.md', 'content'))
 
     act(() => {
@@ -35,6 +35,25 @@ describe('useEditorPersistence', () => {
 
     expect(result.current.status).toBe('saved')
     expect(result.current.lastSavedTime).toBeNull()
+  })
+
+  it('should seed content as saved without auto-save', () => {
+    mockGetMtime.mockResolvedValue(1000)
+    mockSaveFile.mockResolvedValue(2000)
+
+    const { result } = renderHook(() => useEditorPersistence('/test.md', 'hello'))
+
+    act(() => {
+      result.current.reset({ content: 'hello', mtime: 1000 })
+    })
+
+    expect(result.current.status).toBe('saved')
+
+    act(() => {
+      vi.advanceTimersByTime(2000)
+    })
+
+    expect(mockSaveFile).not.toHaveBeenCalled()
   })
 
   it('should have dirty status when content differs from last saved', () => {
@@ -104,10 +123,9 @@ describe('useEditorPersistence', () => {
     mockReadFile.mockResolvedValue({ path: '/test.md', content: 'disk content' })
     mockGetMtime.mockResolvedValue(3000)
 
-    const { result, rerender } = renderHook(
-      ({ content }) => useEditorPersistence('/test.md', content),
-      { initialProps: { content: 'disk content' } },
-    )
+    const { result } = renderHook(({ content }) => useEditorPersistence('/test.md', content), {
+      initialProps: { content: 'disk content' },
+    })
 
     let loadedContent: string | null = null
     await act(async () => {
@@ -149,9 +167,44 @@ describe('useEditorPersistence', () => {
     const { result } = renderHook(() => useEditorPersistence('/test.md', 'content'))
 
     act(() => {
+      result.current.reset({ content: 'content', mtime: 1000 })
+    })
+
+    act(() => {
       vi.advanceTimersByTime(2000)
     })
 
     expect(mockSaveFile).not.toHaveBeenCalled()
+  })
+
+  it('should auto-save after 1.5s debounce when content changes', async () => {
+    mockGetMtime.mockResolvedValue(1000)
+    mockSaveFile.mockResolvedValue(2000)
+
+    const { result, rerender } = renderHook(
+      ({ content }) => useEditorPersistence('/test.md', content),
+      { initialProps: { content: 'hello' } },
+    )
+
+    act(() => {
+      result.current.reset({ content: 'hello', mtime: 1000 })
+    })
+
+    expect(mockSaveFile).not.toHaveBeenCalled()
+
+    rerender({ content: 'hello world' })
+
+    await act(async () => {
+      vi.advanceTimersByTime(1499)
+    })
+    expect(mockSaveFile).not.toHaveBeenCalled()
+
+    await act(async () => {
+      vi.advanceTimersByTime(1)
+    })
+
+    expect(mockGetMtime).toHaveBeenCalledWith('/test.md')
+    expect(mockSaveFile).toHaveBeenCalledWith('/test.md', 'hello world')
+    expect(result.current.status).toBe('saved')
   })
 })

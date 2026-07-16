@@ -329,6 +329,17 @@ export async function grantFsScope(_paths: string[]): Promise<void> {}
 
 export async function ensureStoreMigrated(): Promise<void> {}
 
+export async function saveFile(filePath: string, content: string): Promise<number> {
+  ensureE2E()
+  window.__E2E__.files.set(filePath, content)
+  return Date.now()
+}
+
+export async function getMtime(filePath: string): Promise<number> {
+  ensureE2E()
+  return window.__E2E__.files.has(filePath) ? Date.now() : 0
+}
+
 export const ipc = {
   app: {
     getLaunchPaths,
@@ -346,6 +357,8 @@ export const ipc = {
     createDirectory,
     rename: renameEntry,
     moveToTrash,
+    saveFile,
+    getMtime,
   },
   search: {
     searchContent,

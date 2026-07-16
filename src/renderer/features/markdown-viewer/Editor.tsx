@@ -2,6 +2,7 @@ import { useEffect, useRef, useCallback, useState, forwardRef, useImperativeHand
 import { EditorState } from '@codemirror/state'
 import { EditorView } from '@codemirror/view'
 import { createExtensions } from '../../lib/codemirror/extensions'
+import { useUIStore } from '../../stores/useUIStore'
 
 interface EditorProps {
   value: string
@@ -28,6 +29,11 @@ export const Editor = forwardRef<EditorHandle, EditorProps>(function Editor(
   const containerRef = useRef<HTMLDivElement>(null)
   const viewRef = useRef<EditorView | null>(null)
   const [isMounted, setIsMounted] = useState(false)
+  const { theme, themeId } = useUIStore()
+  const isDark =
+    theme === 'dark' ||
+    (theme === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches) ||
+    (!!themeId && themeId.startsWith('dark'))
 
   useImperativeHandle(ref, () => ({
     get view() {
@@ -52,7 +58,7 @@ export const Editor = forwardRef<EditorHandle, EditorProps>(function Editor(
     const state = EditorState.create({
       doc: value,
       extensions: [
-        ...createExtensions({ showLineNumbers, readOnly }),
+        ...createExtensions({ showLineNumbers, readOnly, isDark }),
         EditorView.updateListener.of((update) => {
           if (update.docChanged) {
             onChange(update.state.doc.toString())
@@ -82,6 +88,25 @@ export const Editor = forwardRef<EditorHandle, EditorProps>(function Editor(
     if (view.hasFocus) return
     updateValue()
   }, [value, isMounted, updateValue])
+
+  useEffect(() => {
+    if (!isMounted) return
+    const view = viewRef.current
+    if (!view) return
+    const newState = EditorState.create({
+      doc: view.state.doc,
+      selection: view.state.selection,
+      extensions: [
+        ...createExtensions({ showLineNumbers, readOnly, isDark }),
+        EditorView.updateListener.of((update) => {
+          if (update.docChanged) {
+            onChange(update.state.doc.toString())
+          }
+        }),
+      ],
+    })
+    view.setState(newState)
+  }, [isDark, isMounted, showLineNumbers, readOnly, onChange])
 
   return <div ref={containerRef} className={`h-full w-full ${className}`} tabIndex={0} />
 })

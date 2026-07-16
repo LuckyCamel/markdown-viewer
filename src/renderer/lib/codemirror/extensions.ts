@@ -14,20 +14,15 @@ import { closeBrackets, closeBracketsKeymap } from '@codemirror/autocomplete'
 import { searchKeymap, search, highlightSelectionMatches } from '@codemirror/search'
 import { codemirrorTheme, codemirrorDarkTheme } from './theme'
 import { listContinuation } from './listContinuation'
-import { useUIStore } from '../../stores/useUIStore'
 
 interface CreateExtensionsOptions {
   showLineNumbers?: boolean
   readOnly?: boolean
+  isDark?: boolean
 }
 
 export function createExtensions(options: CreateExtensionsOptions = {}): Extension[] {
-  const { showLineNumbers = true, readOnly = false } = options
-  const { theme, themeId } = useUIStore.getState()
-  const isDark =
-    theme === 'dark' ||
-    (theme === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches) ||
-    (themeId && themeId.startsWith('dark'))
+  const { showLineNumbers = true, readOnly = false, isDark = false } = options
 
   return [
     history(),

@@ -19,6 +19,7 @@ export default defineConfig({
           mermaid: ['mermaid'],
           katex: ['katex', 'rehype-katex'],
           highlight: ['highlight.js', 'rehype-highlight'],
+          codemirror: ['@codemirror/state', '@codemirror/view', '@codemirror/commands', '@codemirror/lang-markdown', '@codemirror/autocomplete', '@codemirror/search'],
         },
       },
     },

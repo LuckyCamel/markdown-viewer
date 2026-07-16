@@ -89,7 +89,7 @@ Tauri Rust 后端 + Web 前端，通过 IPC 通信。
 | useFileStore | `features/file-tree/useFileStore.ts` | 文件树数据、展开状态、加载状态（惰性加载守卫） | — |
 | useSearchStore | `features/search/useSearchStore.ts` | 搜索关键词、结果、搜索状态 | — |
 
-> 设计原则：store 各自独立，无交叉依赖。组件通过 hook 订阅，不直接操作 store。
+> 设计原则：store 各自独立，避免隐式循环 import；允许通过 action 或 `getState()` 进行显式协同。组件通过 hook 订阅，不直接操作 store。lib 层工具函数不应直接依赖 store，应通过参数注入状态，以提高复用性和可测试性。
 
 ---
 
@@ -190,9 +190,10 @@ Tauri Rust 后端 + Web 前端，通过 IPC 通信。
 - 前端统一通过 `logError` 函数记录，格式一致
 
 ### 5.4 状态管理原则
-- 每个 feature 维护自己的 store，不跨 feature 引用
+- 每个 feature 维护自己的 store，避免隐式循环 import；允许通过 action 或 `getState()` 进行显式协同
 - 全局 UI 状态（主题、面板可见性等）放在 `stores/useUIStore.ts`
 - 组件通过 selector 订阅，避免不必要的重渲染
+- lib 层工具函数不应直接依赖 store，应通过参数注入状态
 
 ### 5.5 安全
 - 前端运行在 WebView 沙箱中，无 Node.js 环境
@@ -215,7 +216,7 @@ Tauri Rust 后端 + Web 前端，通过 IPC 通信。
 ## 6. 设计约束
 
 - 不引入 `Result<T,E>` 类型或统一 Error 类
-- 不引入新依赖（**例外**：`rehype-sanitize`，见 `AGENTS.md`）
+- 不引入新依赖（**例外**：`rehype-sanitize`、CodeMirror 6 相关包，见 `AGENTS.md`）
 - 纯函数不捕获异常，不修改签名以引入错误处理
 - 版本号规范：见 `AGENTS.md`
 

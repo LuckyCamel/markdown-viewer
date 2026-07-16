@@ -4,18 +4,19 @@
 |----|------|
 | 评估对象 | Markdown Viewer（跨平台 Tauri 桌面 Markdown 阅读器与编辑器） |
 | 初评日期 | 2026-07-16 |
-| 修订日期 | 2026-07-16（第三次扫描：含 `8a849ea` 编辑改进与测试覆盖） |
-| 代码版本参考 | `package.json` / `Cargo.toml` / 文档 **1.3.1**；HEAD 含 `8a849ea` |
+| 修订日期 | 2026-07-16（第四次扫描：v1.4.0 版本变更） |
+| 代码版本参考 | `package.json` / `Cargo.toml` / 文档 **1.4.0**；HEAD 含 `0914542` |
 | 评估范围 | 技术栈选型、进程架构、前端/后端分层、编辑子系统、安全、测试与工程化、可维护性与风险 |
-| 结论摘要 | **技术栈与整体架构合理且持续收敛**。v1.3.1 完成「阅读 + 编辑」；`8a849ea` 已闭环多项工程债（EditorPane、CM 分包/注入、架构文档 store 原则、ipc mock 写盘、编辑单测）。剩余张力主要是：**持久化编排仍在 App**、**Edit 路径无 E2E/真实 Tauri 冒烟**、**双高亮栈为产品取舍**、**防抖自动保存正向用例仍偏弱**。 |
+| 结论摘要 | **技术栈与整体架构合理且持续收敛**。v1.3.1 完成「阅读 + 编辑」；v1.4.0 工程化加固（useEditorSession 会话层、ref-based persistence、EditorPane 抽离、CM 分包/注入、架构文档 store 原则、ipc mock 写盘、编辑单测 401 个）。剩余张力主要是：**Edit 路径无 E2E/真实 Tauri 冒烟**、**双高亮栈为产品取舍**。 |
 
 ### 相对初评的主要变更（代码）
 
 | Commit / 主题 | 对架构的影响 |
 |---------------|--------------|
 | `0d6fa1a` feat: 方向六·编辑/写作能力 | 新增 Edit 视图、CM6 工具链、自动保存、冲突检测、`save_file`/`get_mtime` |
-| `dea27b1` / `4225259` / `a7dd9dc` 文档 | product/architecture/roadmap/README 与 1.3.1 对齐 |
+| `dea27b1` / `4225259` / `a7dd9dc` 文档 | product/architecture/roadmap/README 与版本对齐 |
 | `8a849ea` feat(editor): 编辑改进与测试覆盖 | **EditorPane**、CM 依赖注入与 chunk、persistence/commands 单测、architecture store 原则、`ipc.mock` 写盘 API |
+| `0914542` feat(editor): useEditorSession 会话层 | **ref-based persistence**、PersistenceSeed、会话编排下沉、测试扩充至 401 |
 | `87594b2` / `98c2ec7` 等 fix | 渲染细节与样式，不改变架构形状 |
 
 ---
@@ -26,7 +27,7 @@
 
 以**工作区**方式浏览、渲染并编辑本地 Markdown（及扩展文本/代码）文件。
 
-**能力面（1.3.1）**：GFM / KaTeX / Mermaid、多标签、文件树、全文搜索、大纲、主题、原生菜单、命令面板、HTML/PDF 导出、每日笔记；以及 **Edit 模式**（CodeMirror 6、工具栏、1.5s 防抖自动保存、mtime 冲突检测、查找替换、多光标、列表延续）。
+**能力面（1.4.0）**：GFM / KaTeX / Mermaid、多标签、文件树、全文搜索、大纲、主题、原生菜单、命令面板、HTML/PDF 导出、每日笔记；以及 **Edit 模式**（CodeMirror 6、工具栏、1.5s 防抖自动保存、mtime 冲突检测、查找替换、多光标、列表延续）。
 
 定位：**阅读器 + 轻量 Markdown 编辑器**，不是完整 IDE。
 
@@ -239,7 +240,7 @@
 | 文档 | 健康度 |
 |------|--------|
 | `architecture.md` | store 原则、依赖例外、编辑数据流均已更新 |
-| `product.md` / `README` | 1.3.1 一致 |
+| `product.md` / `README` | 1.4.0 一致 |
 | `AGENTS.md` | CM 与 rehype-sanitize 均为已批准例外 |
 | `roadmap.md` | 方向六 ✅ |
 
@@ -251,7 +252,7 @@
 
 ## 5. 对照常见架构坏味道
 
-| 坏味道 | 本项目状态（1.3.1 + `8a849ea`） |
+| 坏味道 | 本项目状态（1.4.0 + `0914542`） |
 |--------|--------------------------------|
 | 错误的桌面壳选型 | 无 |
 | 前后端职责倒置 | 无 |

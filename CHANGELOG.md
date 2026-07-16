@@ -2,6 +2,32 @@
 
 本文件记录 Markdown Viewer 各版本的变更摘要。
 
+## [1.4.0] - 2026-07-16
+
+### 新增
+
+- **useEditorSession 会话层**：将编辑会话编排（持久化 + 换文件 reset/seed + 冲突处理）从 App.tsx 下沉至独立 hook
+- **PersistenceSeed 机制**：文件打开时以磁盘内容初始化已保存状态，避免误标 dirty 并触发自动保存
+- **EditorPane 冲突条本地 dismissed 状态**：冲突横幅可手动关闭，移除 onLater prop
+
+### 变更
+
+- **useEditorPersistence 重构为 ref-based 架构**：使用 ref 同步状态，避免闭包陈旧值导致保存逻辑错误
+- **EditorPane 组件抽离**：编辑相关 UI 逻辑（工具栏、冲突横幅、编辑器）从 App.tsx 下沉
+- **createExtensions 依赖注入**：通过 isDark 参数注入主题状态，移除对 useUIStore 的直接依赖
+- **ipc.mock.ts 新增 saveFile/getMtime mock**：E2E mock 可覆盖写盘路径
+- **Vite manualChunks 拆分 CodeMirror**：优化前端打包分包
+- **architecture.md 状态管理原则更新**：允许 store 通过 action 或 getState() 显式协同，lib 层参数注入
+- **AGENTS.md 依赖例外更新**：CodeMirror 6 相关包登记为已批准依赖
+
+### 测试
+
+- 单元测试从 353 个增至 401 个
+- 新增 useEditorPersistence 测试（12 用例）：覆盖 seed 初始化、防抖保存、mtime 冲突、保存成功/失败、loadDiskVersion
+- 新增 useEditorSession 测试（5 用例）：覆盖 seed/dirty/auto-save/path 切换/loadDisk/keepMine
+- 新增 markdownCommands 测试扩充：新增标题/列表/任务列表/引用/链接/图片/分割线/表格/代码块共 12 个用例
+- 修复 listContinuation 测试：对接生产模块 parseListLine
+
 ## [1.3.1] - 2026-07-16
 
 ### 新增

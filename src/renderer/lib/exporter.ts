@@ -92,7 +92,7 @@ function getActiveThemeCss(): string {
   if (!themeAttr) return ''
   for (let i = 0; i < document.styleSheets.length; i++) {
     const sheet = document.styleSheets[i]
-    let rules: CSSRuleList | null = null
+    let rules: CSSRuleList | null
     try {
       rules = sheet.cssRules
     } catch {

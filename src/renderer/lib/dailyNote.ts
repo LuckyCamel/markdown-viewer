@@ -11,7 +11,6 @@ import { invoke } from '@tauri-apps/api/core'
 import { open as openDialog } from '@tauri-apps/plugin-dialog'
 import { useFileStore } from '../features/file-tree/useFileStore'
 import { useTabStore } from '../features/tabs/useTabStore'
-import { useUIStore } from '../stores/useUIStore'
 import { ipc } from './ipc'
 import { joinPaths } from '../../shared/utils'
 
@@ -60,30 +59,26 @@ export async function openTodaysNote(): Promise<string | null> {
   const filePath = joinPaths(notesDir, `${today}.md`)
 
   // 若目录/文件不存在则创建
-  try {
-    const exists = await ipc.files.checkExists([filePath])
-    if (!exists[0]) {
-      try {
-        await invoke('create_directory', { dirPath: root, name: 'notes' })
-      } catch {
-        // 目录可能已存在，忽略
-      }
-      try {
-        await invoke('create_file', {
-          dirPath: notesDir,
-          name: `${today}.md`,
-        })
-      } catch {
-        // 文件可能已存在，忽略
-      }
-      // 写入模板
-      await invoke('save_text_file', {
-        path: filePath,
-        content: buildTemplate(today),
-      })
+  const exists = await ipc.files.checkExists([filePath])
+  if (!exists[0]) {
+    try {
+      await invoke('create_directory', { dirPath: root, name: 'notes' })
+    } catch {
+      // 目录可能已存在，忽略
     }
-  } catch (err) {
-    throw err
+    try {
+      await invoke('create_file', {
+        dirPath: notesDir,
+        name: `${today}.md`,
+      })
+    } catch {
+      // 文件可能已存在，忽略
+    }
+    // 写入模板
+    await invoke('save_text_file', {
+      path: filePath,
+      content: buildTemplate(today),
+    })
   }
 
   useTabStore.getState().openFile(filePath)

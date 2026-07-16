@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { EditorView } from '@codemirror/view'
 import { useUIStore } from './stores/useUIStore'
 import { useEditorStore } from './features/markdown-viewer/useEditorStore'
 import { useTabStore } from './features/tabs/useTabStore'
@@ -16,6 +17,10 @@ import { useFavoritesStore } from './features/file-tree/useFavoritesStore'
 import { TabBar } from './features/tabs/TabBar'
 import { MarkdownViewer } from './features/markdown-viewer/MarkdownViewer'
 import { SourceViewer } from './features/markdown-viewer/SourceViewer'
+import { Editor } from './features/markdown-viewer/Editor'
+import { EditorToolbar } from './features/markdown-viewer/EditorToolbar'
+import { ConflictBanner } from './features/markdown-viewer/ConflictBanner'
+import { useEditorPersistence } from './features/markdown-viewer/useEditorPersistence'
 import { Outline } from './features/outline/Outline'
 import { FileSearch } from './features/search/FileSearch'
 import { ContentSearch } from './features/search/ContentSearch'
@@ -77,6 +82,9 @@ function App() {
   const [scrollContainer, setScrollContainer] = useState<HTMLElement | null>(null)
   // 标记是否正在从内容搜索跳转，避免文件切换时清除高亮
   const isJumpingRef = useRef(false)
+  // 编辑器引用，用于工具栏访问 CodeMirror view
+  const editorRef = useRef<{ view: EditorView | null }>(null)
+  const [showConflictBanner, setShowConflictBanner] = useState(false)
 
   const content = useEditorStore((s) => (activeFile ? s.contents[activeFile] : undefined))
   const loadError = useEditorStore((s) => (activeFile ? s.errors[activeFile] : undefined))
@@ -168,6 +176,44 @@ function App() {
   useContentJump(activeFile, content)
   useAnchorJump(activeFile, content)
   const readingStats = useReadingStats(content)
+
+  const prevActiveFile = useMemo(() => activeFile, [activeFile])
+
+  const {
+    status: saveStatus,
+    save: forceSave,
+    loadDiskVersion,
+    reset: resetPersistence,
+  } = useEditorPersistence(activeFile, content ?? '')
+
+  useEffect(() => {
+    if (saveStatus === 'conflict') {
+      setShowConflictBanner(true)
+    }
+  }, [saveStatus])
+
+  useEffect(() => {
+    if (activeFile !== prevActiveFile) {
+      resetPersistence()
+      setShowConflictBanner(false)
+    }
+  }, [activeFile, prevActiveFile, resetPersistence])
+
+  const handleLoadDiskVersion = useCallback(async () => {
+    const diskContent = await loadDiskVersion()
+    if (diskContent !== null && activeFile) {
+      useEditorStore.getState().setContent(activeFile, diskContent)
+    }
+    setShowConflictBanner(false)
+  }, [loadDiskVersion, activeFile])
+
+  const handleKeepMine = useCallback(() => {
+    setShowConflictBanner(false)
+  }, [])
+
+  const handleForceSave = useCallback(async () => {
+    await forceSave()
+  }, [forceSave])
   const showCommandPalette = useCommandStore((s) => s.show)
   const toggleSettingsPanel = useCallback(() => setShowSettings((v) => !v), [])
 
@@ -216,6 +262,7 @@ function App() {
     onSearchHighlightNext: next,
     onSearchHighlightPrev: prev,
     onSearchHighlightClose: () => setSearchHighlight(null),
+    onSave: handleForceSave,
   })
 
   useMenuEvents({
@@ -333,7 +380,26 @@ function App() {
                   />
                 ) : content !== undefined ? (
                   activeFile && isMarkdownFile(activeFile) ? (
-                    viewMode === 'source' ? (
+                    viewMode === 'edit' ? (
+                      <>
+                        <EditorToolbar view={editorRef.current?.view as any} />
+                        {showConflictBanner && (
+                          <ConflictBanner
+                            onLoadDisk={handleLoadDiskVersion}
+                            onKeepMine={handleKeepMine}
+                            onLater={() => setShowConflictBanner(false)}
+                          />
+                        )}
+                        <Editor
+                          ref={editorRef}
+                          key={activeFile}
+                          value={content}
+                          onChange={(newContent) =>
+                            useEditorStore.getState().setContent(activeFile, newContent)
+                          }
+                        />
+                      </>
+                    ) : viewMode === 'source' ? (
                       <SourceViewer content={content} filePath={activeFile} />
                     ) : (
                       <MarkdownViewer content={content} filePath={activeFile} />
@@ -347,7 +413,7 @@ function App() {
                   </div>
                 ) : null}
               </div>
-              <StatusBar stats={readingStats} />
+              <StatusBar stats={readingStats} saveStatus={saveStatus} viewMode={viewMode} />
             </div>
           ) : (
             <WelcomePage

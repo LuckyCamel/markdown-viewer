@@ -17,9 +17,9 @@ describe('StatusBar', () => {
     expect(screen.getByText('·')).toBeDefined()
   })
 
-  it('无统计（null）时不显示', () => {
+  it('无统计（null）时仍显示状态栏（用于显示保存状态和视图模式）', () => {
     const { container } = render(<StatusBar stats={null} />)
-    expect(container.firstChild).toBeNull()
+    expect(container.firstChild).not.toBeNull()
   })
 
   it('统计为 0 字时显示「约 0 字 · 1 分钟阅读」', () => {

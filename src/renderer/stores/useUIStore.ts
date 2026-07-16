@@ -23,8 +23,8 @@ interface UIState {
   setOutlineWidth: (width: number) => void
   openSearch: (type: 'file' | 'content' | 'recent') => void
   closeSearch: () => void
-  setViewMode: (mode: ViewMode) => void
   toggleViewMode: () => void
+  setViewMode: (mode: ViewMode) => void
   setCodeTheme: (theme: string) => void
   setPendingContentJump: (target: ContentJumpTarget | null) => void
   setPendingAnchorJump: (target: AnchorJumpTarget | null) => void
@@ -58,7 +58,10 @@ export const useUIStore = create<UIState>((set) => ({
   openSearch: (type) => set({ searchPanel: type }),
   closeSearch: () => set({ searchPanel: 'none' }),
   setViewMode: (mode) => set({ viewMode: mode }),
-  toggleViewMode: () => set((s) => ({ viewMode: s.viewMode === 'render' ? 'source' : 'render' })),
+  toggleViewMode: () =>
+    set((s) => ({
+      viewMode: s.viewMode === 'render' ? 'source' : s.viewMode === 'source' ? 'edit' : 'render',
+    })),
   setCodeTheme: (theme) => set({ codeTheme: theme }),
   setPendingContentJump: (target) => set({ pendingContentJump: target }),
   setPendingAnchorJump: (target) => set({ pendingAnchorJump: target }),

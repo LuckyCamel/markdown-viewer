@@ -131,6 +131,56 @@ pub async fn create_directory(
 }
 
 /**
+ * 保存文件内容（编辑模式专用）
+ *
+ * 要求目标路径位于已授权的工作区根目录下。文件存在则覆盖。
+ * 返回保存后的修改时间（毫秒级时间戳）。
+ */
+#[tauri::command]
+pub async fn save_file(
+    path: String,
+    content: String,
+    settings: State<'_, SettingsState>,
+) -> Result<i64, String> {
+    let target = Path::new(&path);
+    settings.ensure_under_allowed_root(target)?;
+
+    fs::write(target, content).map_err(|e| format!("保存文件失败: {}", e))?;
+
+    let mtime = fs::metadata(target)
+        .ok()
+        .and_then(|m| m.modified().ok())
+        .and_then(|t| t.duration_since(std::time::UNIX_EPOCH).ok())
+        .map(|d| d.as_millis() as i64)
+        .ok_or("获取文件修改时间失败".to_string())?;
+
+    Ok(mtime)
+}
+
+/**
+ * 获取文件修改时间
+ *
+ * 返回毫秒级时间戳，文件不存在则返回 -1。
+ */
+#[tauri::command]
+pub async fn get_mtime(path: String) -> Result<i64, String> {
+    let target = Path::new(&path);
+
+    if !target.exists() {
+        return Ok(-1);
+    }
+
+    let mtime = fs::metadata(target)
+        .ok()
+        .and_then(|m| m.modified().ok())
+        .and_then(|t| t.duration_since(std::time::UNIX_EPOCH).ok())
+        .map(|d| d.as_millis() as i64)
+        .ok_or("获取文件修改时间失败".to_string())?;
+
+    Ok(mtime)
+}
+
+/**
  * 重命名文件/文件夹
  */
 #[tauri::command]

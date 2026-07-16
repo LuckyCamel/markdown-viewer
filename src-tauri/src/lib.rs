@@ -44,6 +44,8 @@ pub fn run(launch_paths: Vec<String>) {
             commands::files::create_file,
             commands::files::create_directory,
             commands::files::rename_entry,
+            commands::files::save_file,
+            commands::files::get_mtime,
             commands::trash::move_to_trash,
             commands::search::search_content,
             commands::search::cancel_search,

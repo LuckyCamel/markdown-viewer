@@ -46,7 +46,7 @@ async function persistPosition(
 export function useScrollRestore(
   activeFile: string | null,
   content: string | undefined,
-  viewMode: 'render' | 'source' = 'render',
+  viewMode: 'render' | 'source' | 'edit' = 'render',
 ): void {
   /** 待写入的滚动位置（防抖窗口内累积） */
   const pendingPos = useRef<{ render: number; source: number } | null>(null)

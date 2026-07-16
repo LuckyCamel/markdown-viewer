@@ -64,6 +64,14 @@ export async function renameEntry(oldPath: string, newName: string): Promise<Fil
   return invoke<FileEntry>('rename_entry', { oldPath, newName })
 }
 
+export async function saveFile(path: string, content: string): Promise<number> {
+  return invoke<number>('save_file', { path, content })
+}
+
+export async function getMtime(path: string): Promise<number> {
+  return invoke<number>('get_mtime', { path })
+}
+
 /**
  * 将文件/文件夹移至回收站
  */
@@ -334,6 +342,8 @@ export const ipc = {
     createDirectory,
     rename: renameEntry,
     moveToTrash,
+    saveFile,
+    getMtime,
   },
   search: {
     searchContent,

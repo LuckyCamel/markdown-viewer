@@ -26,6 +26,8 @@ interface ShortcutHandlers {
   onSearchHighlightPrev?: () => void
   /** 搜索高亮：关闭高亮 */
   onSearchHighlightClose?: () => void
+  /** 保存文件（Ctrl+S，固定不可配置） */
+  onSave?: () => void
 }
 
 type HandlerAction =
@@ -134,6 +136,13 @@ export function useKeyboardShortcuts(handlers: ShortcutHandlers) {
       if (ctrl && e.shiftKey && !e.altKey && key.toLowerCase() === 'p') {
         e.preventDefault()
         handlersRef.current.onOpenCommandPalette?.()
+        return
+      }
+
+      // Ctrl+S 保存文件（固定不可配置）
+      if (ctrl && !e.shiftKey && !e.altKey && key.toLowerCase() === 's') {
+        e.preventDefault()
+        handlersRef.current.onSave?.()
         return
       }
     }

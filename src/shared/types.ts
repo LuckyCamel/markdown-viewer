@@ -75,7 +75,7 @@ export interface FileChangeEvent {
 
 export type ThemeMode = 'system' | 'light' | 'dark'
 
-export type ViewMode = 'render' | 'source'
+export type ViewMode = 'render' | 'source' | 'edit'
 
 /**
  * 阅读设置：控制 Markdown 渲染区域的字体、行高、宽度等

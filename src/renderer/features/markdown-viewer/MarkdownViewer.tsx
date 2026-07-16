@@ -23,7 +23,7 @@ interface MarkdownViewerProps {
 
 export function MarkdownViewer({ content, filePath }: MarkdownViewerProps) {
   const components = {
-    code({ className, children, ...props }: any) {
+    code({ className, children, node: _node, ...props }: any) {
       const isMermaid = className?.includes('language-mermaid')
       if (isMermaid) {
         const text = Array.isArray(children)

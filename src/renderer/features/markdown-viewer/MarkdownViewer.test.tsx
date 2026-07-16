@@ -56,4 +56,17 @@ describe('MarkdownViewer', () => {
     expect(codeElement?.textContent).toBe('hello world')
     expect(codeElement?.textContent).not.toContain('`')
   })
+
+  it('实际文件内容：表格中的行内代码应正确渲染', () => {
+    const content =
+      '# CLAUDE.md\n\n## 目录定位\n\n| 目录 | 定位 |\n|------|------|\n| `base/` | 设备活跃度统计项目 |\n| `datafact/` | 数据工厂 |\n'
+    const { container } = render(<MarkdownViewer content={content} />)
+    console.log('Actual HTML:', container.innerHTML)
+    const table = container.querySelector('table')
+    expect(table).not.toBeNull()
+    const codeElements = container.querySelectorAll('td code')
+    expect(codeElements.length).toBeGreaterThan(0)
+    expect(codeElements[0]?.textContent).toBe('base/')
+    expect(codeElements[0]?.textContent).not.toContain('`')
+  })
 })

@@ -2,6 +2,30 @@
 
 本文件记录 Markdown Viewer 各版本的变更摘要。
 
+## [1.3.1] - 2026-07-16
+
+### 新增
+
+- **编辑模式（Edit）**：基于 CodeMirror 6 的 Markdown 编辑器，新增第三种视图模式
+  - Markdown 语法高亮、行号显示、活动行高亮
+  - 编辑器工具栏：加粗、斜体、删除线、行内代码、标题（H1-H6）、无序列表、有序列表、任务列表、引用、代码块、链接、图片、水平线
+  - 键盘快捷键：Ctrl+S 保存、Ctrl+F 查找替换、Ctrl+D 多选下一个匹配
+  - 列表自动延续：无序列表、有序列表、任务列表回车自动延续
+  - 括号自动匹配：`()[]{}""''` 自动补全
+- **自动保存**：编辑模式下 1.5 秒防抖自动保存，Ctrl+S 立即保存
+- **冲突检测**：检测到文件被外部修改时显示冲突警告横幅，支持加载磁盘版本/保留当前修改
+- **状态栏增强**：显示保存状态（已保存/保存中/未保存/冲突/错误）和当前视图模式
+
+### 变更
+
+- 视图模式从二态（Render/Source）扩展为三态（Render/Source/Edit），Ctrl+Shift+S 循环切换
+- Rust 后端新增 `save_file`、`get_mtime` 命令，支持文件保存和修改时间查询
+- IPC 适配器新增 `files.saveFile`、`files.getMtime` 方法
+
+### 技术
+
+- 新增依赖：`@codemirror/view`、`@codemirror/state`、`@codemirror/commands`、`@codemirror/lang-markdown`、`@codemirror/search`、`@codemirror/autocomplete`、`@codemirror/language`、`lezer-markdown`
+
 ## [1.3.0] - 2026-07-15
 
 ### 新增

@@ -2,9 +2,9 @@
 
 ## 1. 项目标识
 
-- **定位**：跨平台 Tauri 桌面应用，以工作区方式浏览和渲染 Markdown 文件
-- **技术栈**：Tauri 2 · Rust · React 19 · TypeScript · zustand · Tailwind CSS · Vite
-- **核心特性**：GFM 渲染、KaTeX、Mermaid、多标签、全文搜索、原生菜单、主题切换
+- **定位**：跨平台 Tauri 桌面应用，以工作区方式浏览、渲染和编辑 Markdown 文件
+- **技术栈**：Tauri 2 · Rust · React 19 · TypeScript · zustand · Tailwind CSS · Vite · CodeMirror 6
+- **核心特性**：GFM 渲染、KaTeX、Mermaid、多标签、全文搜索、原生菜单、主题切换、Markdown 编辑器、自动保存、冲突检测
 
 ---
 
@@ -52,7 +52,7 @@ Tauri Rust 后端 + Web 前端，通过 IPC 通信。
 | 目录/模块 | 职责 |
 |-----------|------|
 | `lib.rs` | 注册插件、State、`invoke_handler`、`menu::setup_menu` |
-| `commands/` | `list_directory`、`search_content`、`cancel_search`、`watch_file`、`unwatch_file`、`update_settings`、`get_launch_paths`、`grant_fs_scope`、`get_setting`/`set_setting`/`migrate_settings` |
+| `commands/` | `list_directory`、`search_content`、`cancel_search`、`watch_file`、`unwatch_file`、`update_settings`、`get_launch_paths`、`grant_fs_scope`、`get_setting`/`set_setting`/`migrate_settings`、`save_file`、`get_mtime` |
 | `state/` | `SettingsState`（忽略列表、扩展名、`allowed_roots`）、`WatcherState`、`SearchState`、`LaunchState` |
 | `search/` | `walk_dir`、`matcher`（行匹配）、`types`（`SearchProgress` 增量协议） |
 | `scope/` | `grant_fs_paths` — 运行时 `fs_scope` 动态授权 |
@@ -67,7 +67,7 @@ Tauri Rust 后端 + Web 前端，通过 IPC 通信。
 |------|------|------|--------|----------|
 | FileTree | `features/file-tree/` | 递归文件树渲染、展开/折叠 | 中 | useFileStore |
 | Tabs | `features/tabs/` | 多标签管理、切换、关闭 | 中 | useTabStore |
-| MarkdownViewer | `features/markdown-viewer/` | Markdown 渲染（react-markdown + 插件链）| 深 | useEditorStore, mermaid, katex |
+| MarkdownViewer | `features/markdown-viewer/` | Markdown 渲染（react-markdown + 插件链）、CodeMirror 6 编辑器、自动保存、冲突检测 | 深 | useEditorStore, mermaid, katex, @codemirror/* |
 | Outline | `features/outline/` | 标题提取 + 大纲面板 + 点击跳转（rehypeHeadingIds 注入 id） | 中 | headingToId |
 | Search | `features/search/` | 文件搜索 + 全局内容搜索 | 中 | useSearchStore |
 | Settings | `features/settings/` | 主题切换 + 忽略列表 + 扩展名编辑器 | 浅 | useSettingsStore |
@@ -129,6 +129,32 @@ Tauri Rust 后端 + Web 前端，通过 IPC 通信。
           → 保持滚动位置（useScrollRestore）
 ```
 
+### 4.4 编辑保存流程（Edit 模式）
+```
+用户编辑 CodeMirror
+  → useEditorPersistence hook 监听内容变更
+    → 1.5s 防抖
+      → ipc.files.getMtime(path)          // 检查磁盘修改时间
+        → 若磁盘 mtime > 上次保存 mtime → 冲突，显示 ConflictBanner
+        → 否则 → ipc.files.saveFile(path, content)
+          → invoke('save_file', ...)
+            → Rust files::save_file 写入磁盘，返回新 mtime
+          ← 更新 lastSavedMtime、lastSavedContent，状态 = saved
+```
+
+### 4.5 冲突检测流程
+```
+自动保存 / Ctrl+S 触发保存
+  → 先获取磁盘 mtime
+    → 磁盘 mtime > 上次保存 mtime？
+      → 是：saveStatus = 'conflict'，显示 ConflictBanner
+        → 用户选择：
+          - 加载磁盘：读取磁盘内容，更新编辑器
+          - 保留我的：关闭横幅，状态回到 dirty
+          - 稍后处理：关闭横幅，状态保持 conflict
+      → 否：正常保存，更新 mtime 和内容缓存
+```
+
 ---
 
 ## 5. 横切关注点
@@ -150,7 +176,7 @@ Tauri Rust 后端 + Web 前端，通过 IPC 通信。
 - **emit/listen**（事件推送）：单向通知。前端 `listen` 回调内 catch → `logError`
 - **官方插件**：通用能力优先用 plugin-fs / plugin-dialog / plugin-shell
 
-**invoke/command**：`list_directory`、`search_content`、`cancel_search`、`watch_file`、`unwatch_file`、`update_settings`、`get_launch_paths`、`grant_fs_scope`、`get_setting`、`set_setting`、`migrate_settings`
+**invoke/command**：`list_directory`、`search_content`、`cancel_search`、`watch_file`、`unwatch_file`、`update_settings`、`get_launch_paths`、`grant_fs_scope`、`get_setting`、`set_setting`、`migrate_settings`、`save_file`、`get_mtime`
 
 **emit/listen**：`search-result`、`file-change`、`menu-action`（原生菜单 → 前端 `useMenuEvents`）
 

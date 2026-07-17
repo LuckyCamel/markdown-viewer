@@ -1,102 +1,21 @@
-import { useEffect, useRef } from 'react'
+import { useEffect } from 'react'
 import { listen } from '@tauri-apps/api/event'
-import { useTabStore } from '../features/tabs/useTabStore'
 import { logError } from '../logger'
-import {
-  MENU_ABOUT,
-  MENU_ADD_FOLDER_TO_WORKSPACE,
-  MENU_CLOSE_TAB,
-  MENU_CONTENT_SEARCH,
-  MENU_EXPORT_HTML,
-  MENU_EXPORT_PDF,
-  MENU_FILE_SEARCH,
-  MENU_OPEN_FILE,
-  MENU_OPEN_FOLDER,
-  MENU_OPEN_TODAYS_NOTE,
-  MENU_SETTINGS,
-  MENU_TOGGLE_OUTLINE,
-  MENU_TOGGLE_SIDEBAR,
-  MENU_TOGGLE_VIEW_MODE,
-  type MenuActionId,
-} from '../lib/menuActions'
-
-export interface MenuHandlers {
-  onOpenFolder: () => void
-  onAddFolderToWorkspace: () => void
-  onOpenFile: () => void
-  onToggleSidebar: () => void
-  onToggleOutline: () => void
-  onOpenFileSearch: () => void
-  onOpenContentSearch: () => void
-  onToggleSettings: () => void
-  onShowAbout: () => void
-  onToggleViewMode: () => void
-  onExportPdf?: () => void
-  onExportHtml?: () => void
-  onOpenTodaysNote?: () => void
-}
+import { MENU_ID_TO_COMMAND_ID, type MenuActionId } from '../lib/menuActions'
+import { commandRegistry } from '../features/commands/commands'
 
 /**
- * 监听 Rust 原生菜单点击事件并分发到对应处理器
+ * 监听 Rust 原生菜单点击事件，通过 commandRegistry 统一分发执行
  */
-export function useMenuEvents(handlers: MenuHandlers): void {
-  const handlersRef = useRef(handlers)
-  handlersRef.current = handlers
-
+export function useMenuEvents(): void {
   useEffect(() => {
     let unlisten: (() => void) | undefined
 
     listen<string>('menu-action', (event) => {
       const id = event.payload as MenuActionId
-      const h = handlersRef.current
-
-      switch (id) {
-        case MENU_OPEN_FOLDER:
-          h.onOpenFolder()
-          break
-        case MENU_ADD_FOLDER_TO_WORKSPACE:
-          h.onAddFolderToWorkspace()
-          break
-        case MENU_OPEN_FILE:
-          h.onOpenFile()
-          break
-        case MENU_CLOSE_TAB: {
-          const state = useTabStore.getState()
-          if (state.activeFile) state.closeFile(state.activeFile)
-          break
-        }
-        case MENU_TOGGLE_SIDEBAR:
-          h.onToggleSidebar()
-          break
-        case MENU_TOGGLE_OUTLINE:
-          h.onToggleOutline()
-          break
-        case MENU_FILE_SEARCH:
-          h.onOpenFileSearch()
-          break
-        case MENU_CONTENT_SEARCH:
-          h.onOpenContentSearch()
-          break
-        case MENU_SETTINGS:
-          h.onToggleSettings()
-          break
-        case MENU_ABOUT:
-          h.onShowAbout()
-          break
-        case MENU_TOGGLE_VIEW_MODE:
-          h.onToggleViewMode()
-          break
-        case MENU_EXPORT_PDF:
-          h.onExportPdf?.()
-          break
-        case MENU_EXPORT_HTML:
-          h.onExportHtml?.()
-          break
-        case MENU_OPEN_TODAYS_NOTE:
-          h.onOpenTodaysNote?.()
-          break
-        default:
-          break
+      const commandId = MENU_ID_TO_COMMAND_ID[id]
+      if (commandId) {
+        commandRegistry.execute(commandId)
       }
     })
       .then((fn) => {

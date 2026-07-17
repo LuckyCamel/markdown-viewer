@@ -10,13 +10,19 @@ import { useTabStore } from '../tabs/useTabStore'
 export interface CommandFactoryContext {
   /** 打开文件夹 */
   openFolder: () => Promise<void> | void
+  /** 添加文件夹到工作区 */
+  addFolderToWorkspace: () => Promise<void> | void
+  /** 打开文件 */
+  openFile: () => Promise<void> | void
+  /** 显示关于对话框 */
+  showAbout: () => void
   /** 切换侧边栏 */
   toggleSidebar: () => void
   /** 切换大纲 */
   toggleOutline: () => void
   /** 切换设置 */
   toggleSettings: () => void
-  /** 切换源码/渲染视图 */
+  /** 切换阅读/编辑模式 */
   toggleViewMode: () => void
   /** 打开文件搜索 */
   openFileSearch: () => void
@@ -26,6 +32,10 @@ export interface CommandFactoryContext {
   openRecentFiles: () => void
   /** 关闭当前标签 */
   closeActiveTab: () => void
+  /** 下一个标签 */
+  nextTab: () => void
+  /** 上一个标签 */
+  prevTab: () => void
   /** 打开命令面板 */
   openCommandPalette: () => void
   /** 打开每日笔记 */
@@ -56,6 +66,27 @@ function buildCommands(ctx: CommandFactoryContext): Command[] {
       execute: () => void ctx.openFolder(),
     },
     {
+      id: 'file.openFile',
+      name: '打开文件',
+      alias: 'Open File',
+      category: 'file',
+      execute: () => void ctx.openFile(),
+    },
+    {
+      id: 'workspace.addFolder',
+      name: '添加文件夹到工作区',
+      alias: 'Add Folder to Workspace',
+      category: 'workspace',
+      execute: () => void ctx.addFolderToWorkspace(),
+    },
+    {
+      id: 'help.about',
+      name: '关于',
+      alias: 'About',
+      category: 'settings',
+      execute: ctx.showAbout,
+    },
+    {
       id: 'view.toggleSidebar',
       name: '切换侧边栏',
       alias: 'Toggle Sidebar',
@@ -78,7 +109,7 @@ function buildCommands(ctx: CommandFactoryContext): Command[] {
     },
     {
       id: 'view.toggleViewMode',
-      name: '切换源码/渲染视图',
+      name: '切换阅读/编辑模式',
       alias: 'Toggle View Mode',
       category: 'view',
       execute: ctx.toggleViewMode,
@@ -111,6 +142,22 @@ function buildCommands(ctx: CommandFactoryContext): Command[] {
       category: 'workspace',
       execute: ctx.closeActiveTab,
       isAvailable: () => useTabStore.getState().activeFile !== null,
+    },
+    {
+      id: 'tab.next',
+      name: '下一个标签',
+      alias: 'Next Tab',
+      category: 'workspace',
+      execute: ctx.nextTab,
+      isAvailable: () => useTabStore.getState().openFiles.length > 1,
+    },
+    {
+      id: 'tab.prev',
+      name: '上一个标签',
+      alias: 'Previous Tab',
+      category: 'workspace',
+      execute: ctx.prevTab,
+      isAvailable: () => useTabStore.getState().openFiles.length > 1,
     },
     {
       id: 'dailyNote.open',
@@ -147,6 +194,9 @@ function buildCommands(ctx: CommandFactoryContext): Command[] {
 export function useRegisterCommands(
   overrides?: Partial<{
     openFolder: CommandFactoryContext['openFolder']
+    addFolderToWorkspace: CommandFactoryContext['addFolderToWorkspace']
+    openFile: CommandFactoryContext['openFile']
+    showAbout: CommandFactoryContext['showAbout']
     toggleSettings: CommandFactoryContext['toggleSettings']
     openDailyNote: CommandFactoryContext['openDailyNote']
     exportPdf: CommandFactoryContext['exportPdf']
@@ -156,16 +206,36 @@ export function useRegisterCommands(
   useEffect(() => {
     const ctx: CommandFactoryContext = {
       openFolder: overrides?.openFolder ?? (() => undefined),
+      addFolderToWorkspace: overrides?.addFolderToWorkspace ?? (() => undefined),
+      openFile: overrides?.openFile ?? (() => undefined),
+      showAbout: overrides?.showAbout ?? (() => undefined),
       toggleSidebar: () => useUIStore.getState().toggleSidebar(),
       toggleOutline: () => useUIStore.getState().toggleOutline(),
       toggleSettings: overrides?.toggleSettings ?? (() => undefined),
-      toggleViewMode: () => useUIStore.getState().toggleViewMode(),
+      toggleViewMode: () => {
+        const s = useTabStore.getState()
+        if (s.activeFile) s.toggleViewMode(s.activeFile)
+      },
       openFileSearch: () => useUIStore.getState().openSearch('file'),
       openContentSearch: () => useUIStore.getState().openSearch('content'),
       openRecentFiles: () => useUIStore.getState().openSearch('recent'),
       closeActiveTab: () => {
         const s = useTabStore.getState()
         if (s.activeFile) s.closeFile(s.activeFile)
+      },
+      nextTab: () => {
+        const s = useTabStore.getState()
+        if (s.openFiles.length < 2) return
+        const idx = s.openFiles.indexOf(s.activeFile ?? '')
+        const next = (idx + 1) % s.openFiles.length
+        s.setActive(s.openFiles[next])
+      },
+      prevTab: () => {
+        const s = useTabStore.getState()
+        if (s.openFiles.length < 2) return
+        const idx = s.openFiles.indexOf(s.activeFile ?? '')
+        const prev = (idx - 1 + s.openFiles.length) % s.openFiles.length
+        s.setActive(s.openFiles[prev])
       },
       openCommandPalette: () => useCommandStore.getState().show(),
       openDailyNote: overrides?.openDailyNote ?? (() => undefined),
@@ -181,7 +251,5 @@ export function useRegisterCommands(
         commandRegistry.unregister(cmd.id)
       }
     }
-    // 仅在 overrides 引用变化时重新注册；避免每次渲染都重建
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [overrides])
 }

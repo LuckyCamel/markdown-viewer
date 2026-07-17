@@ -41,12 +41,12 @@ async function persistPosition(
  *
  * @param activeFile - 当前文件路径
  * @param content - 当前文件内容
- * @param viewMode - 当前视图模式（render/source），默认 render
+ * @param viewMode - 当前视图模式（read/edit），默认 read
  */
 export function useScrollRestore(
   activeFile: string | null,
   content: string | undefined,
-  viewMode: 'render' | 'source' | 'edit' = 'render',
+  viewMode: 'read' | 'edit' = 'read',
 ): void {
   /** 待写入的滚动位置（防抖窗口内累积） */
   const pendingPos = useRef<{ render: number; source: number } | null>(null)
@@ -60,14 +60,13 @@ export function useScrollRestore(
 
     /**
      * scroll 事件处理：仅更新 pendingPos，并重置防抖定时器
+     * edit 模式下 CodeMirror 自管滚动，不写入阅读位置
      */
     const handleScroll = () => {
+      if (viewMode === 'edit') return
       const top = container.scrollTop
       const prev = pendingPos.current ?? { render: 0, source: 0 }
-      pendingPos.current =
-        viewMode === 'source'
-          ? { render: prev.render, source: top }
-          : { render: top, source: prev.source }
+      pendingPos.current = { render: top, source: prev.source }
 
       if (debounceRef.current) clearTimeout(debounceRef.current)
       debounceRef.current = setTimeout(() => {
@@ -114,7 +113,10 @@ export function useScrollRestore(
       const pos = positions[activeFile]
       if (!pos) return
 
-      const target = viewMode === 'source' ? pos.source : pos.render
+      // edit 模式下不恢复滚动（CodeMirror 自管）
+      if (viewMode === 'edit') return
+
+      const target = pos.render
       // 目标为 0 时无需恢复
       if (target === 0) return
 

@@ -20,6 +20,24 @@ export type ShortcutAction =
   | 'nextTab'
   | 'prevTab'
 
+/**
+ * 快捷键动作 → 命令注册中心中的命令 ID 映射
+ * 用于将快捷键事件路由到统一的 commandRegistry
+ */
+export const SHORTCUT_TO_COMMAND_ID: Record<ShortcutAction, string> = {
+  openFolder: 'file.openFolder',
+  toggleSidebar: 'view.toggleSidebar',
+  toggleOutline: 'view.toggleOutline',
+  openFileSearch: 'search.openFile',
+  openContentSearch: 'search.openContent',
+  openRecentFiles: 'search.openRecent',
+  toggleSettings: 'settings.open',
+  toggleViewMode: 'view.toggleViewMode',
+  closeTab: 'tab.closeActive',
+  nextTab: 'tab.next',
+  prevTab: 'tab.prev',
+}
+
 export const DEFAULT_SHORTCUTS: Record<ShortcutAction, ShortcutConfig> = {
   openFolder: {
     id: 'openFolder',
@@ -79,7 +97,7 @@ export const DEFAULT_SHORTCUTS: Record<ShortcutAction, ShortcutConfig> = {
   },
   toggleViewMode: {
     id: 'toggleViewMode',
-    label: '切换源码/渲染视图',
+    label: '切换阅读/编辑模式',
     key: 's',
     ctrl: true,
     shift: true,

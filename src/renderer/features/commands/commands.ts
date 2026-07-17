@@ -58,6 +58,18 @@ class CommandRegistry {
     return this.commands.get(id)
   }
 
+  /**
+   * 执行指定 ID 的命令
+   * @returns 命令存在且可执行返回 true，否则返回 false
+   */
+  execute(id: string): boolean {
+    const cmd = this.commands.get(id)
+    if (!cmd) return false
+    if (cmd.isAvailable && !cmd.isAvailable()) return false
+    void cmd.execute()
+    return true
+  }
+
   /** 清理所有命令 */
   clear(): void {
     this.commands.clear()

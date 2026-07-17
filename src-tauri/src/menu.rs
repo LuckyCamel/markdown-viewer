@@ -32,7 +32,7 @@ pub fn setup_menu(app: &App) -> tauri::Result<()> {
     let file_search = MenuItemBuilder::with_id(FILE_SEARCH, "Find File...").build(app)?;
     let content_search = MenuItemBuilder::with_id(CONTENT_SEARCH, "Find in Files...").build(app)?;
     let about = MenuItemBuilder::with_id(ABOUT, "About Markdown-Viewer").build(app)?;
-    let toggle_view_mode = MenuItemBuilder::with_id(TOGGLE_VIEW_MODE, "Toggle Source View").build(app)?;
+    let toggle_view_mode = MenuItemBuilder::with_id(TOGGLE_VIEW_MODE, "Toggle Edit Mode").build(app)?;
     let export_pdf = MenuItemBuilder::with_id(EXPORT_PDF, "Export as PDF...").build(app)?;
     let export_html = MenuItemBuilder::with_id(EXPORT_HTML, "Export as HTML...").build(app)?;
     let open_todays_note = MenuItemBuilder::with_id(OPEN_TODAYS_NOTE, "Today's Note").build(app)?;

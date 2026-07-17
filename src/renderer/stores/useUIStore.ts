@@ -1,5 +1,5 @@
 import { create } from 'zustand'
-import type { ThemeMode, ContentJumpTarget, AnchorJumpTarget, ViewMode } from '../../shared/types'
+import type { ThemeMode, ContentJumpTarget, AnchorJumpTarget } from '../../shared/types'
 import type { ThemeId } from '../lib/themes'
 
 interface UIState {
@@ -10,7 +10,6 @@ interface UIState {
   sidebarWidth: number
   outlineWidth: number
   searchPanel: 'none' | 'file' | 'content' | 'recent'
-  viewMode: ViewMode
   codeTheme: string
   pendingContentJump: ContentJumpTarget | null
   pendingAnchorJump: AnchorJumpTarget | null
@@ -23,8 +22,6 @@ interface UIState {
   setOutlineWidth: (width: number) => void
   openSearch: (type: 'file' | 'content' | 'recent') => void
   closeSearch: () => void
-  toggleViewMode: () => void
-  setViewMode: (mode: ViewMode) => void
   setCodeTheme: (theme: string) => void
   setPendingContentJump: (target: ContentJumpTarget | null) => void
   setPendingAnchorJump: (target: AnchorJumpTarget | null) => void
@@ -40,7 +37,6 @@ const initialState = {
   sidebarWidth: 256,
   outlineWidth: 224,
   searchPanel: 'none' as const,
-  viewMode: 'render' as ViewMode,
   codeTheme: 'auto',
   pendingContentJump: null as ContentJumpTarget | null,
   pendingAnchorJump: null as AnchorJumpTarget | null,
@@ -57,11 +53,6 @@ export const useUIStore = create<UIState>((set) => ({
   setOutlineWidth: (width) => set({ outlineWidth: width }),
   openSearch: (type) => set({ searchPanel: type }),
   closeSearch: () => set({ searchPanel: 'none' }),
-  setViewMode: (mode) => set({ viewMode: mode }),
-  toggleViewMode: () =>
-    set((s) => ({
-      viewMode: s.viewMode === 'render' ? 'source' : s.viewMode === 'source' ? 'edit' : 'render',
-    })),
   setCodeTheme: (theme) => set({ codeTheme: theme }),
   setPendingContentJump: (target) => set({ pendingContentJump: target }),
   setPendingAnchorJump: (target) => set({ pendingAnchorJump: target }),

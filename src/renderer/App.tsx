@@ -40,7 +40,6 @@ import { useReadingStats } from './hooks/useReadingStats'
 import { useSearchHighlight } from './hooks/useSearchHighlight'
 import { StatusBar } from './components/StatusBar'
 import { SearchHighlightBar } from './components/SearchHighlightBar'
-import { isVisibleFileEntry } from '../shared/settingsDefaults'
 import { isMarkdownFile } from '../shared/fileTypes'
 import type { RecentEntry } from '../shared/types'
 
@@ -60,10 +59,6 @@ function App() {
   const sidebarVisible = useUIStore((s) => s.sidebarVisible)
   const outlineVisible = useUIStore((s) => s.outlineVisible)
   const searchPanel = useUIStore((s) => s.searchPanel)
-  const viewMode = useUIStore((s) => s.viewMode)
-  const toggleSidebar = useUIStore((s) => s.toggleSidebar)
-  const toggleOutline = useUIStore((s) => s.toggleOutline)
-  const openSearch = useUIStore((s) => s.openSearch)
   const closeSearch = useUIStore((s) => s.closeSearch)
   const setPendingContentJump = useUIStore((s) => s.setPendingContentJump)
   const searchHighlight = useUIStore((s) => s.searchHighlight)
@@ -74,6 +69,8 @@ function App() {
 
   const openFiles = useTabStore((s) => s.openFiles)
   const activeFile = useTabStore((s) => s.activeFile)
+  const viewModes = useTabStore((s) => s.viewModes)
+  const viewMode = activeFile ? (viewModes[activeFile] ?? 'read') : 'read'
 
   // 滚动容器元素，用 callback ref 在挂载时设置以触发 useSearchHighlight 重新计算
   const [scrollContainer, setScrollContainer] = useState<HTMLElement | null>(null)
@@ -206,22 +203,29 @@ function App() {
     }
   }, [])
 
+  const handleAddFolderViaDialog = useCallback(async () => {
+    const path = await ipc.dialog.openDirectory()
+    if (path) handleAddFolderToWorkspace(path)
+  }, [handleAddFolderToWorkspace])
+
+  const handleOpenFileViaDialog = useCallback(async () => {
+    const path = await ipc.dialog.openFile()
+    if (path) handleOpenFile(path)
+  }, [handleOpenFile])
+
+  const handleShowAbout = useCallback(() => setShowAbout(true), [])
+
   useRegisterCommands({
     openFolder: handleOpenFolderViaDialog,
+    addFolderToWorkspace: handleAddFolderViaDialog,
+    openFile: handleOpenFileViaDialog,
+    showAbout: handleShowAbout,
     toggleSettings: toggleSettingsPanel,
     exportPdf: handleExportPdf,
     exportHtml: handleExportHtml,
     openDailyNote: handleOpenDailyNote,
   })
   useKeyboardShortcuts({
-    onOpenFolder: handleOpenFolderViaDialog,
-    onToggleSidebar: toggleSidebar,
-    onToggleOutline: toggleOutline,
-    onOpenFileSearch: () => openSearch('file'),
-    onOpenContentSearch: () => openSearch('content'),
-    onOpenRecentFiles: () => openSearch('recent'),
-    onToggleSettings: toggleSettingsPanel,
-    onToggleViewMode: () => useUIStore.getState().toggleViewMode(),
     onOpenCommandPalette: showCommandPalette,
     onSearchHighlightNext: next,
     onSearchHighlightPrev: prev,
@@ -231,27 +235,7 @@ function App() {
     },
   })
 
-  useMenuEvents({
-    onOpenFolder: handleOpenFolderViaDialog,
-    onAddFolderToWorkspace: async () => {
-      const path = await ipc.dialog.openDirectory()
-      if (path) handleAddFolderToWorkspace(path)
-    },
-    onOpenFile: async () => {
-      const path = await ipc.dialog.openFile()
-      if (path) handleOpenFile(path)
-    },
-    onToggleSidebar: toggleSidebar,
-    onToggleOutline: toggleOutline,
-    onOpenFileSearch: () => openSearch('file'),
-    onOpenContentSearch: () => openSearch('content'),
-    onToggleSettings: toggleSettingsPanel,
-    onShowAbout: () => setShowAbout(true),
-    onToggleViewMode: () => useUIStore.getState().toggleViewMode(),
-    onExportPdf: handleExportPdf,
-    onExportHtml: handleExportHtml,
-    onOpenTodaysNote: handleOpenDailyNote,
-  })
+  useMenuEvents()
 
   return (
     <ThemeProvider>
@@ -356,8 +340,6 @@ function App() {
                         }}
                         onKeepMine={keepMine}
                       />
-                    ) : viewMode === 'source' ? (
-                      <SourceViewer content={content} filePath={activeFile} />
                     ) : (
                       <MarkdownViewer content={content} filePath={activeFile} />
                     )

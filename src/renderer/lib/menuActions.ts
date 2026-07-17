@@ -29,3 +29,24 @@ export type MenuActionId =
   | typeof MENU_EXPORT_PDF
   | typeof MENU_EXPORT_HTML
   | typeof MENU_OPEN_TODAYS_NOTE
+
+/**
+ * 菜单动作 ID → 命令注册中心中的命令 ID 映射
+ * 用于将原生菜单事件路由到统一的 commandRegistry
+ */
+export const MENU_ID_TO_COMMAND_ID: Record<MenuActionId, string> = {
+  [MENU_OPEN_FOLDER]: 'file.openFolder',
+  [MENU_ADD_FOLDER_TO_WORKSPACE]: 'workspace.addFolder',
+  [MENU_OPEN_FILE]: 'file.openFile',
+  [MENU_CLOSE_TAB]: 'tab.closeActive',
+  [MENU_TOGGLE_SIDEBAR]: 'view.toggleSidebar',
+  [MENU_TOGGLE_OUTLINE]: 'view.toggleOutline',
+  [MENU_FILE_SEARCH]: 'search.openFile',
+  [MENU_CONTENT_SEARCH]: 'search.openContent',
+  [MENU_SETTINGS]: 'settings.open',
+  [MENU_ABOUT]: 'help.about',
+  [MENU_TOGGLE_VIEW_MODE]: 'view.toggleViewMode',
+  [MENU_EXPORT_PDF]: 'export.pdf',
+  [MENU_EXPORT_HTML]: 'export.html',
+  [MENU_OPEN_TODAYS_NOTE]: 'dailyNote.open',
+}

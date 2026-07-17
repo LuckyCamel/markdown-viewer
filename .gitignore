@@ -13,4 +13,5 @@ test-results/
 candidate_icons/
 .claude/
 .dev-process/
+.codegraph/
 debug.log

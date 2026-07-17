@@ -1,23 +1,17 @@
 import { useEffect, useRef, useState } from 'react'
-import { useTabStore } from '../features/tabs/useTabStore'
-import { useUIStore } from '../stores/useUIStore'
 import {
   DEFAULT_SHORTCUTS,
   loadShortcuts,
+  SHORTCUT_TO_COMMAND_ID,
   type ShortcutAction,
   type ShortcutConfig,
 } from '../lib/shortcuts'
 import { logError } from '../logger'
+import { commandRegistry } from '../features/commands/commands'
+import { useTabStore } from '../features/tabs/useTabStore'
+import { useUIStore } from '../stores/useUIStore'
 
 interface ShortcutHandlers {
-  onOpenFolder: () => void
-  onToggleSidebar: () => void
-  onToggleOutline: () => void
-  onOpenFileSearch: () => void
-  onOpenContentSearch: () => void
-  onOpenRecentFiles: () => void
-  onToggleSettings: () => void
-  onToggleViewMode: () => void
   /** 唤起命令面板（Ctrl+Shift+P，固定不可配置） */
   onOpenCommandPalette?: () => void
   /** 搜索高亮：跳转到下一个匹配 */
@@ -30,32 +24,12 @@ interface ShortcutHandlers {
   onSave?: () => void
 }
 
-type HandlerAction =
-  | 'openFolder'
-  | 'toggleSidebar'
-  | 'toggleOutline'
-  | 'openFileSearch'
-  | 'openContentSearch'
-  | 'openRecentFiles'
-  | 'toggleSettings'
-  | 'toggleViewMode'
-
-const ACTION_TO_HANDLER: Record<HandlerAction, keyof ShortcutHandlers> = {
-  openFolder: 'onOpenFolder',
-  toggleSidebar: 'onToggleSidebar',
-  toggleOutline: 'onToggleOutline',
-  openFileSearch: 'onOpenFileSearch',
-  openContentSearch: 'onOpenContentSearch',
-  openRecentFiles: 'onOpenRecentFiles',
-  toggleSettings: 'onToggleSettings',
-  toggleViewMode: 'onToggleViewMode',
-}
-
 /**
  * 键盘快捷键 Hook，支持自定义配置
  *
  * 从 localStorage 加载用户配置，未配置时使用默认值。
- * 内置标签页切换快捷键（关闭标签、切换标签）。
+ * 可配置快捷键通过 commandRegistry 统一分发执行。
+ * 固定快捷键（命令面板、保存、搜索高亮导航）保留直接 handler。
  */
 export function useKeyboardShortcuts(handlers: ShortcutHandlers) {
   const handlersRef = useRef(handlers)
@@ -83,15 +57,6 @@ export function useKeyboardShortcuts(handlers: ShortcutHandlers) {
           config.alt === e.altKey &&
           key.toLowerCase() === config.key.toLowerCase()
         ) {
-          if (action === 'closeTab') {
-            e.preventDefault()
-            const state = useTabStore.getState()
-            if (state.activeFile) {
-              state.closeFile(state.activeFile)
-            }
-            return
-          }
-
           if (action === 'nextTab' || action === 'prevTab') {
             e.preventDefault()
             const state = useTabStore.getState()
@@ -105,10 +70,10 @@ export function useKeyboardShortcuts(handlers: ShortcutHandlers) {
             return
           }
 
-          const handlerKey = ACTION_TO_HANDLER[action as HandlerAction]
-          if (handlerKey) {
+          const commandId = SHORTCUT_TO_COMMAND_ID[action]
+          if (commandId) {
             e.preventDefault()
-            handlersRef.current[handlerKey]?.()
+            commandRegistry.execute(commandId)
           }
           return
         }

@@ -4,7 +4,7 @@ import type { SaveStatus } from '../features/markdown-viewer/useEditorPersistenc
 interface StatusBarProps {
   stats: ReadingStats | null
   saveStatus?: SaveStatus
-  viewMode?: 'render' | 'source' | 'edit'
+  viewMode?: 'read' | 'edit'
 }
 
 function getSaveStatusText(status: SaveStatus): string {
@@ -24,14 +24,12 @@ function getSaveStatusText(status: SaveStatus): string {
   }
 }
 
-function getViewModeText(mode: 'render' | 'source' | 'edit'): string {
+function getViewModeText(mode: 'read' | 'edit'): string {
   switch (mode) {
-    case 'render':
-      return 'Render'
-    case 'source':
-      return 'Source'
+    case 'read':
+      return '阅读'
     case 'edit':
-      return 'Edit'
+      return '编辑'
     default:
       return ''
   }

@@ -2,6 +2,38 @@
 
 本文件记录 Markdown Viewer 各版本的变更摘要。
 
+## [1.4.2] - 2026-07-18
+
+### 新增
+
+- **相对路径补全**：在编辑器中输入 `[[`、`./`、`![](`、`](` 触发文件路径补全
+  - 基于 `@codemirror/autocomplete` 实现，无需新增依赖
+  - 支持模糊匹配、目录导航（`./dir/`）、图片文件识别
+  - `[[` 触发 wiki 链接补全，插入 `[filename](./path)` 格式
+  - `![](` 触发图片补全，仅显示图片文件
+  - 通过 `updateListener` + `startCompletion` 解决特殊字符触发问题
+  - 通过 `apply` 函数替换触发词，`from` 设为光标位置
+
+### 变更
+
+- **编辑会话模块合并**：合并 `useEditorSession` 和 `useEditorPersistence` 为统一的 `useEditorDocument`
+  - 统一状态机（saved/dirty/saving/error/conflict）
+  - 统一冲突处理 Seam：保存时 mtime 冲突和外部变更冲突走同一条路径
+  - `keepMine` 通过 `ignoreMtimeConflict` 参数跳过 mtime 冲突检测
+- **useFileWatcher 改造**：移除直接修改 store 的逻辑，新增 `onExternalChange` 回调
+  - 由 `useEditorDocument` 统一处理外部变更，确保进入冲突状态并显示提示横幅
+  - 修复外部变更静默覆盖 bug：dirty 状态下外部变更不再被静默覆盖
+- **EditorPane 重构**：用 props 替换内部 store 调用，接收 `saveStatus`、`onLoadDisk`、`onKeepMine`、`onChange`
+
+### 测试
+
+- 单元测试从 399 个增至 444 个
+  - 新增 `pathCompletion.test.ts`（45 用例）：覆盖触发词检测、查询提取、路径解析、候选项构建、模糊匹配、插入文本构建
+  - 新增 `useEditorDocument.test.ts`（14 用例）：覆盖状态机所有转移、mtime 冲突、外部变更处理
+- E2E 测试从 51 个增至 55 个
+  - 新增 `path-completion.spec.ts`（4 用例）：验证 `[[`、`./`、`![](` 触发补全及选择插入
+  - 新增 `editor-conflict.spec.ts`（3 用例）：验证外部变更冲突检测与处理
+
 ## [1.4.0] - 2026-07-16
 
 ### 新增

@@ -14,17 +14,29 @@ import { closeBrackets, closeBracketsKeymap } from '@codemirror/autocomplete'
 import { searchKeymap, search, highlightSelectionMatches } from '@codemirror/search'
 import { codemirrorTheme, codemirrorDarkTheme } from './theme'
 import { listContinuation } from './listContinuation'
+import { pathCompletionExtension } from './pathCompletion'
+import type { FileEntry } from '../../../shared/types'
 
 interface CreateExtensionsOptions {
   showLineNumbers?: boolean
   readOnly?: boolean
   isDark?: boolean
+  /** 当前文件完整路径，传入后启用路径补全 */
+  currentFilePath?: string
+  /** 列出指定目录的文件条目（异步），用于路径补全 */
+  listDirectory?: (dirPath: string) => Promise<FileEntry[]>
 }
 
 export function createExtensions(options: CreateExtensionsOptions = {}): Extension[] {
-  const { showLineNumbers = true, readOnly = false, isDark = false } = options
+  const {
+    showLineNumbers = true,
+    readOnly = false,
+    isDark = false,
+    currentFilePath,
+    listDirectory,
+  } = options
 
-  return [
+  const extensions: Extension[] = [
     history(),
     search(),
     highlightSelectionMatches(),
@@ -68,11 +80,26 @@ export function createExtensions(options: CreateExtensionsOptions = {}): Extensi
     markdown(),
     closeBrackets(),
     listContinuation,
+  ]
+
+  // 路径补全：仅在提供 currentFilePath 和 listDirectory 时启用
+  if (currentFilePath && listDirectory) {
+    extensions.push(
+      pathCompletionExtension({
+        currentFilePath,
+        listDirectory,
+      }),
+    )
+  }
+
+  extensions.push(
     showLineNumbers ? lineNumbers() : [],
     highlightActiveLine(),
     highlightActiveLineGutter(),
     isDark ? codemirrorDarkTheme : codemirrorTheme,
     EditorState.readOnly.of(readOnly),
     EditorView.editable.of(!readOnly),
-  ]
+  )
+
+  return extensions
 }

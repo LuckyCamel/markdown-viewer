@@ -3,6 +3,7 @@ import { EditorState } from '@codemirror/state'
 import { EditorView } from '@codemirror/view'
 import { createExtensions } from '../../lib/codemirror/extensions'
 import { useUIStore } from '../../stores/useUIStore'
+import { ipc } from '../../lib/ipc'
 
 interface EditorProps {
   value: string
@@ -10,6 +11,8 @@ interface EditorProps {
   showLineNumbers?: boolean
   readOnly?: boolean
   className?: string
+  /** 当前文件完整路径，传入后启用路径补全 */
+  filePath?: string
 }
 
 interface EditorHandle {
@@ -23,7 +26,7 @@ interface EditorHandle {
  * 外部值变化时仅在失焦时同步，避免编辑冲突。
  */
 export const Editor = forwardRef<EditorHandle, EditorProps>(function Editor(
-  { value, onChange, showLineNumbers = true, readOnly = false, className = '' },
+  { value, onChange, showLineNumbers = true, readOnly = false, className = '', filePath },
   ref,
 ) {
   const containerRef = useRef<HTMLDivElement>(null)
@@ -58,7 +61,13 @@ export const Editor = forwardRef<EditorHandle, EditorProps>(function Editor(
     const state = EditorState.create({
       doc: value,
       extensions: [
-        ...createExtensions({ showLineNumbers, readOnly, isDark }),
+        ...createExtensions({
+          showLineNumbers,
+          readOnly,
+          isDark,
+          currentFilePath: filePath,
+          listDirectory: filePath ? (dir: string) => ipc.files.listDirectory(dir) : undefined,
+        }),
         EditorView.updateListener.of((update) => {
           if (update.docChanged) {
             onChange(update.state.doc.toString())
@@ -97,7 +106,13 @@ export const Editor = forwardRef<EditorHandle, EditorProps>(function Editor(
       doc: view.state.doc,
       selection: view.state.selection,
       extensions: [
-        ...createExtensions({ showLineNumbers, readOnly, isDark }),
+        ...createExtensions({
+          showLineNumbers,
+          readOnly,
+          isDark,
+          currentFilePath: filePath,
+          listDirectory: filePath ? (dir: string) => ipc.files.listDirectory(dir) : undefined,
+        }),
         EditorView.updateListener.of((update) => {
           if (update.docChanged) {
             onChange(update.state.doc.toString())
@@ -106,7 +121,7 @@ export const Editor = forwardRef<EditorHandle, EditorProps>(function Editor(
       ],
     })
     view.setState(newState)
-  }, [isDark, isMounted, showLineNumbers, readOnly, onChange])
+  }, [isDark, isMounted, showLineNumbers, readOnly, onChange, filePath])
 
   return <div ref={containerRef} className={`h-full w-full ${className}`} tabIndex={0} />
 })

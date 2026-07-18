@@ -45,7 +45,13 @@ export function EditorPane({
           onLater={() => setConflictDismissed(true)}
         />
       )}
-      <Editor ref={editorRef} key={filePath} value={content} onChange={onChange} />
+      <Editor
+        ref={editorRef}
+        key={filePath}
+        value={content}
+        onChange={onChange}
+        filePath={filePath}
+      />
     </>
   )
 }

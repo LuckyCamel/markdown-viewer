@@ -1,5 +1,6 @@
 pub mod cli;
 mod commands;
+mod filesystem;
 mod filters;
 mod menu;
 mod search;
@@ -10,7 +11,8 @@ use std::collections::HashSet;
 use std::sync::Mutex;
 
 use commands::store::init_store;
-use state::{LaunchState, SearchState, WatcherState};
+use search::CancelledStore;
+use state::{LaunchState, WatcherState};
 use tauri::Manager;
 use workspace::WorkspaceState;
 
@@ -33,9 +35,7 @@ pub fn run(launch_paths: Vec<String>) {
             watcher: Mutex::new(None),
             watched_paths: Mutex::new(HashSet::new()),
         })
-        .manage(SearchState {
-            cancelled_ids: Mutex::new(HashSet::new()),
-        })
+        .manage(CancelledStore::new())
         .manage(LaunchState {
             paths: launch_paths,
         })

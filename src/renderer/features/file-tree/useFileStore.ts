@@ -29,13 +29,24 @@ function setCachedEntries(path: string, entries: FileEntry[]) {
   directoryCache.set(path, { entries, timestamp: Date.now() })
 }
 
-function invalidateCache(path: string) {
-  directoryCache.delete(path)
+function invalidateCache(path: string, invalidateParent = false): Set<string> {
+  const affectedPaths = new Set<string>()
+  affectedPaths.add(path)
   directoryCache.forEach((_, key) => {
     if (key.startsWith(path)) {
+      affectedPaths.add(key)
       directoryCache.delete(key)
     }
   })
+  directoryCache.delete(path)
+  if (invalidateParent) {
+    const parent = getParentDir(path)
+    if (parent !== path) {
+      const parentAffected = invalidateCache(parent, true)
+      parentAffected.forEach((p) => affectedPaths.add(p))
+    }
+  }
+  return affectedPaths
 }
 
 export function clearDirectoryCache() {
@@ -104,16 +115,18 @@ export const useFileStore = create<FileTreeState>((set, get) => ({
       set((s) => ({ entries: { ...s.entries, [dirPath]: cached } }))
       return
     }
-    if (entries[dirPath]) return
+    if (entries[dirPath]) {
+      return
+    }
     set((s) => ({ loading: { ...s.loading, [dirPath]: true } }))
     try {
-      const entries = await ipc.files.listDirectory(dirPath)
-      setCachedEntries(dirPath, entries)
+      const loadedEntries = await ipc.files.listDirectory(dirPath)
+      setCachedEntries(dirPath, loadedEntries)
       set((s) => {
         const next = { ...s.loading }
         delete next[dirPath]
         return {
-          entries: { ...s.entries, [dirPath]: entries },
+          entries: { ...s.entries, [dirPath]: loadedEntries },
           loading: next,
         }
       })
@@ -133,11 +146,13 @@ export const useFileStore = create<FileTreeState>((set, get) => ({
   createFile: async (dirPath, name) => {
     try {
       const newEntry = await ipc.files.createFile(dirPath, name)
-      invalidateCache(dirPath)
+      const affected = invalidateCache(dirPath, true)
       set((s) => {
+        const nextEntries = { ...s.entries }
+        affected.forEach((path) => delete nextEntries[path])
         const existing = s.entries[dirPath] || []
         return {
-          entries: { ...s.entries, [dirPath]: [...existing, newEntry] },
+          entries: { ...nextEntries, [dirPath]: [...existing, newEntry] },
         }
       })
     } catch (err) {
@@ -152,11 +167,13 @@ export const useFileStore = create<FileTreeState>((set, get) => ({
   createDirectory: async (dirPath, name) => {
     try {
       const newEntry = await ipc.files.createDirectory(dirPath, name)
-      invalidateCache(dirPath)
+      const affected = invalidateCache(dirPath, true)
       set((s) => {
+        const nextEntries = { ...s.entries }
+        affected.forEach((path) => delete nextEntries[path])
         const existing = s.entries[dirPath] || []
         return {
-          entries: { ...s.entries, [dirPath]: [...existing, newEntry] },
+          entries: { ...nextEntries, [dirPath]: [...existing, newEntry] },
         }
       })
     } catch (err) {
@@ -174,16 +191,17 @@ export const useFileStore = create<FileTreeState>((set, get) => ({
     try {
       const newEntry = await ipc.files.rename(oldPath, newName)
       const parentDir = getParentDir(oldPath)
-      invalidateCache(parentDir)
+      const affected = invalidateCache(parentDir, true)
       invalidateCache(oldPath)
       set((s) => {
+        const nextEntries = { ...s.entries }
+        affected.forEach((path) => delete nextEntries[path])
         const existing = s.entries[parentDir] || []
         const updated = existing.map((e) => (e.path === oldPath ? newEntry : e))
         return {
-          entries: { ...s.entries, [parentDir]: updated },
+          entries: { ...nextEntries, [parentDir]: updated },
         }
       })
-      // 通知 tabStore 更新已打开标签页的路径
       useTabStore.getState().renameFile(oldPath, newEntry.path)
     } catch (err) {
       logError('useFileStore:renameEntry', err)
@@ -200,16 +218,17 @@ export const useFileStore = create<FileTreeState>((set, get) => ({
     try {
       await ipc.files.moveToTrash(path)
       const parentDir = getParentDir(path)
-      invalidateCache(parentDir)
+      const affected = invalidateCache(parentDir, true)
       invalidateCache(path)
       set((s) => {
+        const nextEntries = { ...s.entries }
+        affected.forEach((p) => delete nextEntries[p])
         const existing = s.entries[parentDir] || []
         const updated = existing.filter((e) => e.path !== path)
         return {
-          entries: { ...s.entries, [parentDir]: updated },
+          entries: { ...nextEntries, [parentDir]: updated },
         }
       })
-      // 关闭对应标签页并从收藏夹移除
       useTabStore.getState().closeFile(path)
       useFavoritesStore.getState().remove(path)
     } catch (err) {
@@ -220,13 +239,15 @@ export const useFileStore = create<FileTreeState>((set, get) => ({
 
   /**
    * 刷新目录
+   *
+   * 失效该目录及其所有子目录的缓存，重新加载。
    */
   refreshDirectory: async (dirPath) => {
     const { loadChildren } = get()
-    invalidateCache(dirPath)
+    const affected = invalidateCache(dirPath)
     set((s) => {
       const nextEntries = { ...s.entries }
-      delete nextEntries[dirPath]
+      affected.forEach((path) => delete nextEntries[path])
       return { entries: nextEntries }
     })
     await loadChildren(dirPath)

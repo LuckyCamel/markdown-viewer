@@ -293,7 +293,6 @@ describe('useFileStore', () => {
       await useFileStore.getState().loadChildren('/cached')
       expect(mockListDirectory).toHaveBeenCalledTimes(1)
 
-      // 仅清除 entries 但不清除缓存，再次加载应命中缓存而不触发 IPC
       useFileStore.setState({ entries: {} })
       await useFileStore.getState().loadChildren('/cached')
       expect(mockListDirectory).toHaveBeenCalledTimes(1)
@@ -309,6 +308,84 @@ describe('useFileStore', () => {
       await useFileStore.getState().refreshDirectory('/refresh-test')
       expect(mockListDirectory).toHaveBeenCalledTimes(2)
       expect(useFileStore.getState().entries['/refresh-test']).toHaveLength(2)
+    })
+
+    it('refreshDirectory 同时清除子目录缓存', async () => {
+      mockListDirectory.mockResolvedValue([entry('sub', true)])
+      await useFileStore.getState().loadChildren('/root')
+      mockListDirectory.mockResolvedValue([entry('file.md')])
+      await useFileStore.getState().loadChildren('/root/sub')
+      expect(mockListDirectory).toHaveBeenCalledTimes(2)
+
+      mockListDirectory.mockResolvedValue([entry('sub', true)])
+      await useFileStore.getState().refreshDirectory('/root')
+      expect(mockListDirectory).toHaveBeenCalledTimes(3)
+      expect(useFileStore.getState().entries['/root/sub']).toBeUndefined()
+    })
+
+    it('createFile 后父目录缓存失效', async () => {
+      mockListDirectory.mockResolvedValue([entry('a.md')])
+      await useFileStore.getState().loadChildren('/root')
+      expect(mockListDirectory).toHaveBeenCalledTimes(1)
+
+      const newFile = entry('new.md')
+      mockCreateFile.mockResolvedValue(newFile)
+      await useFileStore.getState().createFile('/root', 'new.md')
+
+      useFileStore.setState({ entries: {} })
+
+      await useFileStore.getState().loadChildren('/root')
+      expect(mockListDirectory).toHaveBeenCalledTimes(2)
+    })
+
+    it('renameEntry 后父目录缓存失效', async () => {
+      mockListDirectory.mockResolvedValue([entry('old.md')])
+      await useFileStore.getState().loadChildren('/root')
+      expect(mockListDirectory).toHaveBeenCalledTimes(1)
+
+      const renamed = entry('new.md')
+      mockRename.mockResolvedValue(renamed)
+      await useFileStore.getState().renameEntry('/root/old.md', 'new.md')
+
+      useFileStore.setState({ entries: {} })
+
+      await useFileStore.getState().loadChildren('/root')
+      expect(mockListDirectory).toHaveBeenCalledTimes(2)
+    })
+
+    it('deleteEntry 后父目录缓存失效', async () => {
+      mockListDirectory.mockResolvedValue([entry('a.md')])
+      await useFileStore.getState().loadChildren('/root')
+      expect(mockListDirectory).toHaveBeenCalledTimes(1)
+
+      mockMoveToTrash.mockResolvedValue(undefined)
+      await useFileStore.getState().deleteEntry('/root/a.md')
+
+      useFileStore.setState({ entries: {} })
+
+      await useFileStore.getState().loadChildren('/root')
+      expect(mockListDirectory).toHaveBeenCalledTimes(2)
+    })
+
+    it('多级目录缓存失效正确传播', async () => {
+      mockListDirectory.mockResolvedValue([entry('sub', true)])
+      await useFileStore.getState().loadChildren('/root')
+      mockListDirectory.mockResolvedValue([entry('deep', true)])
+      await useFileStore.getState().loadChildren('/root/sub')
+      mockListDirectory.mockResolvedValue([entry('file.md')])
+      await useFileStore.getState().loadChildren('/root/sub/deep')
+      expect(mockListDirectory).toHaveBeenCalledTimes(3)
+
+      const newFile = entry('file.md')
+      mockCreateFile.mockResolvedValue(newFile)
+      await useFileStore.getState().createFile('/root/sub/deep', 'file.md')
+
+      useFileStore.setState({ entries: {} })
+
+      await useFileStore.getState().loadChildren('/root')
+      await useFileStore.getState().loadChildren('/root/sub')
+      await useFileStore.getState().loadChildren('/root/sub/deep')
+      expect(mockListDirectory).toHaveBeenCalledTimes(6)
     })
   })
 })

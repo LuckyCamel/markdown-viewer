@@ -48,8 +48,11 @@ export function WelcomePage({ onFolderOpen, onAddToWorkspace, onFileOpen }: Welc
 
   return (
     <div className="h-full flex flex-col items-center justify-center gap-6 p-8">
-      <h1 className="text-3xl font-bold">Markdown-Viewer</h1>
-      <p className="text-gray-500 dark:text-gray-400">{t('welcome.hint')}</p>
+      <div className="text-center">
+        <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100">Markdown Viewer</h1>
+        <p className="text-gray-500 dark:text-gray-400 mt-2">打开文件夹就能流畅读、偶尔改</p>
+        <p className="text-sm text-gray-400 mt-1">{t('welcome.hint')}</p>
+      </div>
       <div className="flex gap-4">
         <button
           onClick={handleOpenFolder}

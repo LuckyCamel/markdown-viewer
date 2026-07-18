@@ -2,6 +2,28 @@
 
 本文件记录 Markdown-Viewer 各版本的变更摘要。
 
+## [1.4.4] - 2026-07-18
+
+### 变更
+
+- **后端 SearchSession Module 抽出**：将搜索编排从 command 层下沉为独立 Module
+  - `SearchSession` 负责 walk → filter → match → emit 全流程，支持注入 emit 回调便于单元测试
+  - `CancelledStore` 替代 `SearchState`，用 `AtomicBool` + `Mutex` 管理取消状态
+  - `commands/search` 退化为薄 Adapter（取 State、构造 Session、转发事件）
+- **后端 Filesystem Module 抽出**：统一 `FileEntry` 类型与 CRUD 入口
+  - `Filesystem` 提供 list/create/rename/save/mtime/trash 与文件名校验
+  - `commands/directory`、`commands/files`、`commands/trash` 仅做注入与错误映射，消除重复校验
+- **文件树缓存失效完善**：`invalidateCache` 支持递归失效父目录，返回受影响路径集合同步清除 `entries` 状态
+- **欢迎页定位**：补充一句话价值主张「打开文件夹就能流畅读、偶尔改」
+- **产品名统一为 Markdown-Viewer**：欢迎页、窗口标题、CLI 帮助、文档与测试断言与 `productName` 对齐（含连字符）
+
+### 测试
+
+- 单元测试从 446 个增至 451 个
+  - 扩充 `useFileStore.test.ts`：覆盖递归缓存失效与受影响路径清理
+- E2E 测试从 58 个增至 64 个
+  - 新增 `welcome-page.spec.ts`：价值主张与应用名称展示
+
 ## [1.4.3] - 2026-07-18
 
 ### 变更

@@ -1,6 +1,6 @@
 [package]
 name = "markdown-viewer"
-version = "1.4.3"
+version = "1.4.4"
 description = "Markdown-Viewer"
 authors = ["Markdown-Viewer Team"]
 license = "MIT"

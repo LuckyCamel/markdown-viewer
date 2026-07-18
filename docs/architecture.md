@@ -23,9 +23,9 @@ Tauri Rust 后端 + Web 前端，通过 IPC 通信。
 ├─────────────────────────────┼───────────────────────────────┤
 │                    Backend (Rust / Tauri)                    │
 │  lib.rs — 插件注册、State、invoke_handler、menu::setup_menu  │
-│  ┌──────────┬──────────┬──────────┬──────────┐            │
-│  │ commands/│  state/  │ search/  │workspace/│            │
-│  └──────────┴──────────┴──────────┴──────────┘            │
+│  ┌──────────┬──────────┬──────────┬──────────┬──────────┐ │
+│  │commands/ │  state/  │ search/  │filesystem│workspace/│ │
+│  └──────────┴──────────┴──────────┴──────────┴──────────┘ │
 │  filters.rs — 文件过滤（ignore_list / markdown_extensions）  │
 │  Tauri Plugins: fs · dialog · shell                          │
 │  入口: main.rs → cli::prepare_launch() → lib::run()          │
@@ -53,9 +53,10 @@ Tauri Rust 后端 + Web 前端，通过 IPC 通信。
 | 目录/模块 | 职责 |
 |-----------|------|
 | `lib.rs` | 注册插件、State、`invoke_handler`、`menu::setup_menu` |
-| `commands/` | `list_directory`、`search_content`、`cancel_search`、`watch_file`、`unwatch_file`、`get_launch_paths`、`grant_workspace`、`get_setting`/`set_setting`/`migrate_settings`、`save_file`、`get_mtime` |
-| `state/` | `WatcherState`、`SearchState`、`LaunchState`、`StoreState`（KV 持久化） |
-| `search/` | `walk_dir`、`matcher`（行匹配）、`types`（`SearchProgress` 增量协议） |
+| `commands/` | `list_directory`、`search_content`、`cancel_search`、`watch_file`、`unwatch_file`、`get_launch_paths`、`grant_workspace`、`get_setting`/`set_setting`/`migrate_settings`、`save_file`、`get_mtime` 等薄 Adapter |
+| `state/` | `WatcherState`、`LaunchState`、`StoreState`（KV 持久化） |
+| `search/` | `walk_dir`、`matcher`（行匹配）、`types`（`SearchProgress` 增量协议）、`SearchSession`（编排）、`CancelledStore`（取消） |
+| `filesystem/` | `Filesystem` — 统一 `FileEntry` 与 list/create/rename/save/mtime/trash 入口；commands 仅做注入与错误映射 |
 | `workspace/` | `WorkspaceState` — 统一 plugin-fs scope 授权与 `allowed_roots` 门禁；`grant` / `grant_many` / `assert_allowed` |
 | `filters.rs` | `FileFilters` — 从 `StoreState` 实时读取 `ignoreList` / `markdownExtensions`；`is_ignored` / `is_markdown_file` / `is_text_file` |
 | `menu.rs` | 原生菜单构建；点击 emit `menu-action` 至前端 |

@@ -1,6 +1,6 @@
 # Markdown-Viewer
 
-> 当前版本：**1.4.3**
+> 当前版本：**1.4.4**
 
 打开文件夹就能流畅读、偶尔改的轻量 Markdown 阅读器与编辑器。
 
@@ -45,8 +45,9 @@ src-tauri/            # Tauri 后端（Rust）
   src/lib.rs          # 应用入口：插件、State、command 注册
   src/menu.rs         # 原生菜单
   src/commands/       # invoke command
-  src/state/          # 共享 State（WatcherState、SearchState、LaunchState、StoreState）
-  src/search/         # 搜索遍历与匹配
+  src/state/          # 共享 State（WatcherState、LaunchState、StoreState）
+  src/search/         # 搜索遍历、匹配、SearchSession 编排与取消
+  src/filesystem/     # 文件 CRUD 与 FileEntry 统一入口
   src/workspace/      # 工作区授权根 Module（plugin-fs scope + allowed_roots）
   src/filters.rs      # 文件过滤（ignore_list / markdown_extensions，从 StoreState 实时读取）
   Cargo.toml

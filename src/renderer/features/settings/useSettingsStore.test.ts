@@ -1,6 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { useSettingsStore } from './useSettingsStore'
-import { DEFAULT_IGNORE_LIST } from '../../../shared/settingsDefaults'
 
 const mockStoreGet = vi.fn()
 const mockStoreSet = vi.fn()
@@ -17,8 +16,6 @@ vi.mock('../../lib/ipc', () => ({
 describe('useSettingsStore', () => {
   beforeEach(() => {
     useSettingsStore.setState({
-      ignoreList: DEFAULT_IGNORE_LIST,
-      markdownExtensions: ['md', 'markdown'],
       fontSize: 14,
       lineHeight: 1.6,
       contentMaxWidth: null,
@@ -26,30 +23,6 @@ describe('useSettingsStore', () => {
       codeFontFamily: '',
     })
     vi.clearAllMocks()
-  })
-
-  it('should load ignore list from disk', async () => {
-    mockStoreGet.mockResolvedValue(['.git', 'node_modules'])
-
-    await useSettingsStore.getState().loadFromDisk()
-
-    expect(useSettingsStore.getState().ignoreList).toEqual(['.git', 'node_modules'])
-  })
-
-  it('should not update when store returns undefined', async () => {
-    mockStoreGet.mockResolvedValue(undefined)
-
-    await useSettingsStore.getState().loadFromDisk()
-
-    expect(useSettingsStore.getState().ignoreList).toEqual(DEFAULT_IGNORE_LIST)
-  })
-
-  it('should save ignore list to disk', async () => {
-    useSettingsStore.setState({ ignoreList: ['dist', '.cache'] })
-
-    await useSettingsStore.getState().saveToDisk()
-
-    expect(mockStoreSet).toHaveBeenCalledWith('ignoreList', ['dist', '.cache'])
   })
 
   // 阅读设置测试
@@ -93,6 +66,19 @@ describe('useSettingsStore', () => {
       expect(useSettingsStore.getState().codeFontFamily).toBe('Consolas')
     })
 
+    it('should not update when store returns undefined', async () => {
+      mockStoreGet.mockResolvedValue(undefined)
+
+      await useSettingsStore.getState().loadFromDisk()
+
+      // 默认值保留
+      expect(useSettingsStore.getState().fontSize).toBe(14)
+      expect(useSettingsStore.getState().lineHeight).toBe(1.6)
+      expect(useSettingsStore.getState().contentMaxWidth).toBeNull()
+      expect(useSettingsStore.getState().fontFamily).toBe('')
+      expect(useSettingsStore.getState().codeFontFamily).toBe('')
+    })
+
     it('should save reading settings to disk', async () => {
       useSettingsStore.setState({
         fontSize: 16,
@@ -109,6 +95,9 @@ describe('useSettingsStore', () => {
       expect(mockStoreSet).toHaveBeenCalledWith('contentMaxWidth', 800)
       expect(mockStoreSet).toHaveBeenCalledWith('fontFamily', 'Georgia')
       expect(mockStoreSet).toHaveBeenCalledWith('codeFontFamily', 'JetBrains Mono')
+      // 不应再写 ignoreList / markdownExtensions
+      expect(mockStoreSet).not.toHaveBeenCalledWith('ignoreList', expect.anything())
+      expect(mockStoreSet).not.toHaveBeenCalledWith('markdownExtensions', expect.anything())
     })
   })
 })

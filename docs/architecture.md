@@ -24,8 +24,9 @@ Tauri Rust 后端 + Web 前端，通过 IPC 通信。
 │                    Backend (Rust / Tauri)                    │
 │  lib.rs — 插件注册、State、invoke_handler、menu::setup_menu  │
 │  ┌──────────┬──────────┬──────────┬──────────┐            │
-│  │ commands/│  state/  │ search/  │  scope/  │            │
+│  │ commands/│  state/  │ search/  │workspace/│            │
 │  └──────────┴──────────┴──────────┴──────────┘            │
+│  filters.rs — 文件过滤（ignore_list / markdown_extensions）  │
 │  Tauri Plugins: fs · dialog · shell                          │
 │  入口: main.rs → cli::prepare_launch() → lib::run()          │
 └─────────────────────────────────────────────────────────────┘
@@ -52,14 +53,16 @@ Tauri Rust 后端 + Web 前端，通过 IPC 通信。
 | 目录/模块 | 职责 |
 |-----------|------|
 | `lib.rs` | 注册插件、State、`invoke_handler`、`menu::setup_menu` |
-| `commands/` | `list_directory`、`search_content`、`cancel_search`、`watch_file`、`unwatch_file`、`update_settings`、`get_launch_paths`、`grant_fs_scope`、`get_setting`/`set_setting`/`migrate_settings`、`save_file`、`get_mtime` |
-| `state/` | `SettingsState`（忽略列表、扩展名、`allowed_roots`）、`WatcherState`、`SearchState`、`LaunchState` |
+| `commands/` | `list_directory`、`search_content`、`cancel_search`、`watch_file`、`unwatch_file`、`get_launch_paths`、`grant_workspace`、`get_setting`/`set_setting`/`migrate_settings`、`save_file`、`get_mtime` |
+| `state/` | `WatcherState`、`SearchState`、`LaunchState`、`StoreState`（KV 持久化） |
 | `search/` | `walk_dir`、`matcher`（行匹配）、`types`（`SearchProgress` 增量协议） |
-| `scope/` | `grant_fs_paths` — 运行时 `fs_scope` 动态授权 |
+| `workspace/` | `WorkspaceState` — 统一 plugin-fs scope 授权与 `allowed_roots` 门禁；`grant` / `grant_many` / `assert_allowed` |
+| `filters.rs` | `FileFilters` — 从 `StoreState` 实时读取 `ignoreList` / `markdownExtensions`；`is_ignored` / `is_markdown_file` / `is_text_file` |
 | `menu.rs` | 原生菜单构建；点击 emit `menu-action` 至前端 |
 | `cli.rs` | `-v`/`-h` 与启动路径解析 |
 
 > 文件读取通过 `@tauri-apps/plugin-fs` 的 `readTextFile` / `stat`；无自定义 `read_file` command。
+> 写路径 command 通过 `workspace.assert_allowed(path)` 纵深防御，并构造 `FileFilters::from_store(&store)` 应用过滤。
 
 ### 3.2 前端模块
 
@@ -83,9 +86,10 @@ Tauri Rust 后端 + Web 前端，通过 IPC 通信。
 | Store | 位置 | 职责 | 持久化 |
 |-------|------|------|--------|
 | useUIStore | `src/renderer/stores/useUIStore.ts` | 主题、面板可见性、面板宽度、搜索面板状态 | theme、sidebarWidth、outlineWidth（Rust store） |
+| useWorkspaceStore | `src/renderer/stores/useWorkspaceStore.ts` | workspace 授权根、启动状态、最近文件/目录；启动时统一 `init()` 恢复 | lastWorkspace、openFiles、activeFile、recentFiles、recentDirs（Rust store） |
 | useEditorStore | `features/markdown-viewer/useEditorStore.ts` | 文件内容缓存（惰性加载）、滚动位置 | readingPositions（Rust store） |
-| useSettingsStore | `features/settings/useSettingsStore.ts` | 忽略列表、Markdown 扩展名配置 | ignoreList、markdownExtensions（Rust store） |
-| useTabStore | `features/tabs/useTabStore.ts` | openFiles、activeFile、dirtyFiles；关闭时清理 Editor 缓存 | openFiles、activeFile（Rust store） |
+| useSettingsStore | `features/settings/useSettingsStore.ts` | 阅读设置（fontSize / lineHeight / contentMaxWidth / fontFamily / codeFontFamily） | 同名字段（Rust store）；ignore/extensions 改由 SettingsPanel 直接 `ipc.store.set`/`get` |
+| useTabStore | `features/tabs/useTabStore.ts` | openFiles、activeFile、dirtyFiles；关闭时清理 Editor 缓存 | —（持久化由 useWorkspaceStore.init 恢复） |
 | useFileStore | `features/file-tree/useFileStore.ts` | 文件树数据、展开状态、加载状态（惰性加载守卫） | — |
 | useSearchStore | `features/search/useSearchStore.ts` | 搜索关键词、结果、搜索状态 | — |
 
@@ -98,7 +102,7 @@ Tauri Rust 后端 + Web 前端，通过 IPC 通信。
 ### 4.1 文件打开流程
 ```
 用户点击文件树 / 菜单 / WelcomePage
-  → ipc.scope.grantFsScope([path])     // 动态 fs scope
+  → ipc.workspace.grant([path])       // 动态 fs scope + allowed_roots
   → useTabStore.openFile(path)
   → useEditorStore.loadContent(path)
     → ipc.files.readFile(path)        // plugin-fs readTextFile
@@ -190,7 +194,7 @@ EditorPane 仅聚合 Toolbar + ConflictBanner + Editor UI
 - **emit/listen**（事件推送）：单向通知。前端 `listen` 回调内 catch → `logError`
 - **官方插件**：通用能力优先用 plugin-fs / plugin-dialog / plugin-shell
 
-**invoke/command**：`list_directory`、`search_content`、`cancel_search`、`watch_file`、`unwatch_file`、`update_settings`、`get_launch_paths`、`grant_fs_scope`、`get_setting`、`set_setting`、`migrate_settings`、`save_file`、`get_mtime`
+**invoke/command**：`list_directory`、`search_content`、`cancel_search`、`watch_file`、`unwatch_file`、`get_launch_paths`、`grant_workspace`、`get_setting`、`set_setting`、`migrate_settings`、`save_file`、`get_mtime`
 
 **emit/listen**：`search-result`、`file-change`、`menu-action`（原生菜单 → 前端 `useMenuEvents`）
 
@@ -211,7 +215,7 @@ EditorPane 仅聚合 Toolbar + ConflictBanner + Editor UI
 
 ### 5.5 安全
 - 前端运行在 WebView 沙箱中，无 Node.js 环境
-- **fs:scope**：`capabilities` 静态 `allow: []`；打开工作区/文件时 `grant_fs_scope` 动态授权；command 层 `ensure_under_allowed_root` 纵深防御
+- **fs:scope**：`capabilities` 静态 `allow: []`；打开工作区/文件时 `grant_workspace` 动态授权；`WorkspaceState.grant` 内部同时调用 `app.fs_scope().allow_directory/allow_file` 与 `add_root`；写路径 command 层 `workspace.assert_allowed(path)` 纵深防御
 - 本地图片通过 `asset://localhost/` 引用
 - **HTML 消毒**：`rehype-raw` → `rehype-sanitize` 白名单（保留 `u`、`kbd`、`mark` 等排版标签；禁止 `script`、`iframe`、`on*` 属性）
 - CSP：`tauri.conf.json` 配置 `asset:`、`object-src 'none'`、`base-uri 'none'` 等
@@ -251,5 +255,6 @@ EditorPane 仅聚合 Toolbar + ConflictBanner + Editor UI
 | Panel Resizer | 侧边栏/大纲面板的可拖拽宽度调节器 |
 | Capabilities | Tauri 权限配置，定义前端可访问的后端能力 |
 | WatcherState | Rust 后端共享状态，管理 notify watcher 与已监控路径 |
-| SettingsState | Rust 后端共享状态，管理忽略列表与 Markdown 扩展名 |
-| shared/settingsDefaults.ts | 前后端一致的默认设置常量 |
+| WorkspaceState | Rust 后端共享状态，管理 plugin-fs scope 授权与 `allowed_roots` 列表 |
+| FileFilters | Rust 后端无状态结构体，每次 command 调用时从 `StoreState` 实时构造，提供 `is_ignored` / `is_markdown_file` / `is_text_file` |
+| shared/settingsDefaults.ts | 前后端一致的默认设置常量（`DEFAULT_IGNORE_LIST` / `DEFAULT_MARKDOWN_EXTENSIONS`） |

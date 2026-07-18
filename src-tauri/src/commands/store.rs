@@ -3,6 +3,7 @@ use std::fs;
 use std::path::PathBuf;
 use std::sync::Mutex;
 
+use serde::de::DeserializeOwned;
 use tauri::{AppHandle, Manager};
 use tauri::State;
 
@@ -38,6 +39,36 @@ impl StoreState {
         let data = self.data.lock().unwrap();
         let content = serde_json::to_string_pretty(&*data).map_err(|e| e.to_string())?;
         fs::write(&self.path, content).map_err(|e| e.to_string())
+    }
+
+    /**
+     * 类型安全的读取接口：按 key 取值并反序列化为指定类型
+     *
+     * 用于 `FileFilters::from_store` 读取 ignore_list / markdown_extensions。
+     * 不存在时返回 `Ok(None)`，由调用方应用默认值。
+     */
+    pub fn get<T: DeserializeOwned>(&self, key: &str) -> Result<Option<T>, String> {
+        let data = self.data.lock().unwrap();
+        match data.get(key) {
+            Some(value) => {
+                let typed: T = serde_json::from_value(value.clone()).map_err(|e| e.to_string())?;
+                Ok(Some(typed))
+            }
+            None => Ok(None),
+        }
+    }
+
+    /**
+     * 测试辅助：从已有 HashMap 构造 StoreState
+     *
+     * 仅在 cfg(test) 下可用，避免测试代码访问私有字段。
+     */
+    #[cfg(test)]
+    pub(crate) fn from_map_for_test(data: HashMap<String, serde_json::Value>) -> Self {
+        Self {
+            data: Mutex::new(data),
+            path: PathBuf::new(),
+        }
     }
 }
 

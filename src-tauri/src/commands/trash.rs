@@ -2,7 +2,7 @@ use std::path::Path;
 
 use tauri::State;
 
-use crate::state::SettingsState;
+use crate::workspace::WorkspaceState;
 
 /**
  * 将文件/文件夹移至回收站
@@ -10,10 +10,10 @@ use crate::state::SettingsState;
 #[tauri::command]
 pub async fn move_to_trash(
     path: String,
-    settings: State<'_, SettingsState>,
+    workspace: State<'_, WorkspaceState>,
 ) -> Result<(), String> {
     let target = Path::new(&path);
-    settings.ensure_under_allowed_root(target)?;
+    workspace.assert_allowed(target)?;
 
     if !target.exists() {
         return Err(format!("路径不存在: {}", path));

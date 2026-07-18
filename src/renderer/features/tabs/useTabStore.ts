@@ -41,7 +41,7 @@ export const useTabStore = create<TabState>((set, get) => ({
   isDirty: (filePath) => get().dirtyFiles.has(filePath),
   getViewMode: (filePath) => get().viewModes[filePath] ?? 'read',
   openFile: (filePath) => {
-    ipc.scope.grantFsScope([filePath]).catch((err) => logError('useTabStore:grantFsScope', err))
+    ipc.workspace.grant([filePath]).catch((err) => logError('useTabStore:grant', err))
     const { openFiles, viewModes } = get()
     if (!openFiles.includes(filePath)) {
       set({

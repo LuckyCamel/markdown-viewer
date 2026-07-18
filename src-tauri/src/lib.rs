@@ -1,16 +1,18 @@
 pub mod cli;
 mod commands;
+mod filters;
 mod menu;
-mod scope;
 mod search;
 mod state;
+mod workspace;
 
 use std::collections::HashSet;
 use std::sync::Mutex;
 
 use commands::store::init_store;
-use state::{LaunchState, SearchState, SettingsState, WatcherState};
+use state::{LaunchState, SearchState, WatcherState};
 use tauri::Manager;
+use workspace::WorkspaceState;
 
 /**
  * Tauri 应用入口：注册插件与 command
@@ -31,13 +33,13 @@ pub fn run(launch_paths: Vec<String>) {
             watcher: Mutex::new(None),
             watched_paths: Mutex::new(HashSet::new()),
         })
-        .manage(SettingsState::default())
         .manage(SearchState {
             cancelled_ids: Mutex::new(HashSet::new()),
         })
         .manage(LaunchState {
             paths: launch_paths,
         })
+        .manage(WorkspaceState::new())
         .invoke_handler(tauri::generate_handler![
             commands::directory::list_directory,
             commands::files::check_files_exist,
@@ -51,9 +53,8 @@ pub fn run(launch_paths: Vec<String>) {
             commands::search::cancel_search,
             commands::watcher::watch_file,
             commands::watcher::unwatch_file,
-            commands::settings::update_settings,
             commands::launch::get_launch_paths,
-            commands::scope::grant_fs_scope,
+            workspace::commands::grant_workspace,
             commands::reveal::reveal_path,
             commands::store::get_setting,
             commands::store::set_setting,

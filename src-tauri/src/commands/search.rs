@@ -3,10 +3,13 @@ use std::path::Path;
 use regex::Regex;
 use tauri::{Emitter, State, Window};
 
+use crate::commands::store::StoreState;
+use crate::filters::FileFilters;
 use crate::search::matcher::{find_matches_in_file, find_matches_in_file_regex};
 use crate::search::types::SearchProgress;
 use crate::search::{walk_dir, MAX_MATCHES, SEARCH_EMIT_INTERVAL};
-use crate::state::{SearchState, SettingsState};
+use crate::state::SearchState;
+use crate::workspace::WorkspaceState;
 
 /**
  * 在目录中搜索内容（增量 emit + 结果上限）
@@ -20,7 +23,8 @@ pub async fn search_content(
     search_id: String,
     is_regex: bool,
     window: Window,
-    settings: State<'_, SettingsState>,
+    workspace: State<'_, WorkspaceState>,
+    store: State<'_, StoreState>,
     search_state: State<'_, SearchState>,
 ) -> Result<(), String> {
     // 正则搜索时预编译 pattern，编译失败立即返回错误
@@ -33,16 +37,17 @@ pub async fn search_content(
         cancelled.remove(&search_id);
     }
 
+    let filters = FileFilters::from_store(&store)?;
     let mut all_files = Vec::new();
     for dir_path in &dir_paths {
         let path = Path::new(dir_path);
-        settings.ensure_under_allowed_root(path)?;
-        walk_dir(path, &mut all_files, &settings);
+        workspace.assert_allowed(path)?;
+        walk_dir(path, &mut all_files, &filters);
     }
 
     let filtered_files: Vec<_> = all_files
         .into_iter()
-        .filter(|p| settings.is_text_file(p))
+        .filter(|p| filters.is_text_file(p))
         .collect();
 
     let total_files = filtered_files.len();

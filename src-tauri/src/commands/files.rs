@@ -3,7 +3,9 @@ use std::path::{Path, PathBuf};
 
 use tauri::State;
 
-use crate::state::SettingsState;
+use crate::commands::store::StoreState;
+use crate::filters::FileFilters;
+use crate::workspace::WorkspaceState;
 
 /**
  * 批量检查文件/目录是否存在
@@ -23,10 +25,10 @@ fn build_file_entry(
     path: &Path,
     name: String,
     is_dir: bool,
-    settings: &SettingsState,
+    filters: &FileFilters,
 ) -> serde_json::Value {
-    let is_markdown = !is_dir && settings.is_markdown_file(path);
-    let is_text_file = !is_dir && settings.is_text_file(path);
+    let is_markdown = !is_dir && filters.is_markdown_file(path);
+    let is_text_file = !is_dir && filters.is_text_file(path);
     let modified = fs::metadata(path)
         .ok()
         .and_then(|m| m.modified().ok())
@@ -65,10 +67,11 @@ fn build_file_entry(
 pub async fn create_file(
     dir_path: String,
     name: String,
-    settings: State<'_, SettingsState>,
+    workspace: State<'_, WorkspaceState>,
+    store: State<'_, StoreState>,
 ) -> Result<serde_json::Value, String> {
     let parent = Path::new(&dir_path);
-    settings.ensure_under_allowed_root(parent)?;
+    workspace.assert_allowed(parent)?;
 
     if !parent.is_dir() {
         return Err(format!("目录不存在: {}", dir_path));
@@ -91,7 +94,8 @@ pub async fn create_file(
 
     fs::File::create(&file_path).map_err(|e| format!("创建文件失败: {}", e))?;
 
-    Ok(build_file_entry(&file_path, name, false, &settings))
+    let filters = FileFilters::from_store(&store)?;
+    Ok(build_file_entry(&file_path, name, false, &filters))
 }
 
 /**
@@ -101,10 +105,11 @@ pub async fn create_file(
 pub async fn create_directory(
     dir_path: String,
     name: String,
-    settings: State<'_, SettingsState>,
+    workspace: State<'_, WorkspaceState>,
+    store: State<'_, StoreState>,
 ) -> Result<serde_json::Value, String> {
     let parent = Path::new(&dir_path);
-    settings.ensure_under_allowed_root(parent)?;
+    workspace.assert_allowed(parent)?;
 
     if !parent.is_dir() {
         return Err(format!("目录不存在: {}", dir_path));
@@ -127,7 +132,8 @@ pub async fn create_directory(
 
     fs::create_dir(&new_dir_path).map_err(|e| format!("创建文件夹失败: {}", e))?;
 
-    Ok(build_file_entry(&new_dir_path, name, true, &settings))
+    let filters = FileFilters::from_store(&store)?;
+    Ok(build_file_entry(&new_dir_path, name, true, &filters))
 }
 
 /**
@@ -140,10 +146,10 @@ pub async fn create_directory(
 pub async fn save_file(
     path: String,
     content: String,
-    settings: State<'_, SettingsState>,
+    workspace: State<'_, WorkspaceState>,
 ) -> Result<i64, String> {
     let target = Path::new(&path);
-    settings.ensure_under_allowed_root(target)?;
+    workspace.assert_allowed(target)?;
 
     fs::write(target, content).map_err(|e| format!("保存文件失败: {}", e))?;
 
@@ -187,10 +193,11 @@ pub async fn get_mtime(path: String) -> Result<i64, String> {
 pub async fn rename_entry(
     old_path: String,
     new_name: String,
-    settings: State<'_, SettingsState>,
+    workspace: State<'_, WorkspaceState>,
+    store: State<'_, StoreState>,
 ) -> Result<serde_json::Value, String> {
     let old = Path::new(&old_path);
-    settings.ensure_under_allowed_root(old)?;
+    workspace.assert_allowed(old)?;
 
     if !old.exists() {
         return Err(format!("路径不存在: {}", old_path));
@@ -215,5 +222,6 @@ pub async fn rename_entry(
     fs::rename(old, &new_path).map_err(|e| format!("重命名失败: {}", e))?;
 
     let is_dir = new_path.is_dir();
-    Ok(build_file_entry(&new_path, new_name, is_dir, &settings))
+    let filters = FileFilters::from_store(&store)?;
+    Ok(build_file_entry(&new_path, new_name, is_dir, &filters))
 }

@@ -4,7 +4,9 @@ use std::time::UNIX_EPOCH;
 
 use tauri::State;
 
-use crate::state::SettingsState;
+use crate::commands::store::StoreState;
+use crate::filters::FileFilters;
+use crate::workspace::WorkspaceState;
 
 /**
  * 列出目录下的文件和文件夹
@@ -12,25 +14,27 @@ use crate::state::SettingsState;
 #[tauri::command]
 pub async fn list_directory(
     dir_path: String,
-    settings: State<'_, SettingsState>,
+    workspace: State<'_, WorkspaceState>,
+    store: State<'_, StoreState>,
 ) -> Result<Vec<serde_json::Value>, String> {
     let path = Path::new(&dir_path);
-    settings.ensure_under_allowed_root(path)?;
+    workspace.assert_allowed(path)?;
 
+    let filters = FileFilters::from_store(&store)?;
     let mut entries = Vec::new();
 
     for entry in fs::read_dir(path).map_err(|e| e.to_string())? {
         let entry = entry.map_err(|e| e.to_string())?;
         let file_name = entry.file_name().to_string_lossy().to_string();
 
-        if settings.is_ignored(&file_name) {
+        if filters.is_ignored(&file_name) {
             continue;
         }
 
         let file_path = entry.path();
         let is_dir = file_path.is_dir();
-        let is_markdown = !is_dir && settings.is_markdown_file(&file_path);
-        let is_text_file = !is_dir && settings.is_text_file(&file_path);
+        let is_markdown = !is_dir && filters.is_markdown_file(&file_path);
+        let is_text_file = !is_dir && filters.is_text_file(&file_path);
 
         let metadata = entry.metadata().ok();
         let modified = metadata.as_ref().and_then(|m| m.modified().ok()).and_then(|t| {

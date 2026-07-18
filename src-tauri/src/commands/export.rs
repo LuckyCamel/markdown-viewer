@@ -1,10 +1,6 @@
 use std::fs;
 use std::path::Path;
 
-use tauri::State;
-
-use crate::state::SettingsState;
-
 /**
  * 将文本内容写入指定路径
  *
@@ -32,7 +28,7 @@ pub async fn save_text_file(path: String, content: String) -> Result<(), String>
  * 渲染端负责调用 window.print()，本命令保留以便将来扩展服务器端 PDF 渲染。
  */
 #[tauri::command]
-pub async fn export_pdf(_settings: State<'_, SettingsState>) -> Result<(), String> {
+pub async fn export_pdf() -> Result<(), String> {
     // 当前实现由前端通过 window.print() 触发
     // 此命令保留供将来扩展（服务端 PDF 渲染、批处理等）
     Ok(())

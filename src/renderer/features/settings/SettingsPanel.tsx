@@ -8,13 +8,16 @@ import { logError } from '../../logger'
 import type { ThemeMode } from '../../../shared/types'
 import { CODE_THEMES } from '../../lib/codeThemes'
 import { t, setLocale, getLocale, type Locale } from '../../../shared/i18n'
-import { THEMES, getThemesByVariant, getThemeVariant, type ThemeId } from '../../lib/themes'
+import { getThemesByVariant, type ThemeId } from '../../lib/themes'
 import { COMMON_PROPORTIONAL_FONTS, COMMON_MONOSPACE_FONTS } from '../../lib/fonts'
-
+import { DEFAULT_IGNORE_LIST, DEFAULT_MARKDOWN_EXTENSIONS } from '../../../shared/settingsDefaults'
 import { parseExtensionLines, formatExtensionLines } from '../../../shared/parseExtensionLines'
 
 type SettingsTab = 'general' | 'shortcuts'
 
+/**
+ * 将多行文本拆分为非空字符串数组（忽略首尾空白行）
+ */
 function parseLines(value: string): string[] {
   return value
     .split('\n')
@@ -33,12 +36,7 @@ export function SettingsPanel({ onClose }: SettingsPanelProps) {
   const setThemeId = useUIStore((s) => s.setThemeId)
   const codeTheme = useUIStore((s) => s.codeTheme)
   const setCodeTheme = useUIStore((s) => s.setCodeTheme)
-  const ignoreList = useSettingsStore((s) => s.ignoreList)
-  const setIgnoreList = useSettingsStore((s) => s.setIgnoreList)
-  const markdownExtensions = useSettingsStore((s) => s.markdownExtensions)
-  const setMarkdownExtensions = useSettingsStore((s) => s.setMarkdownExtensions)
   const loadFromDisk = useSettingsStore((s) => s.loadFromDisk)
-  const saveToDisk = useSettingsStore((s) => s.saveToDisk)
   const rootPath = useFileStore((s) => s.rootPath)
   // 阅读设置
   const fontSize = useSettingsStore((s) => s.fontSize)
@@ -51,12 +49,30 @@ export function SettingsPanel({ onClose }: SettingsPanelProps) {
   const setContentMaxWidth = useSettingsStore((s) => s.setContentMaxWidth)
   const setFontFamily = useSettingsStore((s) => s.setFontFamily)
   const setCodeFontFamily = useSettingsStore((s) => s.setCodeFontFamily)
+  // ignoreList / markdownExtensions 直接读写 KV，不经过 useSettingsStore
+  const [ignoreListText, setIgnoreListText] = useState<string>(DEFAULT_IGNORE_LIST.join('\n'))
+  const [extensionsText, setExtensionsText] = useState<string>(
+    formatExtensionLines(DEFAULT_MARKDOWN_EXTENSIONS),
+  )
   const [activeTab, setActiveTab] = useState<SettingsTab>('general')
   // 语言切换后强制刷新面板，使 t() 文案立即生效
   const [, setLocaleTick] = useState(0)
 
   useEffect(() => {
     loadFromDisk().catch((err) => logError('SettingsPanel:loadFromDisk', err))
+    // ignoreList / markdownExtensions 直接从后端 KV 加载，缺省回退到内置默认值
+    ipc.store
+      .get<string[]>('ignoreList')
+      .then((list) => {
+        if (Array.isArray(list)) setIgnoreListText(list.join('\n'))
+      })
+      .catch((err) => logError('SettingsPanel:loadIgnoreList', err))
+    ipc.store
+      .get<string[]>('markdownExtensions')
+      .then((exts) => {
+        if (Array.isArray(exts)) setExtensionsText(formatExtensionLines(exts))
+      })
+      .catch((err) => logError('SettingsPanel:loadExtensions', err))
   }, [loadFromDisk])
 
   /**
@@ -94,19 +110,21 @@ export function SettingsPanel({ onClose }: SettingsPanelProps) {
       .catch((err) => logError('SettingsPanel:setCodeTheme', err))
   }
 
+  /**
+   * 修改 ignoreList / markdownExtensions 时：
+   * 1. 更新本地 textarea 文本（受控组件）
+   * 2. 解析为列表后直接写入后端 KV
+   * 3. 刷新当前根目录的文件树以应用新的过滤规则
+   */
   const handleSettingsChange = async (type: 'ignoreList' | 'extensions', value: string) => {
-    const list = type === 'ignoreList' ? parseLines(value) : parseExtensionLines(value)
     if (type === 'ignoreList') {
-      setIgnoreList(list)
+      setIgnoreListText(value)
     } else {
-      setMarkdownExtensions(list)
+      setExtensionsText(value)
     }
-    await saveToDisk().catch((err) => logError('SettingsPanel:saveToDisk', err))
-    const { ignoreList: currentIgnore, markdownExtensions: currentExts } =
-      useSettingsStore.getState()
-    await ipc.files
-      .updateSettings(currentIgnore, currentExts)
-      .catch((err) => logError('SettingsPanel:updateSettings', err))
+    const list = type === 'ignoreList' ? parseLines(value) : parseExtensionLines(value)
+    const key = type === 'ignoreList' ? 'ignoreList' : 'markdownExtensions'
+    await ipc.store.set(key, list).catch((err) => logError('SettingsPanel:setKV', err))
     if (rootPath) {
       useFileStore.getState().setRoot(rootPath)
     }
@@ -397,7 +415,7 @@ export function SettingsPanel({ onClose }: SettingsPanelProps) {
               {t('settings.markdownExtensions')}
             </label>
             <textarea
-              value={formatExtensionLines(markdownExtensions)}
+              value={extensionsText}
               onChange={(e) => handleSettingsChange('extensions', e.target.value)}
               rows={3}
               className="w-full px-3 py-1.5 text-sm border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-800"
@@ -409,7 +427,7 @@ export function SettingsPanel({ onClose }: SettingsPanelProps) {
           <div>
             <label className="block text-sm font-medium mb-2">{t('settings.ignoreList')}</label>
             <textarea
-              value={ignoreList.join('\n')}
+              value={ignoreListText}
               onChange={(e) => handleSettingsChange('ignoreList', e.target.value)}
               rows={4}
               className="w-full px-3 py-1.5 text-sm border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-800"

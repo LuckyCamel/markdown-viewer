@@ -67,11 +67,6 @@ export async function listDirectory(dirPath: string): Promise<FileEntry[]> {
   return entries.map(enrichFileEntry)
 }
 
-export async function updateSettings(
-  _ignoreList: string[],
-  _markdownExtensions: string[],
-): Promise<void> {}
-
 export async function readFile(filePath: string): Promise<FileContent> {
   ensureE2E()
   const content = window.__E2E__.files.get(filePath) || ''
@@ -325,7 +320,7 @@ export async function getLaunchPaths(): Promise<string[]> {
   return []
 }
 
-export async function grantFsScope(_paths: string[]): Promise<void> {}
+export async function grantWorkspace(_paths: string[]): Promise<void> {}
 
 export async function ensureStoreMigrated(): Promise<void> {}
 
@@ -344,15 +339,14 @@ export const ipc = {
   app: {
     getLaunchPaths,
   },
-  scope: {
-    grantFsScope,
+  workspace: {
+    grant: grantWorkspace,
   },
   files: {
     listDirectory,
     readFile,
     getFileInfo,
     checkExists,
-    updateSettings,
     createFile,
     createDirectory,
     rename: renameEntry,

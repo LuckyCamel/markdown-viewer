@@ -7,13 +7,12 @@ import { useFileStore } from './features/file-tree/useFileStore'
 
 const mockIpc = vi.hoisted(() => ({
   app: { getLaunchPaths: vi.fn() },
-  scope: { grantFsScope: vi.fn().mockResolvedValue(undefined) },
+  workspace: { grant: vi.fn().mockResolvedValue(undefined) },
   store: { get: vi.fn(), set: vi.fn(), del: vi.fn() },
   files: {
     listDirectory: vi.fn(),
     readFile: vi.fn(),
     getFileInfo: vi.fn(),
-    updateSettings: vi.fn(),
   },
   search: { searchContent: vi.fn(), cancelSearch: vi.fn(), onResult: vi.fn(), offResult: vi.fn() },
   watcher: {
@@ -47,7 +46,6 @@ describe('App', () => {
     mockIpc.store.set.mockResolvedValue(undefined)
     mockIpc.files.listDirectory.mockResolvedValue([])
     mockIpc.files.readFile.mockResolvedValue({ path: '', content: '' })
-    mockIpc.files.updateSettings.mockResolvedValue(undefined)
     mockIpc.app.getLaunchPaths.mockResolvedValue([])
   })
 

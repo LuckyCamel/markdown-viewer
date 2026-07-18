@@ -28,7 +28,7 @@ import { ipc } from './lib/ipc'
 import { exportAsHtml, exportAsPdf } from './lib/exporter'
 import { openTodaysNote } from './lib/dailyNote'
 import { logError } from './logger'
-import { useWorkspaceInit, validateRecentEntries } from './hooks/useWorkspaceInit'
+import { useWorkspaceStore, validateRecentEntries } from './stores/useWorkspaceStore'
 import { useFileWatcher } from './hooks/useFileWatcher'
 import { useScrollRestore } from './hooks/useScrollRestore'
 import { EditorLoadError } from './features/markdown-viewer/EditorLoadError'
@@ -45,16 +45,22 @@ import type { RecentEntry } from '../shared/types'
 
 function App() {
   const [showAbout, setShowAbout] = useState(false)
+  const [showSettings, setShowSettings] = useState(false)
 
-  const {
-    initialized,
-    workspacePath,
-    showSettings,
-    setShowSettings,
-    handleOpenFolder,
-    handleAddFolderToWorkspace,
-    handleOpenFile,
-  } = useWorkspaceInit()
+  // 启动 init：在挂载时调用一次
+  useEffect(() => {
+    useWorkspaceStore
+      .getState()
+      .init()
+      .catch((err) => logError('App:init', err))
+    useFavoritesStore.getState().loadFavorites()
+  }, [])
+
+  const initialized = useWorkspaceStore((s) => s.initialized)
+  const workspacePath = useWorkspaceStore((s) => s.workspacePath)
+  const handleOpenFolder = useWorkspaceStore((s) => s.openFolder)
+  const handleAddFolderToWorkspace = useWorkspaceStore((s) => s.addFolderToWorkspace)
+  const handleOpenFile = useWorkspaceStore((s) => s.openFile)
 
   const sidebarVisible = useUIStore((s) => s.sidebarVisible)
   const outlineVisible = useUIStore((s) => s.outlineVisible)
@@ -136,19 +142,6 @@ function App() {
     window.addEventListener('keydown', handleKeyDown)
     return () => window.removeEventListener('keydown', handleKeyDown)
   }, [showSettings, setShowSettings])
-
-  useEffect(() => {
-    ipc.store.get<number>('sidebarWidth').then((w) => {
-      if (typeof w === 'number') useUIStore.getState().setSidebarWidth(w)
-    })
-    ipc.store.get<number>('outlineWidth').then((w) => {
-      if (typeof w === 'number') useUIStore.getState().setOutlineWidth(w)
-    })
-    ipc.store.get<string>('themeId').then((id) => {
-      if (id) useUIStore.getState().setThemeId(id as import('./lib/themes').ThemeId)
-    })
-    useFavoritesStore.getState().loadFavorites()
-  }, [])
 
   // 打开最近文件面板时加载持久化的最近文件列表，并校验失效条目
   useEffect(() => {

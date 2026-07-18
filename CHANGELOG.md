@@ -2,6 +2,36 @@
 
 本文件记录 Markdown Viewer 各版本的变更摘要。
 
+## [1.4.3] - 2026-07-18
+
+### 变更
+
+- **后端 Workspace Module 抽出**：将 `scope/` 与 `SettingsState.allowed_roots` 双轨合并为统一的 `workspace/` Module
+  - `WorkspaceState` 持有 `allowed_roots: Mutex<Vec<PathBuf>>`，统一管理 plugin-fs scope 授权与自定义门禁
+  - `grant` 内部同时调用 `app.fs_scope().allow_directory/allow_file` 与 `add_root`
+  - `assert_allowed(path)` 实现安全语义：空 roots 时放行（兼容首次启动），有 roots 时检查路径是否在任一授权根下
+  - 删除 `src-tauri/src/scope/` 与 `src-tauri/src/commands/scope.rs`
+- **后端 FileFilters Module 新增**：从 `StoreState` 实时读取 `ignoreList` / `markdownExtensions`，不缓存
+  - `FileFilters::from_store(store)` 在每次 command 调用时构造一次，保证设置改动立即生效
+  - 删除 `src-tauri/src/state/settings.rs` 与 `src-tauri/src/commands/settings.rs`
+  - `StoreState` 新增 `get<T: DeserializeOwned>()` typed getter
+- **前端 useWorkspaceStore 新增**：替代 `useWorkspaceInit` hook，统一管理 workspace 授权根与启动状态
+  - 集中 `init()` / `openFolder()` / `addFolderToWorkspace()` / `openFile()` / `validateRecentEntries()`
+  - 移除 App.tsx 中零散的 sidebarWidth/outlineWidth/themeId 启动 effect
+  - 删除 `src/renderer/hooks/useWorkspaceInit.ts`
+- **前端 useSettingsStore 收拢**：移除 `ignoreList` / `markdownExtensions` 字段，仅保留阅读设置
+  - SettingsPanel 改为本地 state + 直接 `ipc.store.set` / `ipc.store.get` 读写后端 KV
+- **IPC 适配器改造**：`ipc.scope.grantFsScope` → `ipc.workspace.grant`；删除 `ipc.files.updateSettings`
+
+### 测试
+
+- 单元测试从 444 个增至 446 个
+  - 新增 `useWorkspaceStore.test.ts`（12 用例）：覆盖 init / openFolder / openFile / addFolderToWorkspace / validateRecentEntries
+  - 新增 Rust `workspace::` 模块 5 个单元测试：grant/assert_allowed/dedup 等
+  - 新增 Rust `filters::` 模块单元测试：from_store 默认值与自定义值两条路径
+- E2E 测试从 55 个增至 58 个
+  - 新增 `workspace-init.spec.ts`（3 用例）：启动恢复、无 workspace 打开文件、多工作区添加
+
 ## [1.4.2] - 2026-07-18
 
 ### 新增

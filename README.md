@@ -1,6 +1,6 @@
 # Markdown Viewer
 
-> 当前版本：**1.4.0**
+> 当前版本：**1.4.3**
 
 跨平台 Tauri 桌面应用，以工作区方式浏览、渲染和编辑 Markdown 文件。
 
@@ -45,17 +45,18 @@ src-tauri/            # Tauri 后端（Rust）
   src/lib.rs          # 应用入口：插件、State、command 注册
   src/menu.rs         # 原生菜单
   src/commands/       # invoke command
-  src/state/          # 共享 State
+  src/state/          # 共享 State（WatcherState、SearchState、LaunchState、StoreState）
   src/search/         # 搜索遍历与匹配
-  src/scope/          # fs:scope 动态授权
+  src/workspace/      # 工作区授权根 Module（plugin-fs scope + allowed_roots）
+  src/filters.rs      # 文件过滤（ignore_list / markdown_extensions，从 StoreState 实时读取）
   Cargo.toml
   tauri.conf.json
   capabilities/
 src/
   renderer/           # 渲染进程：React UI
     features/         # 功能模块（file-tree, tabs, markdown-viewer, outline, search, settings, welcome）
-    hooks/            # 文件监控、键盘快捷键、原生菜单、滚动恢复、工作区初始化
-    stores/           # 全局 UI 状态（useUIStore）
+    hooks/            # 文件监控、键盘快捷键、原生菜单、滚动恢复
+    stores/           # 全局 UI 状态（useUIStore、useWorkspaceStore）
     lib/              # 集中式 IPC 适配器（封装 Tauri invoke/API）
     components/       # 通用组件（ErrorBoundary, ThemeProvider, Layout）
   shared/             # 共享类型定义

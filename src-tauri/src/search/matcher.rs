@@ -1,4 +1,3 @@
-use std::env;
 use std::fs::File;
 use std::io::{BufRead, BufReader};
 use std::path::Path;
@@ -86,6 +85,7 @@ pub fn find_matches_in_file_regex(
 #[cfg(test)]
 mod tests {
     use super::*;
+    use std::env;
     use std::fs::write;
     use std::path::PathBuf;
     use std::sync::atomic::{AtomicUsize, Ordering};

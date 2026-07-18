@@ -4,8 +4,8 @@ use std::path::PathBuf;
 use notify::{RecursiveMode, Watcher};
 use tauri::{Emitter, State, Window};
 
-use crate::state::SettingsState;
 use crate::state::WatcherState;
+use crate::workspace::WorkspaceState;
 
 #[derive(serde::Serialize, serde::Deserialize, Clone)]
 struct FileChangePayload {
@@ -21,11 +21,11 @@ struct FileChangePayload {
 pub async fn watch_file(
     file_path: String,
     window: Window,
-    settings: State<'_, SettingsState>,
+    workspace: State<'_, WorkspaceState>,
     state: State<'_, WatcherState>,
 ) -> Result<(), String> {
     let path = PathBuf::from(&file_path);
-    settings.ensure_under_allowed_root(&path)?;
+    workspace.assert_allowed(&path)?;
 
     let mut watched = state.watched_paths.lock().unwrap();
     if watched.contains(&path) {

@@ -10,13 +10,6 @@ export async function listDirectory(dirPath: string): Promise<FileEntry[]> {
   return invoke('list_directory', { dirPath })
 }
 
-export async function updateSettings(
-  ignoreList: string[],
-  markdownExtensions: string[],
-): Promise<void> {
-  await invoke('update_settings', { ignoreList, markdownExtensions })
-}
-
 export async function readFile(filePath: string): Promise<FileContent> {
   const content = await readTextFile(filePath)
   return { path: filePath, content }
@@ -100,11 +93,14 @@ export async function getLaunchPaths(): Promise<string[]> {
 }
 
 /**
- * 为 plugin-fs 动态授权路径（目录递归、文件及其父目录）
+ * 为 plugin-fs 动态授权路径，并记录 workspace 根
+ *
+ * 替代旧的 `grant_fs_scope`，统一由后端 `WorkspaceState` 管理 plugin-fs scope
+ * 与 `allowed_roots` 列表。
  */
-export async function grantFsScope(paths: string[]): Promise<void> {
+export async function grantWorkspace(paths: string[]): Promise<void> {
   if (paths.length === 0) return
-  await invoke('grant_fs_scope', { paths })
+  await invoke('grant_workspace', { paths })
 }
 
 const STORE_MIGRATED_KEY = 'storeMigrated'
@@ -329,15 +325,14 @@ export const ipc = {
   app: {
     getLaunchPaths,
   },
-  scope: {
-    grantFsScope,
+  workspace: {
+    grant: grantWorkspace,
   },
   files: {
     listDirectory,
     readFile,
     getFileInfo,
     checkExists,
-    updateSettings,
     createFile,
     createDirectory,
     rename: renameEntry,

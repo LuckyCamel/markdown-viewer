@@ -1,10 +1,10 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
-import { renderHook, act } from '@testing-library/react'
-import { useWorkspaceInit } from './useWorkspaceInit'
+import { useWorkspaceStore, validateRecentEntries } from './useWorkspaceStore'
 
 const mockStoreGet = vi.fn()
 const mockStoreSet = vi.fn()
-const mockUpdateSettings = vi.fn()
+const mockGrant = vi.fn()
+const mockEnsureStoreMigrated = vi.fn()
 const mockGetLaunchPaths = vi.fn()
 const mockGetFileInfo = vi.fn()
 const mockCheckExists = vi.fn()
@@ -12,14 +12,24 @@ const mockLogError = vi.fn()
 let mockRootPath: string | null = null
 let mockRootPaths: string[] = []
 
-const mockGrantFsScope = vi.fn()
-const mockEnsureStoreMigrated = vi.fn()
+const mockSetTheme = vi.fn()
+const mockSetCodeTheme = vi.fn()
+const mockSetSidebarWidth = vi.fn()
+const mockSetOutlineWidth = vi.fn()
+const mockSetThemeId = vi.fn()
+const mockOpenFile = vi.fn()
+const mockSetActive = vi.fn()
+const mockCloseAll = vi.fn()
+const mockSetRoot = vi.fn()
+const mockAddRoot = vi.fn()
+const mockReset = vi.fn()
+const mockLoadSortSettings = vi.fn()
 
 vi.mock('../lib/ipc', () => ({
   ensureStoreMigrated: (...args: unknown[]) => mockEnsureStoreMigrated(...args),
   ipc: {
-    scope: {
-      grantFsScope: (...args: unknown[]) => mockGrantFsScope(...args),
+    workspace: {
+      grant: (...args: unknown[]) => mockGrant(...args),
     },
     store: {
       get: (...args: unknown[]) => mockStoreGet(...args),
@@ -29,7 +39,6 @@ vi.mock('../lib/ipc', () => ({
       getLaunchPaths: (...args: unknown[]) => mockGetLaunchPaths(...args),
     },
     files: {
-      updateSettings: (...args: unknown[]) => mockUpdateSettings(...args),
       getFileInfo: (...args: unknown[]) => mockGetFileInfo(...args),
       checkExists: (...args: unknown[]) => mockCheckExists(...args),
     },
@@ -37,19 +46,16 @@ vi.mock('../lib/ipc', () => ({
 }))
 vi.mock('../logger', () => ({ logError: (...args: unknown[]) => mockLogError(...args) }))
 
-const mockSetTheme = vi.fn()
-const mockSetIgnoreList = vi.fn()
-const mockOpenFile = vi.fn()
-const mockSetActive = vi.fn()
-const mockCloseAll = vi.fn()
-const mockSetRoot = vi.fn()
-const mockAddRoot = vi.fn()
-const mockRemoveRoot = vi.fn()
-const mockReset = vi.fn()
-const mockLoadSortSettings = vi.fn()
-
-vi.mock('../stores/useUIStore', () => {
-  const actual = { getState: vi.fn(() => ({ setTheme: mockSetTheme })) }
+vi.mock('./useUIStore', () => {
+  const actual = {
+    getState: vi.fn(() => ({
+      setTheme: mockSetTheme,
+      setCodeTheme: mockSetCodeTheme,
+      setSidebarWidth: mockSetSidebarWidth,
+      setOutlineWidth: mockSetOutlineWidth,
+      setThemeId: mockSetThemeId,
+    })),
+  }
   const useUIStore = Object.assign(
     (selector: (s: ReturnType<(typeof actual)['getState']>) => unknown) =>
       selector(actual.getState()),
@@ -57,15 +63,6 @@ vi.mock('../stores/useUIStore', () => {
   )
   return { useUIStore }
 })
-vi.mock('../features/settings/useSettingsStore', () => ({
-  useSettingsStore: {
-    getState: () => ({
-      setIgnoreList: mockSetIgnoreList,
-      ignoreList: [],
-      markdownExtensions: [],
-    }),
-  },
-}))
 vi.mock('../features/tabs/useTabStore', () => ({
   useTabStore: {
     getState: () => ({
@@ -83,17 +80,12 @@ vi.mock('../features/file-tree/useFileStore', () => ({
         mockRootPath = path
         mockRootPaths = [path]
       },
-      addRoot: (path: string) => {
+      addRoot: async (path: string) => {
         mockAddRoot(path)
         if (!mockRootPaths.includes(path)) {
           mockRootPaths.push(path)
         }
         if (!mockRootPath) mockRootPath = path
-      },
-      removeRoot: (path: string) => {
-        mockRemoveRoot(path)
-        mockRootPaths = mockRootPaths.filter((p) => p !== path)
-        if (mockRootPath === path) mockRootPath = mockRootPaths[0] ?? null
       },
       loadSortSettings: (...args: unknown[]) => mockLoadSortSettings(...args),
       get rootPath() {
@@ -111,67 +103,76 @@ vi.mock('../features/search/useSearchStore', () => ({
   },
 }))
 
-describe('useWorkspaceInit', () => {
+describe('useWorkspaceStore', () => {
   beforeEach(() => {
     vi.clearAllMocks()
     mockEnsureStoreMigrated.mockResolvedValue(undefined)
-    mockGrantFsScope.mockResolvedValue(undefined)
+    mockGrant.mockResolvedValue(undefined)
     mockRootPath = null
     mockRootPaths = []
     mockStoreGet.mockResolvedValue(undefined)
     mockStoreSet.mockResolvedValue(undefined)
-    mockUpdateSettings.mockResolvedValue(undefined)
     mockGetLaunchPaths.mockResolvedValue([])
     mockCheckExists.mockResolvedValue([])
     mockLoadSortSettings.mockResolvedValue(undefined)
+    // 重置 store 状态
+    useWorkspaceStore.setState({ workspacePath: null, initialized: false })
   })
 
-  describe('初始化', () => {
-    it('挂载后并行恢复 5 个状态', async () => {
+  describe('init', () => {
+    it('恢复持久化 workspace 和 openFiles', async () => {
       mockStoreGet.mockImplementation(async (key: string) => {
         const map: Record<string, unknown> = {
           theme: 'dark',
+          codeTheme: 'github-dark',
           lastWorkspace: '/work',
           openFiles: ['/work/a.md'],
           activeFile: '/work/a.md',
-          ignoreList: ['.git'],
         }
         return map[key]
       })
-      const { result } = renderHook(() => useWorkspaceInit())
 
-      await vi.waitFor(() => {
-        expect(result.current.initialized).toBe(true)
-      })
+      await useWorkspaceStore.getState().init()
+
       expect(mockSetTheme).toHaveBeenCalledWith('dark')
-      expect(mockSetIgnoreList).toHaveBeenCalledWith(['.git'])
+      expect(mockSetCodeTheme).toHaveBeenCalledWith('github-dark')
       expect(mockSetRoot).toHaveBeenCalledWith('/work')
       expect(mockOpenFile).toHaveBeenCalledWith('/work/a.md')
       expect(mockSetActive).toHaveBeenCalledWith('/work/a.md')
+      expect(useWorkspaceStore.getState().initialized).toBe(true)
+      expect(useWorkspaceStore.getState().workspacePath).toBe('/work')
     })
 
-    it('未保存的状态不用默认值覆盖', async () => {
+    it('未保存的状态不覆盖默认值且不调用 setter', async () => {
       mockStoreGet.mockResolvedValue(undefined)
-      const { result } = renderHook(() => useWorkspaceInit())
 
-      await vi.waitFor(() => {
-        expect(result.current.initialized).toBe(true)
-      })
+      await useWorkspaceStore.getState().init()
+
       expect(mockSetTheme).not.toHaveBeenCalled()
-      expect(mockSetIgnoreList).not.toHaveBeenCalled()
+      expect(mockSetCodeTheme).not.toHaveBeenCalled()
       expect(mockSetRoot).not.toHaveBeenCalled()
-      expect(mockUpdateSettings).toHaveBeenCalledWith([], [])
+      expect(mockOpenFile).not.toHaveBeenCalled()
+      expect(useWorkspaceStore.getState().initialized).toBe(true)
     })
 
-    it('init 异常时调用 logError', async () => {
-      mockStoreGet.mockRejectedValue(new Error('store read error'))
-      renderHook(() => useWorkspaceInit())
-      await vi.waitFor(() => {
-        expect(mockLogError).toHaveBeenCalledWith('useWorkspaceInit:init', expect.any(Error))
+    it('恢复持久化 sidebarWidth/outlineWidth/themeId 到 useUIStore', async () => {
+      mockStoreGet.mockImplementation(async (key: string) => {
+        const map: Record<string, unknown> = {
+          sidebarWidth: 240,
+          outlineWidth: 300,
+          themeId: 'sepia',
+        }
+        return map[key]
       })
+
+      await useWorkspaceStore.getState().init()
+
+      expect(mockSetSidebarWidth).toHaveBeenCalledWith(240)
+      expect(mockSetOutlineWidth).toHaveBeenCalledWith(300)
+      expect(mockSetThemeId).toHaveBeenCalledWith('sepia')
     })
 
-    it('CLI 启动路径优先于已保存 workspace', async () => {
+    it('CLI 启动路径优先于持久化 workspace', async () => {
       mockGetLaunchPaths.mockResolvedValue(['/cli/readme.md'])
       mockGetFileInfo.mockResolvedValue({
         path: '/cli/readme.md',
@@ -184,14 +185,12 @@ describe('useWorkspaceInit', () => {
         return undefined
       })
 
-      const { result } = renderHook(() => useWorkspaceInit())
-      await vi.waitFor(() => {
-        expect(result.current.initialized).toBe(true)
-      })
+      await useWorkspaceStore.getState().init()
 
       expect(mockOpenFile).toHaveBeenCalledWith('/cli/readme.md')
       expect(mockOpenFile).not.toHaveBeenCalledWith('/saved/old.md')
       expect(mockSetRoot).toHaveBeenCalledWith('/cli')
+      expect(useWorkspaceStore.getState().workspacePath).toBe('/cli')
     })
 
     it('启动时后台校验最近文件并移除失效条目', async () => {
@@ -205,12 +204,9 @@ describe('useWorkspaceInit', () => {
       })
       mockCheckExists.mockResolvedValue([true, false])
 
-      const { result } = renderHook(() => useWorkspaceInit())
-      await vi.waitFor(() => {
-        expect(result.current.initialized).toBe(true)
-      })
+      await useWorkspaceStore.getState().init()
 
-      // 校验在后台异步执行，等待 checkExists 与回写完成
+      // 校验在后台异步执行
       await vi.waitFor(() => {
         expect(mockCheckExists).toHaveBeenCalledWith(['/a.md', '/b.md'])
       })
@@ -228,73 +224,107 @@ describe('useWorkspaceInit', () => {
       })
       mockCheckExists.mockResolvedValue([true])
 
-      const { result } = renderHook(() => useWorkspaceInit())
-      await vi.waitFor(() => {
-        expect(result.current.initialized).toBe(true)
-      })
+      await useWorkspaceStore.getState().init()
+
       await vi.waitFor(() => {
         expect(mockCheckExists).toHaveBeenCalledWith(['/dir1'])
       })
-      // 全部存在时不应为 recentDirs 触发回写
       expect(mockStoreSet).not.toHaveBeenCalledWith('recentDirs', expect.anything())
     })
   })
 
-  describe('handleOpenFolder', () => {
-    it('打开指定目录 + 持久化', async () => {
-      const { result } = renderHook(() => useWorkspaceInit())
-      await act(async () => result.current.handleOpenFolder('/myproject'))
+  describe('openFolder', () => {
+    it('打开指定目录并持久化 lastWorkspace', async () => {
+      await useWorkspaceStore.getState().openFolder('/myproject')
+
+      expect(mockGrant).toHaveBeenCalledWith(['/myproject'])
       expect(mockSetRoot).toHaveBeenCalledWith('/myproject')
       expect(mockCloseAll).toHaveBeenCalled()
       expect(mockReset).toHaveBeenCalled()
       expect(mockStoreSet).toHaveBeenCalledWith('lastWorkspace', '/myproject')
-    })
-
-    it('trackRecent 异常时 catch 调用 logError', async () => {
-      mockStoreGet.mockResolvedValueOnce([])
-      mockStoreSet.mockResolvedValueOnce(undefined).mockRejectedValueOnce(new Error('write error'))
-      const { result } = renderHook(() => useWorkspaceInit())
-      await act(async () => result.current.handleOpenFolder('/myproject'))
-      expect(mockLogError).toHaveBeenCalledWith(
-        expect.stringContaining('trackRecent'),
-        expect.any(Error),
-      )
+      expect(useWorkspaceStore.getState().workspacePath).toBe('/myproject')
     })
   })
 
-  describe('handleOpenFile', () => {
+  describe('openFile', () => {
     it('通过 useTabStore.openFile 打开文件', async () => {
-      const { result } = renderHook(() => useWorkspaceInit())
-      await act(async () => result.current.handleOpenFile('/file.md'))
-      expect(mockOpenFile).toHaveBeenCalledWith('/file.md')
+      // 预设 workspacePath 以避免触发以父目录初始化
+      useWorkspaceStore.setState({ workspacePath: '/work' })
+      await useWorkspaceStore.getState().openFile('/work/readme.md')
+
+      expect(mockGrant).toHaveBeenCalledWith(['/work/readme.md'])
+      expect(mockOpenFile).toHaveBeenCalledWith('/work/readme.md')
     })
 
-    it('无工作区时以文件父目录初始化 workspace', async () => {
-      const { result } = renderHook(() => useWorkspaceInit())
-      await act(async () => result.current.handleOpenFile('/projects/readme.md'))
+    it('无 workspace 时以文件父目录初始化 workspace', async () => {
+      await useWorkspaceStore.getState().openFile('/projects/readme.md')
+
       expect(mockSetRoot).toHaveBeenCalledWith('/projects')
       expect(mockStoreSet).toHaveBeenCalledWith('lastWorkspace', '/projects')
       expect(mockOpenFile).toHaveBeenCalledWith('/projects/readme.md')
-      expect(result.current.workspacePath).toBe('/projects')
+      expect(useWorkspaceStore.getState().workspacePath).toBe('/projects')
     })
   })
 
-  describe('handleAddFolderToWorkspace', () => {
-    it('应添加文件夹到当前工作区', async () => {
-      const { result } = renderHook(() => useWorkspaceInit())
-      await act(async () => result.current.handleOpenFolder('/workspace1'))
-      await act(async () => result.current.handleAddFolderToWorkspace('/workspace2'))
+  describe('addFolderToWorkspace', () => {
+    it('应添加文件夹到当前工作区并授权', async () => {
+      await useWorkspaceStore.getState().addFolderToWorkspace('/workspace2')
+
+      expect(mockGrant).toHaveBeenCalledWith(['/workspace2'])
       expect(mockAddRoot).toHaveBeenCalledWith('/workspace2')
-      expect(mockGrantFsScope).toHaveBeenCalledWith(expect.arrayContaining(['/workspace2']))
+    })
+
+    it('无 workspace 时设置为 workspacePath 并持久化', async () => {
+      await useWorkspaceStore.getState().addFolderToWorkspace('/workspace1')
+
+      expect(useWorkspaceStore.getState().workspacePath).toBe('/workspace1')
+      expect(mockStoreSet).toHaveBeenCalledWith('lastWorkspace', '/workspace1')
+    })
+
+    it('已有 workspace 时不覆盖 workspacePath', async () => {
+      useWorkspaceStore.setState({ workspacePath: '/existing' })
+      await useWorkspaceStore.getState().addFolderToWorkspace('/workspace2')
+
+      expect(useWorkspaceStore.getState().workspacePath).toBe('/existing')
+      expect(mockStoreSet).not.toHaveBeenCalledWith('lastWorkspace', '/workspace2')
     })
 
     it('应记录到最近目录', async () => {
-      const { result } = renderHook(() => useWorkspaceInit())
-      await act(async () => result.current.handleAddFolderToWorkspace('/workspace2'))
-      expect(mockStoreSet).toHaveBeenCalledWith(
-        'recentDirs',
-        expect.arrayContaining([expect.objectContaining({ path: '/workspace2' })]),
+      await useWorkspaceStore.getState().addFolderToWorkspace('/workspace2')
+
+      await vi.waitFor(() => {
+        expect(mockStoreSet).toHaveBeenCalledWith(
+          'recentDirs',
+          expect.arrayContaining([expect.objectContaining({ path: '/workspace2' })]),
+        )
+      })
+    })
+  })
+
+  describe('validateRecentEntries (exported helper)', () => {
+    it('空列表返回空数组', async () => {
+      const result = await validateRecentEntries([], 'recentFiles')
+      expect(result).toEqual([])
+    })
+
+    it('undefined 返回空数组', async () => {
+      const result = await validateRecentEntries(undefined, 'recentFiles')
+      expect(result).toEqual([])
+    })
+
+    it('全部失效时回写空数组', async () => {
+      mockCheckExists.mockResolvedValue([false, false])
+
+      const result = await validateRecentEntries(
+        [
+          { path: '/a.md', name: 'a.md', timestamp: 1 },
+          { path: '/b.md', name: 'b.md', timestamp: 2 },
+        ],
+        'recentFiles',
       )
+
+      expect(result).toEqual([])
+      expect(mockStoreSet).toHaveBeenCalledWith('recentFiles', [])
     })
   })
 })

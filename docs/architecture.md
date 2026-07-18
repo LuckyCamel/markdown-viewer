@@ -124,18 +124,20 @@ Tauri Rust 后端 + Web 前端，通过 IPC 通信。
       → 读取新内容
       → window.emit("file-change", payload)
         ← 前端 useFileWatcher 监听接收
-          → useEditorStore 更新内容
+          → 通过 onExternalChange 回调通知 useEditorDocument
+            → saved 状态：静默重载 useEditorStore 内容
+            → dirty 状态：进入 conflict，显示横幅
           → 标签短暂显示刷新标记
           → 保持滚动位置（useScrollRestore）
 ```
 
 ### 4.4 编辑保存流程（Edit 模式）
 ```
-App 挂载 useEditorSession(activeMarkdownPath, content)
+App 挂载 useEditorDocument(activeMarkdownPath, content)
   → 路径变化：reset()；内容首次就绪：reset({ content }) seed，避免误标 dirty
 用户编辑 CodeMirror
   → useEditorStore.setContent
-  → useEditorPersistence 监听内容变更
+  → useEditorDocument 监听内容变更
     → 1.5s 防抖
       → ipc.files.getMtime(path)          // 检查磁盘修改时间
         → 若磁盘 mtime > 上次保存 mtime → 冲突，显示 ConflictBanner
@@ -143,8 +145,10 @@ App 挂载 useEditorSession(activeMarkdownPath, content)
           → invoke('save_file', ...)
             → Rust files::save_file 写入磁盘，返回新 mtime
           ← 更新 lastSavedMtime、lastSavedContent，状态 = saved
-Ctrl+S / StatusBar 状态均消费 session.forceSave / session.saveStatus
+Ctrl+S / StatusBar 状态均消费 document.forceSave / document.saveStatus
 EditorPane 仅聚合 Toolbar + ConflictBanner + Editor UI
+外部磁盘变更（useFileWatcher onExternalChange 回调）
+  → useEditorDocument 统一处理：dirty 状态下进入 conflict，显示横幅
 ```
 
 ### 4.5 冲突检测流程
@@ -154,10 +158,15 @@ EditorPane 仅聚合 Toolbar + ConflictBanner + Editor UI
     → 磁盘 mtime > 上次保存 mtime？
       → 是：saveStatus = 'conflict'，EditorPane 显示 ConflictBanner
         → 用户选择：
-          - 加载磁盘：session.loadDisk → 读盘 + setContent
-          - 保留我的：session.keepMine → force save
+          - 加载磁盘：document.loadDisk → 读盘 + setContent
+          - 保留我的：document.keepMine → force save（通过 ignoreMtimeConflict 跳过 mtime 检查）
           - 稍后处理：仅 UI 关闭横幅，status 保持 conflict
       → 否：正常保存，更新 mtime 和内容缓存
+外部磁盘变更触发
+  → useFileWatcher 监听 file-change 事件
+    → 通过 onExternalChange 回调通知 useEditorDocument
+      → dirty 状态：进入 conflict，显示横幅
+      → saved 状态：静默重载磁盘内容
 ```
 
 ---

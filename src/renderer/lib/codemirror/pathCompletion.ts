@@ -252,13 +252,13 @@ export function filterPaths(filter: string, candidates: PathCandidate[]): PathCa
  */
 export function detectTrigger(textBefore: string): TriggerKind {
   // ![]( 触发图片补全
-  if (/\!\[\]\($/.test(textBefore)) return 'image'
+  if (/!\[\]\($/.test(textBefore)) return 'image'
   // ]( 触发链接路径补全
   if (/\]\($/.test(textBefore)) return 'link'
   // [[ 触发 wiki 链接补全
   if (/\[\[$/.test(textBefore)) return 'wiki'
   // ./ 触发相对路径补全
-  if (/(^|\s|[\(\[])\.\/$/.test(textBefore)) return 'relative'
+  if (/(^|\s|\(|\[)\.\/$/.test(textBefore)) return 'relative'
   return 'none'
 }
 
@@ -294,7 +294,7 @@ export function extractQuery(textBefore: string, trigger: TriggerKind): string {
       // 确保这是一个触发（前面是行首、空白或括号），而不是路径中间的 ./
       if (idx > 0) {
         const prevChar = textBefore[idx - 1]
-        if (!/[\s\(\[]/.test(prevChar)) return ''
+        if (!/[\s([]/.test(prevChar)) return ''
       }
       triggerIdx = idx
       triggerLen = 2

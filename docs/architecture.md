@@ -1,4 +1,4 @@
-# Markdown Viewer — 架构总览
+# Markdown-Viewer — 架构总览
 
 ## 1. 项目标识
 

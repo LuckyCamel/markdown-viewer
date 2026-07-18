@@ -9,7 +9,7 @@ test.describe('Welcome Page', () => {
 
   test('should display application name', async ({ page }) => {
     await launchApp(page)
-    await expect(page.getByRole('heading', { name: 'Markdown Viewer' })).toBeVisible({ timeout: 10000 })
+    await expect(page.getByRole('heading', { name: 'Markdown-Viewer' })).toBeVisible({ timeout: 10000 })
   })
 
   test('should have Open Folder button', async ({ page }) => {

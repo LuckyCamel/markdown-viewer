@@ -1,6 +1,6 @@
 # Changelog
 
-本文件记录 Markdown Viewer 各版本的变更摘要。
+本文件记录 Markdown-Viewer 各版本的变更摘要。
 
 ## [1.4.3] - 2026-07-18
 

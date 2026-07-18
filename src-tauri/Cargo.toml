@@ -1,8 +1,8 @@
 [package]
 name = "markdown-viewer"
 version = "1.4.3"
-description = "Markdown Viewer"
-authors = ["Markdown Viewer Team"]
+description = "Markdown-Viewer"
+authors = ["Markdown-Viewer Team"]
 license = "MIT"
 edition = "2021"
 rust-version = "1.77.2"

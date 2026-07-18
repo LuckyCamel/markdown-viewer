@@ -3,7 +3,7 @@ pub enum LaunchPrep {
     Run(Vec<String>),
 }
 
-const HELP: &str = "Markdown Viewer
+const HELP: &str = "Markdown-Viewer
 
 Usage: markdown-viewer [options] [path...]
 

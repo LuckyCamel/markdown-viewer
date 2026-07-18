@@ -53,7 +53,7 @@ test.describe('Workspace Init', () => {
     await launchApp(page, ws)
 
     // 启动后无 workspace，应显示 WelcomePage
-    await expect(page.getByRole('heading', { name: /Markdown Viewer/i })).toBeVisible({
+    await expect(page.getByRole('heading', { name: /Markdown-Viewer/i })).toBeVisible({
       timeout: 10000,
     })
 

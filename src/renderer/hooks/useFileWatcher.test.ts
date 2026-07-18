@@ -18,19 +18,6 @@ vi.mock('../lib/ipc', () => ({
   },
 }))
 
-const mockSetContent = vi.fn()
-const mockMarkDirty = vi.fn()
-const mockClearDirty = vi.fn()
-
-vi.mock('../features/markdown-viewer/useEditorStore', () => ({
-  useEditorStore: { getState: () => ({ setContent: mockSetContent }) },
-}))
-vi.mock('../features/tabs/useTabStore', () => ({
-  useTabStore: {
-    getState: () => ({ markDirty: mockMarkDirty, clearDirty: mockClearDirty }),
-  },
-}))
-
 describe('useFileWatcher', () => {
   beforeEach(() => {
     vi.clearAllMocks()
@@ -65,22 +52,28 @@ describe('useFileWatcher', () => {
     expect(mockWatchFile).not.toHaveBeenCalled()
   })
 
-  it('change 事件 → setContent + markDirty + 2s 后 clearDirty', () => {
-    renderHook(() => useFileWatcher(['/a.md'], true))
+  it('change 事件且有 content 时调用 onExternalChange', () => {
+    const onExternalChange = vi.fn()
+    renderHook(() => useFileWatcher(['/a.md'], true, { onExternalChange }))
     const onChangeCb = mockOnChange.mock.calls[0][0]
     onChangeCb({ path: '/a.md', type: 'change' }, 'new content')
-    expect(mockSetContent).toHaveBeenCalledWith('/a.md', 'new content')
-    expect(mockMarkDirty).toHaveBeenCalledWith('/a.md')
-
-    vi.advanceTimersByTime(2000)
-    expect(mockClearDirty).toHaveBeenCalledWith('/a.md')
+    expect(onExternalChange).toHaveBeenCalledWith('/a.md', 'new content', 0)
   })
 
-  it('delete 事件不设置 content', () => {
-    renderHook(() => useFileWatcher(['/a.md'], true))
+  it('delete 事件不调用 onExternalChange', () => {
+    const onExternalChange = vi.fn()
+    renderHook(() => useFileWatcher(['/a.md'], true, { onExternalChange }))
     const onChangeCb = mockOnChange.mock.calls[0][0]
     onChangeCb({ path: '/a.md', type: 'delete' }, null)
-    expect(mockSetContent).not.toHaveBeenCalled()
+    expect(onExternalChange).not.toHaveBeenCalled()
+  })
+
+  it('change 事件但 content 为 null 时不调用 onExternalChange', () => {
+    const onExternalChange = vi.fn()
+    renderHook(() => useFileWatcher(['/a.md'], true, { onExternalChange }))
+    const onChangeCb = mockOnChange.mock.calls[0][0]
+    onChangeCb({ path: '/a.md', type: 'change' }, null)
+    expect(onExternalChange).not.toHaveBeenCalled()
   })
 
   it('openFiles 变化时重新注册监听', () => {

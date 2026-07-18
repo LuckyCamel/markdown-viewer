@@ -17,7 +17,7 @@ import { TabBar } from './features/tabs/TabBar'
 import { MarkdownViewer } from './features/markdown-viewer/MarkdownViewer'
 import { SourceViewer } from './features/markdown-viewer/SourceViewer'
 import { EditorPane } from './features/markdown-viewer/EditorPane'
-import { useEditorSession } from './features/markdown-viewer/useEditorSession'
+import { useEditorDocument } from './features/markdown-viewer/useEditorDocument'
 import { Outline } from './features/outline/Outline'
 import { FileSearch } from './features/search/FileSearch'
 import { ContentSearch } from './features/search/ContentSearch'
@@ -162,19 +162,25 @@ function App() {
       .catch((err) => logError('App:loadRecentFiles', err))
   }, [searchPanel])
 
-  useFileWatcher(openFiles, initialized)
+  // 活动 Markdown 的编辑会话（任意视图模式均挂载，保证 StatusBar / Ctrl+S 可用）
+  const sessionFilePath = activeFile && isMarkdownFile(activeFile) ? activeFile : null
+  const { saveStatus, forceSave, loadDisk, keepMine, setContent, handleExternalChange } =
+    useEditorDocument(sessionFilePath)
+
+  const handleExternalFileChange = useCallback(
+    (path: string, content: string, mtime: number) => {
+      if (path === sessionFilePath) {
+        handleExternalChange(content, mtime)
+      }
+    },
+    [sessionFilePath, handleExternalChange],
+  )
+
+  useFileWatcher(openFiles, initialized, { onExternalChange: handleExternalFileChange })
   useScrollRestore(activeFile, content, viewMode)
   useContentJump(activeFile, content)
   useAnchorJump(activeFile, content)
   const readingStats = useReadingStats(content)
-
-  // 活动 Markdown 的编辑会话（任意视图模式均挂载，保证 StatusBar / Ctrl+S 可用）
-  const sessionFilePath = activeFile && isMarkdownFile(activeFile) ? activeFile : null
-  const { saveStatus, forceSave, loadDisk, keepMine } = useEditorSession(
-    sessionFilePath,
-    content ?? '',
-  )
-
   const showCommandPalette = useCommandStore((s) => s.show)
   const toggleSettingsPanel = useCallback(() => setShowSettings((v) => !v), [])
 
@@ -338,7 +344,10 @@ function App() {
                         onLoadDisk={() => {
                           void loadDisk()
                         }}
-                        onKeepMine={keepMine}
+                        onKeepMine={() => {
+                          void keepMine()
+                        }}
+                        onChange={setContent}
                       />
                     ) : (
                       <MarkdownViewer content={content} filePath={activeFile} />

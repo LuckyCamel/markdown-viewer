@@ -1,5 +1,5 @@
 import type { ReadingStats } from '../../shared/readingStats'
-import type { SaveStatus } from '../features/markdown-viewer/useEditorPersistence'
+import type { SaveStatus } from '../features/markdown-viewer/useEditorDocument'
 
 interface StatusBarProps {
   stats: ReadingStats | null

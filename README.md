@@ -68,7 +68,6 @@ src/
 |------|------|------|
 | 用户 / 新贡献者 | [product.md](docs/product.md) | 功能、快捷键、平台 |
 | 日常开发者 | [development.md](docs/development.md) + [architecture.md](docs/architecture.md) | 开发与架构 |
-| 架构评审 | [tech-stack-architecture-review.md](docs/tech-stack-architecture-review.md) | 技术栈与架构评估 |
 | 发布负责人 | [release-checklist.md](docs/release-checklist.md) + [CHANGELOG.md](CHANGELOG.md) | 冒烟与版本记录 |
 | AI Agent | [AGENTS.md](AGENTS.md) | 代码约束 |
 

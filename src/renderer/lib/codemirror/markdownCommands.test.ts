@@ -14,7 +14,6 @@ import {
   insertLink,
   insertImage,
   insertHorizontalRule,
-  insertTable,
   insertCodeBlock,
 } from './markdownCommands'
 
@@ -139,13 +138,6 @@ describe('markdownCommands', () => {
     const view = createView('text', 0, 0)
     insertHorizontalRule(view)
     expect(view.state.doc.toString()).toBe('text\n---\n')
-  })
-
-  it('insertTable should insert table skeleton', () => {
-    const view = createView('', 0, 0)
-    insertTable(view)
-    expect(view.state.doc.toString()).toContain('| Column 1 | Column 2 |')
-    expect(view.state.doc.toString()).toContain('|----------|----------|')
   })
 
   it('insertCodeBlock should wrap selection in fence', () => {

@@ -2,6 +2,26 @@
 
 本文件记录 Markdown-Viewer 各版本的变更摘要。
 
+## [1.4.5] - 2026-07-19
+
+### 变更
+
+- **前端状态管理拆分**：将 `useUIStore` 杂物袋按概念拆分为 3 个领域专属 store
+  - `useThemeStore`：主题状态（theme / themeId / codeTheme）
+  - `useLayoutStore`：布局状态（侧边栏/大纲可见性与宽度、搜索面板）
+  - `useNavigationStore`：导航意图状态（pendingContentJump / pendingAnchorJump / searchHighlight）
+  - 12+ 消费文件同步迁移，删除原 `useUIStore` 及其测试
+- **`useCommandStore` 定位澄清**：添加头部注释，明确其作为命令面板公共接口的角色
+- **Lint 警告专项清理**：20 个 warnings 全部归零
+  - 移除未使用的导入与变量
+  - 替换 3 处 `any` 类型为具体类型
+  - 修复/注释 4 处 React Hook 依赖项警告
+
+### 测试
+
+- 单元测试 460 个全部通过
+- E2E 测试 62 个全部通过
+
 ## [1.4.4] - 2026-07-18
 
 ### 变更

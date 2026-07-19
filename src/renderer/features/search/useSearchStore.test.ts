@@ -1,5 +1,6 @@
 import { describe, it, expect, beforeEach } from 'vitest'
 import { useSearchStore } from './useSearchStore'
+import type { SearchProgress } from '../../../shared/types'
 
 describe('useSearchStore', () => {
   beforeEach(() => {
@@ -72,7 +73,7 @@ describe('useSearchStore', () => {
   it('reset 清空所有字段', () => {
     useSearchStore.setState({
       query: 'x',
-      results: {} as any,
+      results: {} as SearchProgress,
       isSearching: true,
       isRegex: true,
     })

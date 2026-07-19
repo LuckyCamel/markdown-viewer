@@ -61,6 +61,8 @@ export function useOutlineActiveHeading(headingIds: string[]) {
         rafRef.current = null
       }
     }
+    // 使用 idsKey（headingIds 的字符串化）作为依赖，避免数组引用变化导致重复绑定 scroll 事件
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [idsKey])
 
   return { activeId, setActiveHeading }

@@ -256,7 +256,7 @@ export function FileTree() {
       } else {
         await useFileStore.getState().createDirectory(creating.dirPath, name)
       }
-    } catch (err) {
+    } catch {
       // 错误已在 store 内记录
     }
     setCreating(null)
@@ -279,7 +279,7 @@ export function FileTree() {
     }
     try {
       await useFileStore.getState().renameEntry(renaming, newName)
-    } catch (err) {
+    } catch {
       // 错误已在 store 内记录
     }
     setRenaming(null)

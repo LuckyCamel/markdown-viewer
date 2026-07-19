@@ -88,6 +88,8 @@ export const Editor = forwardRef<EditorHandle, EditorProps>(function Editor(
       viewRef.current = null
       setIsMounted(false)
     }
+    // EditorView 只在挂载时创建一次，后续通过 dispatch/updateValue 同步状态，避免重建导致光标丢失
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   useEffect(() => {

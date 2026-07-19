@@ -86,43 +86,43 @@ describe('getRelativePath', () => {
 
 describe('parsePathQuery', () => {
   it('空查询返回空前缀和空过滤词', () => {
-    const result = parsePathQuery('', '/workspace/docs/guide.md')
+    const result = parsePathQuery('')
     expect(result.dirPrefix).toBe('')
     expect(result.filter).toBe('')
   })
 
   it('[[ 触发词后无输入', () => {
-    const result = parsePathQuery('[[', '/workspace/docs/guide.md')
+    const result = parsePathQuery('[[')
     expect(result.dirPrefix).toBe('')
     expect(result.filter).toBe('')
   })
 
   it('[[api 过滤词为 api', () => {
-    const result = parsePathQuery('[[api', '/workspace/docs/guide.md')
+    const result = parsePathQuery('[[api')
     expect(result.dirPrefix).toBe('')
     expect(result.filter).toBe('api')
   })
 
   it('./images/ 目录前缀', () => {
-    const result = parsePathQuery('./images/', '/workspace/docs/guide.md')
+    const result = parsePathQuery('./images/')
     expect(result.dirPrefix).toBe('images/')
     expect(result.filter).toBe('')
   })
 
   it('./images/arch 目录前缀 + 过滤词', () => {
-    const result = parsePathQuery('./images/arch', '/workspace/docs/guide.md')
+    const result = parsePathQuery('./images/arch')
     expect(result.dirPrefix).toBe('images/')
     expect(result.filter).toBe('arch')
   })
 
   it('../api/ 上级目录前缀', () => {
-    const result = parsePathQuery('../api/', '/workspace/docs/guide.md')
+    const result = parsePathQuery('../api/')
     expect(result.dirPrefix).toBe('../api/')
     expect(result.filter).toBe('')
   })
 
   it('![]( 触发词被正确剥离', () => {
-    const result = parsePathQuery('![](./images/', '/workspace/docs/guide.md')
+    const result = parsePathQuery('![](./images/')
     expect(result.dirPrefix).toBe('images/')
     expect(result.filter).toBe('')
   })

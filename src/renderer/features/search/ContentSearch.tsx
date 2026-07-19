@@ -71,6 +71,8 @@ export function ContentSearch({ rootPaths, onSelect }: ContentSearchProps) {
 
     return () => {
       clearTimeout(timer)
+      // 递增 generation 使之前的搜索结果失效（故意在 cleanup 中修改 ref）
+      // eslint-disable-next-line react-hooks/exhaustive-deps
       searchGenerationRef.current++
       if (activeSearchIdRef.current) {
         ipc.search.cancelSearch(activeSearchIdRef.current).catch((err) => {

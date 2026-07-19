@@ -118,13 +118,9 @@ export function getRelativePath(targetPath: string, currentFilePath: string): st
  * - 过滤词：`arch`
  *
  * @param query - 用户输入的查询字符串（如 ./images/arch、[[api、./）
- * @param currentFilePath - 当前文件完整路径
  * @returns 解析结果
  */
-export function parsePathQuery(
-  query: string,
-  currentFilePath: string,
-): { dirPrefix: string; filter: string } {
+export function parsePathQuery(query: string): { dirPrefix: string; filter: string } {
   // 去掉触发词部分，只保留路径部分
   let pathPart = query
   if (pathPart.startsWith('[[')) pathPart = pathPart.slice(2)
@@ -390,7 +386,6 @@ export function pathCompletionExtension(options: PathCompletionOptions): Extensi
     const query = extractQuery(textBefore, trigger)
     const { dirPrefix, filter } = parsePathQuery(
       trigger === 'wiki' ? query : query.startsWith('./') ? query : './' + query,
-      currentFilePath,
     )
 
     // 解析目标目录

@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { sortFileEntries, type SortMode, type SortDirection } from './fileSort'
+import { sortFileEntries } from './fileSort'
 import type { FileEntry } from './types'
 
 function makeEntry(name: string, isDir = false, modified?: number, size?: number): FileEntry {

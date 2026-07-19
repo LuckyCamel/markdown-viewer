@@ -56,6 +56,8 @@ export function InlineRenameInput({
       const result = validate(initialValue.trim())
       setError(result)
     }
+    // 故意只在挂载时执行：focus/select 和初始验证不应在依赖变化时重复触发
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   /**

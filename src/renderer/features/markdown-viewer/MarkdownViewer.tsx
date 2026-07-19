@@ -1,4 +1,4 @@
-import ReactMarkdown from 'react-markdown'
+import ReactMarkdown, { type Components } from 'react-markdown'
 import remarkGfm from 'remark-gfm'
 import remarkMath from 'remark-math'
 import rehypeKatex from 'rehype-katex'
@@ -22,8 +22,8 @@ interface MarkdownViewerProps {
 }
 
 export function MarkdownViewer({ content, filePath }: MarkdownViewerProps) {
-  const components = {
-    code({ className, children, node: _node, ...props }: any) {
+  const components: Components = {
+    code({ className, children, node: _node, ...props }) {
       const isMermaid = className?.includes('language-mermaid')
       if (isMermaid) {
         const text = Array.isArray(children)

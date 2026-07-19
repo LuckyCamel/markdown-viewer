@@ -22,12 +22,13 @@ function enrichFileEntry(entry: FileEntry): FileEntry {
  */
 ;(function () {
   if (typeof window !== 'undefined') {
-    ;(window as any).__IPC_MOCK_LOADED__ = true
+    window.__IPC_MOCK_LOADED__ = true
   }
 })()
 
 declare global {
   interface Window {
+    __IPC_MOCK_LOADED__?: boolean
     __E2E__: {
       files: Map<string, string>
       directoryTree: Map<string, FileEntry[]>
@@ -136,7 +137,7 @@ export async function createDirectory(dirPath: string, name: string): Promise<Fi
 export async function renameEntry(oldPath: string, newName: string): Promise<FileEntry> {
   ensureE2E()
   const parts = oldPath.split('/')
-  const oldName = parts.pop() || ''
+  parts.pop() // 移除旧文件名，保留目录路径
   const dirPath = parts.join('/')
   const newPath = `${dirPath}/${newName}`
 
@@ -178,7 +179,7 @@ export async function renameEntry(oldPath: string, newName: string): Promise<Fil
 export async function moveToTrash(path: string): Promise<void> {
   ensureE2E()
   const parts = path.split('/')
-  const name = parts.pop() || ''
+  parts.pop() // 移除文件名，保留目录路径
   const dirPath = parts.join('/')
 
   const entries = window.__E2E__.directoryTree.get(dirPath) || []

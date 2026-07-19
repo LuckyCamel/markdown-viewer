@@ -1,4 +1,4 @@
-import { useUIStore } from '../../stores/useUIStore'
+import { useThemeStore } from '../../stores/useThemeStore'
 import { useSettingsStore } from './useSettingsStore'
 import { useFileStore } from '../file-tree/useFileStore'
 import { ShortcutEditor } from './ShortcutEditor'
@@ -30,12 +30,12 @@ interface SettingsPanelProps {
 }
 
 export function SettingsPanel({ onClose }: SettingsPanelProps) {
-  const theme = useUIStore((s) => s.theme)
-  const setTheme = useUIStore((s) => s.setTheme)
-  const themeId = useUIStore((s) => s.themeId)
-  const setThemeId = useUIStore((s) => s.setThemeId)
-  const codeTheme = useUIStore((s) => s.codeTheme)
-  const setCodeTheme = useUIStore((s) => s.setCodeTheme)
+  const theme = useThemeStore((s) => s.theme)
+  const setTheme = useThemeStore((s) => s.setTheme)
+  const themeId = useThemeStore((s) => s.themeId)
+  const setThemeId = useThemeStore((s) => s.setThemeId)
+  const codeTheme = useThemeStore((s) => s.codeTheme)
+  const setCodeTheme = useThemeStore((s) => s.setCodeTheme)
   const loadFromDisk = useSettingsStore((s) => s.loadFromDisk)
   const rootPath = useFileStore((s) => s.rootPath)
   // 阅读设置

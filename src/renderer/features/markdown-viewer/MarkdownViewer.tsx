@@ -14,7 +14,7 @@ import { useTabStore } from '../tabs/useTabStore'
 import { dirname, joinPaths } from '../../../shared/utils'
 import { isInternalMarkdownHref, parseMarkdownHref } from '../../../shared/markdownLink'
 import { scrollToAnchor } from '../../../shared/scrollContainer'
-import { useUIStore } from '../../stores/useUIStore'
+import { useNavigationStore } from '../../stores/useNavigationStore'
 
 interface MarkdownViewerProps {
   content: string
@@ -87,7 +87,7 @@ export function MarkdownViewer({ content, filePath }: MarkdownViewerProps) {
               if (parsed.filePart) {
                 const resolved = joinPaths(dirname(filePath), parsed.filePart)
                 if (parsed.anchor) {
-                  useUIStore.getState().setPendingAnchorJump({
+                  useNavigationStore.getState().setPendingAnchorJump({
                     path: resolved,
                     anchor: parsed.anchor,
                   })

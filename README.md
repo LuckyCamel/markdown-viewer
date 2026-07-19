@@ -57,7 +57,7 @@ src/
   renderer/           # 渲染进程：React UI
     features/         # 功能模块（file-tree, tabs, markdown-viewer, outline, search, settings, welcome）
     hooks/            # 文件监控、键盘快捷键、原生菜单、滚动恢复
-    stores/           # 全局 UI 状态（useUIStore、useWorkspaceStore）
+    stores/           # 全局 UI 状态（useThemeStore、useLayoutStore、useNavigationStore、useWorkspaceStore）
     lib/              # 集中式 IPC 适配器（封装 Tauri invoke/API）
     components/       # 通用组件（ErrorBoundary, ThemeProvider, Layout）
   shared/             # 共享类型定义

@@ -31,7 +31,9 @@
 - `src/renderer/lib/themes.ts` — 主题定义与解析（6 套内置主题）
 - `src/renderer/lib/fonts.ts` — 系统字体选择列表
 - `src/renderer/styles/themes.css` — 主题 CSS 变量
-- `src/renderer/stores/useUIStore.ts` — 全局 UI 状态（主题、布局、搜索）
+- `src/renderer/stores/useThemeStore.ts` — 主题状态（theme、themeId、codeTheme）
+- `src/renderer/stores/useLayoutStore.ts` — 布局状态（侧边栏/大纲可见性与宽度、搜索面板）
+- `src/renderer/stores/useNavigationStore.ts` — 导航意图状态（跨文件跳转、搜索高亮）
 - `src/renderer/features/settings/useSettingsStore.ts` — 阅读设置状态
 - `src/renderer/hooks/useKeyboardShortcuts.ts` — 键盘快捷键
 - `src/renderer/hooks/useMenuEvents.ts` — 原生菜单事件分发

@@ -2,7 +2,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { render, screen, act } from '@testing-library/react'
 import App from './App'
 import { useTabStore } from './features/tabs/useTabStore'
-import { useUIStore } from './stores/useUIStore'
+import { useLayoutStore } from './stores/useLayoutStore'
 import { useFileStore } from './features/file-tree/useFileStore'
 
 const mockIpc = vi.hoisted(() => ({
@@ -33,7 +33,7 @@ vi.mock('./lib/ipc', () => ({
 describe('App', () => {
   beforeEach(() => {
     useTabStore.setState({ openFiles: [], activeFile: null })
-    useUIStore.setState({
+    useLayoutStore.setState({
       sidebarVisible: true,
       outlineVisible: true,
       sidebarWidth: 256,
@@ -78,7 +78,7 @@ describe('App', () => {
       render(<App />)
     })
 
-    expect(useUIStore.getState().sidebarWidth).toBe(300)
-    expect(useUIStore.getState().outlineWidth).toBe(350)
+    expect(useLayoutStore.getState().sidebarWidth).toBe(300)
+    expect(useLayoutStore.getState().outlineWidth).toBe(350)
   })
 })

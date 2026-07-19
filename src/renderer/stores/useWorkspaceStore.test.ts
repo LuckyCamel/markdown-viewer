@@ -46,22 +46,34 @@ vi.mock('../lib/ipc', () => ({
 }))
 vi.mock('../logger', () => ({ logError: (...args: unknown[]) => mockLogError(...args) }))
 
-vi.mock('./useUIStore', () => {
+vi.mock('./useThemeStore', () => {
   const actual = {
     getState: vi.fn(() => ({
       setTheme: mockSetTheme,
       setCodeTheme: mockSetCodeTheme,
-      setSidebarWidth: mockSetSidebarWidth,
-      setOutlineWidth: mockSetOutlineWidth,
       setThemeId: mockSetThemeId,
     })),
   }
-  const useUIStore = Object.assign(
+  const useThemeStore = Object.assign(
     (selector: (s: ReturnType<(typeof actual)['getState']>) => unknown) =>
       selector(actual.getState()),
     actual,
   )
-  return { useUIStore }
+  return { useThemeStore }
+})
+vi.mock('./useLayoutStore', () => {
+  const actual = {
+    getState: vi.fn(() => ({
+      setSidebarWidth: mockSetSidebarWidth,
+      setOutlineWidth: mockSetOutlineWidth,
+    })),
+  }
+  const useLayoutStore = Object.assign(
+    (selector: (s: ReturnType<(typeof actual)['getState']>) => unknown) =>
+      selector(actual.getState()),
+    actual,
+  )
+  return { useLayoutStore }
 })
 vi.mock('../features/tabs/useTabStore', () => ({
   useTabStore: {
@@ -155,7 +167,7 @@ describe('useWorkspaceStore', () => {
       expect(useWorkspaceStore.getState().initialized).toBe(true)
     })
 
-    it('恢复持久化 sidebarWidth/outlineWidth/themeId 到 useUIStore', async () => {
+    it('恢复持久化 sidebarWidth/outlineWidth/themeId 到对应 store', async () => {
       mockStoreGet.mockImplementation(async (key: string) => {
         const map: Record<string, unknown> = {
           sidebarWidth: 240,

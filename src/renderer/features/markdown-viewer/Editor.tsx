@@ -2,7 +2,7 @@ import { useEffect, useRef, useCallback, useState, forwardRef, useImperativeHand
 import { EditorState } from '@codemirror/state'
 import { EditorView } from '@codemirror/view'
 import { createExtensions } from '../../lib/codemirror/extensions'
-import { useUIStore } from '../../stores/useUIStore'
+import { useThemeStore } from '../../stores/useThemeStore'
 import { ipc } from '../../lib/ipc'
 
 interface EditorProps {
@@ -32,7 +32,7 @@ export const Editor = forwardRef<EditorHandle, EditorProps>(function Editor(
   const containerRef = useRef<HTMLDivElement>(null)
   const viewRef = useRef<EditorView | null>(null)
   const [isMounted, setIsMounted] = useState(false)
-  const { theme, themeId } = useUIStore()
+  const { theme, themeId } = useThemeStore()
   const isDark =
     theme === 'dark' ||
     (theme === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches) ||

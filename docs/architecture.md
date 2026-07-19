@@ -34,7 +34,7 @@ Tauri Rust 后端 + Web 前端，通过 IPC 通信。
 
 ### 2.2 前端分层
 - **features**：按业务域组织的功能模块（file-tree、tabs、markdown-viewer 等），每个 feature 自包含组件 + store
-- **stores**：全局 UI 状态（useUIStore），feature 级 store 放在各自 feature 目录下
+- **stores**：全局 UI 状态按域拆分为 useThemeStore / useLayoutStore / useNavigationStore；feature 级 store 放在各自 feature 目录下
 - **hooks**：跨 feature 复用的副作用逻辑（文件监控、键盘快捷键、原生菜单事件、滚动恢复等）
 - **components**：UI 骨架组件（Layout、ThemeProvider、ErrorBoundary）
 - **lib**：基础设施封装（IPC 适配器）
@@ -76,8 +76,8 @@ Tauri Rust 后端 + Web 前端，通过 IPC 通信。
 | Search | `features/search/` | 文件搜索 + 全局内容搜索 | 中 | useSearchStore |
 | Settings | `features/settings/` | 主题切换 + 忽略列表 + 扩展名编辑器 | 浅 | useSettingsStore |
 | WelcomePage | `features/welcome/` | 欢迎页：最近文件、恢复会话 | 浅 | useEditorStore |
-| Layout | `components/Layout.tsx` | 三栏布局 + 可拖拽面板分隔条 | 中 | useUIStore |
-| ThemeProvider | `components/ThemeProvider.tsx` | 主题上下文 + OS 主题监听 | 浅 | useUIStore |
+| Layout | `components/Layout.tsx` | 三栏布局 + 可拖拽面板分隔条 | 中 | useLayoutStore |
+| ThemeProvider | `components/ThemeProvider.tsx` | 主题上下文 + OS 主题监听 | 浅 | useThemeStore |
 | App | `App.tsx` | 顶层组装 hook + UI 组件 | 中 | 所有 feature hook |
 | ipc adapter | `lib/ipc.ts` | 集中式 Tauri API 封装（invoke + 插件） | 浅 | @tauri-apps/api |
 | ErrorBoundary | `components/ErrorBoundary.tsx` | React 组件崩溃降级 UI | 中 | logger |
@@ -86,7 +86,10 @@ Tauri Rust 后端 + Web 前端，通过 IPC 通信。
 
 | Store | 位置 | 职责 | 持久化 |
 |-------|------|------|--------|
-| useUIStore | `src/renderer/stores/useUIStore.ts` | 主题、面板可见性、面板宽度、搜索面板状态 | theme、sidebarWidth、outlineWidth（Rust store） |
+| useThemeStore | `src/renderer/stores/useThemeStore.ts` | 主题模式、主题配色 ID、代码高亮主题 | theme、themeId、codeTheme（Rust store） |
+| useLayoutStore | `src/renderer/stores/useLayoutStore.ts` | 侧边栏/大纲面板可见性与宽度、搜索面板状态 | sidebarWidth、outlineWidth（Rust store） |
+| useNavigationStore | `src/renderer/stores/useNavigationStore.ts` | 跨文件跳转意图（pendingContentJump / pendingAnchorJump）、搜索高亮 | — |
+| useCommandStore | `src/renderer/stores/useCommandStore.ts` | 命令面板显示状态（open 布尔 + show/hide/toggle） | — |
 | useWorkspaceStore | `src/renderer/stores/useWorkspaceStore.ts` | workspace 授权根、启动状态、最近文件/目录；启动时统一 `init()` 恢复 | lastWorkspace、openFiles、activeFile、recentFiles、recentDirs（Rust store） |
 | useEditorStore | `features/markdown-viewer/useEditorStore.ts` | 文件内容缓存（惰性加载）、滚动位置 | readingPositions（Rust store） |
 | useSettingsStore | `features/settings/useSettingsStore.ts` | 阅读设置（fontSize / lineHeight / contentMaxWidth / fontFamily / codeFontFamily） | 同名字段（Rust store）；ignore/extensions 改由 SettingsPanel 直接 `ipc.store.set`/`get` |
@@ -210,7 +213,7 @@ EditorPane 仅聚合 Toolbar + ConflictBanner + Editor UI
 
 ### 5.4 状态管理原则
 - 每个 feature 维护自己的 store，避免隐式循环 import；允许通过 action 或 `getState()` 进行显式协同
-- 全局 UI 状态（主题、面板可见性等）放在 `stores/useUIStore.ts`
+- 全局 UI 状态按域拆分：主题（useThemeStore）、布局 chrome（useLayoutStore）、导航意图（useNavigationStore）
 - 组件通过 selector 订阅，避免不必要的重渲染
 - lib 层工具函数不应直接依赖 store，应通过参数注入状态
 

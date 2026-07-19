@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import { useUIStore } from './stores/useUIStore'
+import { useLayoutStore } from './stores/useLayoutStore'
+import { useNavigationStore } from './stores/useNavigationStore'
 import { useEditorStore } from './features/markdown-viewer/useEditorStore'
 import { useTabStore } from './features/tabs/useTabStore'
 import { useFileStore } from './features/file-tree/useFileStore'
@@ -62,13 +63,13 @@ function App() {
   const handleAddFolderToWorkspace = useWorkspaceStore((s) => s.addFolderToWorkspace)
   const handleOpenFile = useWorkspaceStore((s) => s.openFile)
 
-  const sidebarVisible = useUIStore((s) => s.sidebarVisible)
-  const outlineVisible = useUIStore((s) => s.outlineVisible)
-  const searchPanel = useUIStore((s) => s.searchPanel)
-  const closeSearch = useUIStore((s) => s.closeSearch)
-  const setPendingContentJump = useUIStore((s) => s.setPendingContentJump)
-  const searchHighlight = useUIStore((s) => s.searchHighlight)
-  const setSearchHighlight = useUIStore((s) => s.setSearchHighlight)
+  const sidebarVisible = useLayoutStore((s) => s.sidebarVisible)
+  const outlineVisible = useLayoutStore((s) => s.outlineVisible)
+  const searchPanel = useLayoutStore((s) => s.searchPanel)
+  const closeSearch = useLayoutStore((s) => s.closeSearch)
+  const setPendingContentJump = useNavigationStore((s) => s.setPendingContentJump)
+  const searchHighlight = useNavigationStore((s) => s.searchHighlight)
+  const setSearchHighlight = useNavigationStore((s) => s.setSearchHighlight)
 
   // 最近文件列表，在打开 recent 面板时从持久化存储加载
   const [recentFiles, setRecentFiles] = useState<RecentEntry[]>([])

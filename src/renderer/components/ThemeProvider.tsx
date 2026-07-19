@@ -1,5 +1,5 @@
 import { useEffect, type ReactNode } from 'react'
-import { useUIStore } from '../stores/useUIStore'
+import { useThemeStore } from '../stores/useThemeStore'
 import { applyCodeTheme, resolveCodeTheme } from '../lib/codeThemes'
 import { useSettingsStore } from '../features/settings/useSettingsStore'
 import { resolveThemeId, getThemeVariant, type ThemeId } from '../lib/themes'
@@ -33,9 +33,9 @@ function applyThemeId(themeId: ThemeId) {
 }
 
 export function ThemeProvider({ children }: { children: ReactNode }) {
-  const theme = useUIStore((s) => s.theme)
-  const themeId = useUIStore((s) => s.themeId)
-  const codeTheme = useUIStore((s) => s.codeTheme)
+  const theme = useThemeStore((s) => s.theme)
+  const themeId = useThemeStore((s) => s.themeId)
+  const codeTheme = useThemeStore((s) => s.codeTheme)
   const fontSize = useSettingsStore((s) => s.fontSize)
   const lineHeight = useSettingsStore((s) => s.lineHeight)
   const contentMaxWidth = useSettingsStore((s) => s.contentMaxWidth)

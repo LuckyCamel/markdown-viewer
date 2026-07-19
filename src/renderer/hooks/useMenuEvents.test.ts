@@ -18,8 +18,8 @@ vi.mock('../features/tabs/useTabStore', () => ({
   },
 }))
 
-vi.mock('../stores/useUIStore', () => ({
-  useUIStore: {
+vi.mock('../stores/useLayoutStore', () => ({
+  useLayoutStore: {
     getState: () => ({
       toggleSidebar: vi.fn(),
       toggleOutline: vi.fn(),

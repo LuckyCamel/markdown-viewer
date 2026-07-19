@@ -1,7 +1,7 @@
 import { useEffect } from 'react'
 import { commandRegistry, type Command } from './commands'
 import { useCommandStore } from '../../stores/useCommandStore'
-import { useUIStore } from '../../stores/useUIStore'
+import { useLayoutStore } from '../../stores/useLayoutStore'
 import { useTabStore } from '../tabs/useTabStore'
 
 /**
@@ -209,16 +209,16 @@ export function useRegisterCommands(
       addFolderToWorkspace: overrides?.addFolderToWorkspace ?? (() => undefined),
       openFile: overrides?.openFile ?? (() => undefined),
       showAbout: overrides?.showAbout ?? (() => undefined),
-      toggleSidebar: () => useUIStore.getState().toggleSidebar(),
-      toggleOutline: () => useUIStore.getState().toggleOutline(),
+      toggleSidebar: () => useLayoutStore.getState().toggleSidebar(),
+      toggleOutline: () => useLayoutStore.getState().toggleOutline(),
       toggleSettings: overrides?.toggleSettings ?? (() => undefined),
       toggleViewMode: () => {
         const s = useTabStore.getState()
         if (s.activeFile) s.toggleViewMode(s.activeFile)
       },
-      openFileSearch: () => useUIStore.getState().openSearch('file'),
-      openContentSearch: () => useUIStore.getState().openSearch('content'),
-      openRecentFiles: () => useUIStore.getState().openSearch('recent'),
+      openFileSearch: () => useLayoutStore.getState().openSearch('file'),
+      openContentSearch: () => useLayoutStore.getState().openSearch('content'),
+      openRecentFiles: () => useLayoutStore.getState().openSearch('recent'),
       closeActiveTab: () => {
         const s = useTabStore.getState()
         if (s.activeFile) s.closeFile(s.activeFile)

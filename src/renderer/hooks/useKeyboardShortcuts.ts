@@ -9,7 +9,7 @@ import {
 import { logError } from '../logger'
 import { commandRegistry } from '../features/commands/commands'
 import { useTabStore } from '../features/tabs/useTabStore'
-import { useUIStore } from '../stores/useUIStore'
+import { useNavigationStore } from '../stores/useNavigationStore'
 
 interface ShortcutHandlers {
   /** 唤起命令面板（Ctrl+Shift+P，固定不可配置） */
@@ -91,7 +91,7 @@ export function useKeyboardShortcuts(handlers: ShortcutHandlers) {
       }
 
       // 存在搜索高亮时，Escape 关闭高亮
-      if (key === 'Escape' && useUIStore.getState().searchHighlight) {
+      if (key === 'Escape' && useNavigationStore.getState().searchHighlight) {
         e.preventDefault()
         handlersRef.current.onSearchHighlightClose?.()
         return

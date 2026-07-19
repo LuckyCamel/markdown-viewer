@@ -1,6 +1,6 @@
 import { useRef, useCallback, useEffect, useState } from 'react'
 import type { ReactNode } from 'react'
-import { useUIStore } from '../stores/useUIStore'
+import { useLayoutStore } from '../stores/useLayoutStore'
 import { ipc } from '../lib/ipc'
 import { logError } from '../logger'
 
@@ -13,10 +13,10 @@ interface LayoutProps {
 }
 
 export function Layout({ sidebar, main, outline, sidebarVisible, outlineVisible }: LayoutProps) {
-  const sidebarWidth = useUIStore((s) => s.sidebarWidth)
-  const outlineWidth = useUIStore((s) => s.outlineWidth)
-  const setSidebarWidth = useUIStore((s) => s.setSidebarWidth)
-  const setOutlineWidth = useUIStore((s) => s.setOutlineWidth)
+  const sidebarWidth = useLayoutStore((s) => s.sidebarWidth)
+  const outlineWidth = useLayoutStore((s) => s.outlineWidth)
+  const setSidebarWidth = useLayoutStore((s) => s.setSidebarWidth)
+  const setOutlineWidth = useLayoutStore((s) => s.setOutlineWidth)
 
   const containerRef = useRef<HTMLDivElement>(null)
   const draggingRef = useRef<'sidebar' | 'outline' | null>(null)
@@ -59,8 +59,8 @@ export function Layout({ sidebar, main, outline, sidebarVisible, outlineVisible 
       document.body.style.cursor = ''
       const width =
         panel === 'sidebar'
-          ? useUIStore.getState().sidebarWidth
-          : useUIStore.getState().outlineWidth
+          ? useLayoutStore.getState().sidebarWidth
+          : useLayoutStore.getState().outlineWidth
       ipc.store.set(panel === 'sidebar' ? 'sidebarWidth' : 'outlineWidth', width).catch((err) => {
         logError('Layout:persistWidth', err)
       })

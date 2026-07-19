@@ -3,7 +3,8 @@ import { ipc, ensureStoreMigrated } from '../lib/ipc'
 import { useFileStore } from '../features/file-tree/useFileStore'
 import { useTabStore } from '../features/tabs/useTabStore'
 import { useSearchStore } from '../features/search/useSearchStore'
-import { useUIStore } from './useUIStore'
+import { useThemeStore } from './useThemeStore'
+import { useLayoutStore } from './useLayoutStore'
 import { logError } from '../logger'
 import { dirname } from '../../shared/utils'
 import { setLocale, type Locale } from '../../shared/i18n'
@@ -104,8 +105,8 @@ export const useWorkspaceStore = create<WorkspaceState>((set, get) => ({
       setLocale(savedLocale as Locale)
     }
 
-    if (savedTheme) useUIStore.getState().setTheme(savedTheme as ThemeMode)
-    if (savedCodeTheme) useUIStore.getState().setCodeTheme(savedCodeTheme)
+    if (savedTheme) useThemeStore.getState().setTheme(savedTheme as ThemeMode)
+    if (savedCodeTheme) useThemeStore.getState().setCodeTheme(savedCodeTheme)
 
     // 加载 UI 布局设置
     const [sidebarWidth, outlineWidth, themeId] = await Promise.all([
@@ -113,9 +114,9 @@ export const useWorkspaceStore = create<WorkspaceState>((set, get) => ({
       ipc.store.get<number>('outlineWidth'),
       ipc.store.get<string>('themeId'),
     ])
-    if (typeof sidebarWidth === 'number') useUIStore.getState().setSidebarWidth(sidebarWidth)
-    if (typeof outlineWidth === 'number') useUIStore.getState().setOutlineWidth(outlineWidth)
-    if (themeId) useUIStore.getState().setThemeId(themeId as ThemeId)
+    if (typeof sidebarWidth === 'number') useLayoutStore.getState().setSidebarWidth(sidebarWidth)
+    if (typeof outlineWidth === 'number') useLayoutStore.getState().setOutlineWidth(outlineWidth)
+    if (themeId) useThemeStore.getState().setThemeId(themeId as ThemeId)
 
     // 加载文件排序设置
     await useFileStore.getState().loadSortSettings()

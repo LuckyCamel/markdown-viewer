@@ -71,7 +71,7 @@ Tauri Rust 后端 + Web 前端，通过 IPC 通信。
 |------|------|------|--------|----------|
 | FileTree | `features/file-tree/` | 递归文件树渲染、展开/折叠 | 中 | useFileStore |
 | Tabs | `features/tabs/` | 多标签管理、切换、关闭 | 中 | useTabStore |
-| MarkdownViewer | `features/markdown-viewer/` | Markdown 渲染（react-markdown + 插件链）、CodeMirror 6 编辑器、自动保存、冲突检测 | 深 | useEditorStore, mermaid, katex, @codemirror/* |
+| MarkdownViewer | `features/markdown-viewer/` | Markdown 渲染（react-markdown + 插件链）、CodeMirror 6 编辑器、自动保存、冲突检测、表格编辑 | 深 | useEditorStore, mermaid, katex, @codemirror/* |
 | Outline | `features/outline/` | 标题提取 + 大纲面板 + 点击跳转（rehypeHeadingIds 注入 id） | 中 | headingToId |
 | Search | `features/search/` | 文件搜索 + 全局内容搜索 | 中 | useSearchStore |
 | Settings | `features/settings/` | 主题切换 + 忽略列表 + 扩展名编辑器 | 浅 | useSettingsStore |
@@ -96,6 +96,7 @@ Tauri Rust 后端 + Web 前端，通过 IPC 通信。
 | useTabStore | `features/tabs/useTabStore.ts` | openFiles、activeFile、dirtyFiles；关闭时清理 Editor 缓存 | —（持久化由 useWorkspaceStore.init 恢复） |
 | useFileStore | `features/file-tree/useFileStore.ts` | 文件树数据、展开状态、加载状态（惰性加载守卫） | — |
 | useSearchStore | `features/search/useSearchStore.ts` | 搜索关键词、结果、搜索状态 | — |
+| useTableDialogStore | `src/renderer/stores/useTableDialogStore.ts` | 表格插入弹窗开关与编辑器视图引用 | — |
 
 > 设计原则：store 各自独立，避免隐式循环 import；允许通过 action 或 `getState()` 进行显式协同。组件通过 hook 订阅，不直接操作 store。lib 层工具函数不应直接依赖 store，应通过参数注入状态，以提高复用性和可测试性。
 

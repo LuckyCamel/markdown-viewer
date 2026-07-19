@@ -46,4 +46,7 @@
 - `src/renderer/lib/dailyNote.ts` — 每日笔记创建/打开
 - `src/renderer/features/markdown-viewer/useEditorDocument.ts` — 统一编辑会话（状态机：saved/dirty/saving/error/conflict、seed/reset、保存、冲突处理）
 - `src/renderer/lib/codemirror/pathCompletion.ts` — 相对路径补全（纯函数 + CodeMirror 扩展）
+- `src/renderer/lib/codemirror/table.ts` — 表格编辑核心（解析/插入/删除/导航 + keymap）
+- `src/renderer/components/TableInsertDialog.tsx` — 表格插入弹窗（行/列配置）
+- `src/renderer/stores/useTableDialogStore.ts` — 表格弹窗状态（工具栏与命令面板共享）
 - `src-tauri/src/commands/export.rs` — `save_text_file` Rust command

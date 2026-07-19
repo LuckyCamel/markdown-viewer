@@ -7,7 +7,7 @@
 import type { ReactNode } from 'react'
 
 /** 命令分类 */
-export type CommandCategory = 'file' | 'view' | 'search' | 'settings' | 'workspace'
+export type CommandCategory = 'file' | 'view' | 'search' | 'settings' | 'workspace' | 'edit'
 
 /** 命令定义 */
 export interface Command {

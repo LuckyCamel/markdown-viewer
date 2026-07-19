@@ -27,6 +27,7 @@ export function EditorPane({
   onChange,
 }: EditorPaneProps) {
   const editorRef = useRef<{ view: EditorView | null }>(null)
+  const [editorView, setEditorView] = useState<EditorView | null>(null)
   const [conflictDismissed, setConflictDismissed] = useState(false)
 
   useEffect(() => {
@@ -37,7 +38,7 @@ export function EditorPane({
 
   return (
     <>
-      <EditorToolbar view={editorRef.current?.view ?? null} />
+      <EditorToolbar view={editorView} />
       {saveStatus === 'conflict' && !conflictDismissed && (
         <ConflictBanner
           onLoadDisk={onLoadDisk}
@@ -51,6 +52,7 @@ export function EditorPane({
         value={content}
         onChange={onChange}
         filePath={filePath}
+        onViewReady={setEditorView}
       />
     </>
   )

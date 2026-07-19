@@ -1,4 +1,4 @@
-import { Extension, EditorSelection } from '@codemirror/state'
+import { Extension, EditorSelection, Prec } from '@codemirror/state'
 import { EditorState } from '@codemirror/state'
 import {
   EditorView,
@@ -10,11 +10,14 @@ import {
 } from '@codemirror/view'
 import { defaultKeymap, history, historyKeymap, indentWithTab } from '@codemirror/commands'
 import { markdown } from '@codemirror/lang-markdown'
+// @ts-expect-error lezer-markdown 的 package.json exports 缺少 types 字段，需显式抑制
+import { Table } from 'lezer-markdown'
 import { closeBrackets, closeBracketsKeymap } from '@codemirror/autocomplete'
 import { searchKeymap, search, highlightSelectionMatches } from '@codemirror/search'
 import { codemirrorTheme, codemirrorDarkTheme } from './theme'
 import { listContinuation } from './listContinuation'
 import { pathCompletionExtension } from './pathCompletion'
+import { tableKeymap } from './table'
 import type { FileEntry } from '../../../shared/types'
 
 interface CreateExtensionsOptions {
@@ -77,9 +80,10 @@ export function createExtensions(options: CreateExtensionsOptions = {}): Extensi
         },
       },
     ]),
-    markdown(),
+    markdown({ extensions: [Table] }),
     closeBrackets(),
     listContinuation,
+    Prec.high(keymap.of(tableKeymap)),
   ]
 
   // 路径补全：仅在提供 currentFilePath 和 listDirectory 时启用

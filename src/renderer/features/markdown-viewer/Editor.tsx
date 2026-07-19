@@ -13,6 +13,8 @@ interface EditorProps {
   className?: string
   /** 当前文件完整路径，传入后启用路径补全 */
   filePath?: string
+  /** 编辑器视图创建或销毁时回调 */
+  onViewReady?: (view: EditorView | null) => void
 }
 
 interface EditorHandle {
@@ -26,7 +28,15 @@ interface EditorHandle {
  * 外部值变化时仅在失焦时同步，避免编辑冲突。
  */
 export const Editor = forwardRef<EditorHandle, EditorProps>(function Editor(
-  { value, onChange, showLineNumbers = true, readOnly = false, className = '', filePath },
+  {
+    value,
+    onChange,
+    showLineNumbers = true,
+    readOnly = false,
+    className = '',
+    filePath,
+    onViewReady,
+  },
   ref,
 ) {
   const containerRef = useRef<HTMLDivElement>(null)
@@ -82,11 +92,13 @@ export const Editor = forwardRef<EditorHandle, EditorProps>(function Editor(
     })
     viewRef.current = view
     setIsMounted(true)
+    onViewReady?.(view)
 
     return () => {
       view.destroy()
       viewRef.current = null
       setIsMounted(false)
+      onViewReady?.(null)
     }
     // EditorView 只在挂载时创建一次，后续通过 dispatch/updateValue 同步状态，避免重建导致光标丢失
     // eslint-disable-next-line react-hooks/exhaustive-deps

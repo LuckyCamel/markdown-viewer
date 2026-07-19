@@ -2,6 +2,7 @@ import { useEffect } from 'react'
 import { commandRegistry, type Command } from './commands'
 import { useCommandStore } from '../../stores/useCommandStore'
 import { useLayoutStore } from '../../stores/useLayoutStore'
+import { useTableDialogStore } from '../../stores/useTableDialogStore'
 import { useTabStore } from '../tabs/useTabStore'
 
 /**
@@ -180,6 +181,16 @@ function buildCommands(ctx: CommandFactoryContext): Command[] {
       alias: 'Export HTML',
       category: 'file',
       execute: () => void ctx.exportHtml(),
+      isAvailable: () => useTabStore.getState().activeFile !== null,
+    },
+    {
+      id: 'editor.insert-table',
+      name: '插入表格',
+      alias: 'Insert Table',
+      category: 'edit',
+      execute: () => {
+        useTableDialogStore.getState().openDialog()
+      },
       isAvailable: () => useTabStore.getState().activeFile !== null,
     },
   ]

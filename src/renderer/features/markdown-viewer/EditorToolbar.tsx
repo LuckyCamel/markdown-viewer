@@ -1,4 +1,4 @@
-import { useCallback } from 'react'
+import { useCallback, useEffect } from 'react'
 import { EditorView } from '@codemirror/view'
 import {
   toggleBold,
@@ -13,11 +13,13 @@ import {
   insertLink,
   insertImage,
   insertHorizontalRule,
-  insertTable,
   insertCodeBlock,
   undo,
   redo,
 } from '../../lib/codemirror/markdownCommands'
+import { insertTableWithSize } from '../../lib/codemirror/table'
+import { TableInsertDialog } from '../../components/TableInsertDialog'
+import { useTableDialogStore } from '../../stores/useTableDialogStore'
 
 interface EditorToolbarProps {
   view: EditorView | null
@@ -57,6 +59,17 @@ function ToolbarButton({ onClick, title, icon, shortcut }: ToolbarButtonProps) {
 }
 
 export function EditorToolbar({ view }: EditorToolbarProps) {
+  const dialogOpen = useTableDialogStore((s) => s.open)
+  const closeDialog = useTableDialogStore((s) => s.closeDialog)
+
+  /**
+   * 将当前编辑器视图同步到弹窗 store，
+   * 确保命令面板触发弹窗时也能拿到正确的 view 实例。
+   */
+  useEffect(() => {
+    useTableDialogStore.getState().setView(view)
+  }, [view])
+
   const handleAction = useCallback(
     (action: (v: EditorView) => void) => {
       if (!view) return
@@ -66,126 +79,151 @@ export function EditorToolbar({ view }: EditorToolbarProps) {
     [view],
   )
 
+  /**
+   * 打开表格插入弹窗
+   */
+  const handleOpenTableDialog = useCallback(() => {
+    if (!view) return
+    useTableDialogStore.getState().openDialog(view)
+  }, [view])
+
+  /**
+   * 确认插入指定大小的表格
+   */
+  const handleConfirmTable = useCallback(
+    (rows: number, cols: number) => {
+      const targetView = useTableDialogStore.getState().view ?? view
+      if (!targetView) return
+      insertTableWithSize(targetView, rows, cols)
+      targetView.focus()
+      closeDialog()
+    },
+    [view, closeDialog],
+  )
+
   if (!view) return null
 
   return (
-    <div className="flex items-center gap-1 px-4 py-2 border-b border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 flex-wrap">
-      <div className="flex items-center gap-1 border-r border-gray-200 dark:border-gray-700 pr-3 mr-3">
-        <ToolbarButton
-          onClick={() => handleAction((v) => setHeading(v, 1))}
-          title="Heading 1"
-          icon={<path d="M4 4h16v3H8l-4 4v10H4V4z" />}
-          shortcut="Ctrl+1"
-        />
-        <ToolbarButton
-          onClick={() => handleAction((v) => setHeading(v, 2))}
-          title="Heading 2"
-          icon={<path d="M4 4h16v3H8l-4 4v8H4V4z" />}
-          shortcut="Ctrl+2"
-        />
-        <ToolbarButton
-          onClick={() => handleAction((v) => setHeading(v, 3))}
-          title="Heading 3"
-          icon={<path d="M4 4h16v3H8l-4 4v4H4V4z" />}
-          shortcut="Ctrl+3"
-        />
-      </div>
+    <>
+      <TableInsertDialog open={dialogOpen} onClose={closeDialog} onConfirm={handleConfirmTable} />
+      <div className="flex items-center gap-1 px-4 py-2 border-b border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 flex-wrap">
+        <div className="flex items-center gap-1 border-r border-gray-200 dark:border-gray-700 pr-3 mr-3">
+          <ToolbarButton
+            onClick={() => handleAction((v) => setHeading(v, 1))}
+            title="Heading 1"
+            icon={<path d="M4 4h16v3H8l-4 4v10H4V4z" />}
+            shortcut="Ctrl+1"
+          />
+          <ToolbarButton
+            onClick={() => handleAction((v) => setHeading(v, 2))}
+            title="Heading 2"
+            icon={<path d="M4 4h16v3H8l-4 4v8H4V4z" />}
+            shortcut="Ctrl+2"
+          />
+          <ToolbarButton
+            onClick={() => handleAction((v) => setHeading(v, 3))}
+            title="Heading 3"
+            icon={<path d="M4 4h16v3H8l-4 4v4H4V4z" />}
+            shortcut="Ctrl+3"
+          />
+        </div>
 
-      <div className="flex items-center gap-1 border-r border-gray-200 dark:border-gray-700 pr-3 mr-3">
-        <ToolbarButton
-          onClick={() => handleAction(toggleBold)}
-          title="Bold"
-          icon={<path d="M6 4h8a4 4 0 0 1 4 4 4 4 0 0 1-4 4H8" />}
-          shortcut="Ctrl+B"
-        />
-        <ToolbarButton
-          onClick={() => handleAction(toggleItalic)}
-          title="Italic"
-          icon={<path d="M14 4h6v6" />}
-          shortcut="Ctrl+I"
-        />
-        <ToolbarButton
-          onClick={() => handleAction(toggleStrikethrough)}
-          title="Strikethrough"
-          icon={<path d="M18 4H6l6 8-6 8h12l-6-8z" />}
-          shortcut="Ctrl+S"
-        />
-        <ToolbarButton
-          onClick={() => handleAction(toggleInlineCode)}
-          title="Inline Code"
-          icon={<path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />}
-          shortcut="Ctrl+`"
-        />
-      </div>
+        <div className="flex items-center gap-1 border-r border-gray-200 dark:border-gray-700 pr-3 mr-3">
+          <ToolbarButton
+            onClick={() => handleAction(toggleBold)}
+            title="Bold"
+            icon={<path d="M6 4h8a4 4 0 0 1 4 4 4 4 0 0 1-4 4H8" />}
+            shortcut="Ctrl+B"
+          />
+          <ToolbarButton
+            onClick={() => handleAction(toggleItalic)}
+            title="Italic"
+            icon={<path d="M14 4h6v6" />}
+            shortcut="Ctrl+I"
+          />
+          <ToolbarButton
+            onClick={() => handleAction(toggleStrikethrough)}
+            title="Strikethrough"
+            icon={<path d="M18 4H6l6 8-6 8h12l-6-8z" />}
+            shortcut="Ctrl+S"
+          />
+          <ToolbarButton
+            onClick={() => handleAction(toggleInlineCode)}
+            title="Inline Code"
+            icon={<path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />}
+            shortcut="Ctrl+`"
+          />
+        </div>
 
-      <div className="flex items-center gap-1 border-r border-gray-200 dark:border-gray-700 pr-3 mr-3">
-        <ToolbarButton
-          onClick={() => handleAction(toggleUnorderedList)}
-          title="Unordered List"
-          icon={<path d="M6 4h2a2 2 0 0 1 2 2v0a2 2 0 0 1-2 2H6" />}
-          shortcut="Ctrl+U"
-        />
-        <ToolbarButton
-          onClick={() => handleAction(toggleOrderedList)}
-          title="Ordered List"
-          icon={<path d="M3 6h18" />}
-          shortcut="Ctrl+O"
-        />
-        <ToolbarButton
-          onClick={() => handleAction(toggleTaskList)}
-          title="Task List"
-          icon={<path d="M3 6h18" />}
-        />
-        <ToolbarButton
-          onClick={() => handleAction(toggleBlockquote)}
-          title="Quote"
-          icon={<path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />}
-        />
-      </div>
+        <div className="flex items-center gap-1 border-r border-gray-200 dark:border-gray-700 pr-3 mr-3">
+          <ToolbarButton
+            onClick={() => handleAction(toggleUnorderedList)}
+            title="Unordered List"
+            icon={<path d="M6 4h2a2 2 0 0 1 2 2v0a2 2 0 0 1-2 2H6" />}
+            shortcut="Ctrl+U"
+          />
+          <ToolbarButton
+            onClick={() => handleAction(toggleOrderedList)}
+            title="Ordered List"
+            icon={<path d="M3 6h18" />}
+            shortcut="Ctrl+O"
+          />
+          <ToolbarButton
+            onClick={() => handleAction(toggleTaskList)}
+            title="Task List"
+            icon={<path d="M3 6h18" />}
+          />
+          <ToolbarButton
+            onClick={() => handleAction(toggleBlockquote)}
+            title="Quote"
+            icon={<path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />}
+          />
+        </div>
 
-      <div className="flex items-center gap-1 border-r border-gray-200 dark:border-gray-700 pr-3 mr-3">
-        <ToolbarButton
-          onClick={() => handleAction(insertLink)}
-          title="Link"
-          icon={<path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" />}
-          shortcut="Ctrl+K"
-        />
-        <ToolbarButton
-          onClick={() => handleAction(insertImage)}
-          title="Image"
-          icon={<rect x="3" y="3" width="18" height="18" rx="2" ry="2" />}
-        />
-        <ToolbarButton
-          onClick={() => handleAction(insertTable)}
-          title="Table"
-          icon={<rect x="3" y="3" width="18" height="18" rx="2" ry="2" />}
-        />
-        <ToolbarButton
-          onClick={() => handleAction(insertCodeBlock)}
-          title="Code Block"
-          icon={<path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />}
-        />
-        <ToolbarButton
-          onClick={() => handleAction(insertHorizontalRule)}
-          title="Horizontal Rule"
-          icon={<path d="M4 12h16" />}
-        />
-      </div>
+        <div className="flex items-center gap-1 border-r border-gray-200 dark:border-gray-700 pr-3 mr-3">
+          <ToolbarButton
+            onClick={() => handleAction(insertLink)}
+            title="Link"
+            icon={<path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" />}
+            shortcut="Ctrl+K"
+          />
+          <ToolbarButton
+            onClick={() => handleAction(insertImage)}
+            title="Image"
+            icon={<rect x="3" y="3" width="18" height="18" rx="2" ry="2" />}
+          />
+          <ToolbarButton
+            onClick={handleOpenTableDialog}
+            title="Table"
+            icon={<rect x="3" y="3" width="18" height="18" rx="2" ry="2" />}
+          />
+          <ToolbarButton
+            onClick={() => handleAction(insertCodeBlock)}
+            title="Code Block"
+            icon={<path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />}
+          />
+          <ToolbarButton
+            onClick={() => handleAction(insertHorizontalRule)}
+            title="Horizontal Rule"
+            icon={<path d="M4 12h16" />}
+          />
+        </div>
 
-      <div className="flex items-center gap-1">
-        <ToolbarButton
-          onClick={() => handleAction(undo)}
-          title="Undo"
-          icon={<path d="M3 7v6h6" />}
-          shortcut="Ctrl+Z"
-        />
-        <ToolbarButton
-          onClick={() => handleAction(redo)}
-          title="Redo"
-          icon={<path d="M21 17a9 9 0 0 0-9-9 9 9 0 0 0-6 2.3L3 13" />}
-          shortcut="Ctrl+Y"
-        />
+        <div className="flex items-center gap-1">
+          <ToolbarButton
+            onClick={() => handleAction(undo)}
+            title="Undo"
+            icon={<path d="M3 7v6h6" />}
+            shortcut="Ctrl+Z"
+          />
+          <ToolbarButton
+            onClick={() => handleAction(redo)}
+            title="Redo"
+            icon={<path d="M21 17a9 9 0 0 0-9-9 9 9 0 0 0-6 2.3L3 13" />}
+            shortcut="Ctrl+Y"
+          />
+        </div>
       </div>
-    </div>
+    </>
   )
 }

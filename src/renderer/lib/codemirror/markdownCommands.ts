@@ -119,15 +119,6 @@ export function insertHorizontalRule(view: EditorView) {
   }
 }
 
-export function insertTable(view: EditorView) {
-  const { from } = view.state.selection.main
-  const insertText = '\n| Column 1 | Column 2 |\n|----------|----------|\n| Cell 1   | Cell 2   |\n'
-  view.dispatch({
-    changes: { from, to: from, insert: insertText },
-    selection: { anchor: from + insertText.length - 2, head: from + insertText.length - 2 },
-  })
-}
-
 export function insertCodeBlock(view: EditorView) {
   const { from, to } = view.state.selection.main
   const selected = view.state.sliceDoc(from, to)

@@ -221,6 +221,15 @@ function App() {
 
   const handleShowAbout = useCallback(() => setShowAbout(true), [])
 
+  /**
+   * 保存并返回阅读模式：先强制保存，再切换到阅读视图
+   */
+  const handleSaveAndReturnToRead = useCallback(async () => {
+    if (!activeFile) return
+    await forceSave()
+    useTabStore.getState().setViewMode(activeFile, 'read')
+  }, [activeFile, forceSave])
+
   useRegisterCommands({
     openFolder: handleOpenFolderViaDialog,
     addFolderToWorkspace: handleAddFolderViaDialog,
@@ -230,6 +239,7 @@ function App() {
     exportPdf: handleExportPdf,
     exportHtml: handleExportHtml,
     openDailyNote: handleOpenDailyNote,
+    saveAndReturnToRead: handleSaveAndReturnToRead,
   })
   useKeyboardShortcuts({
     onOpenCommandPalette: showCommandPalette,

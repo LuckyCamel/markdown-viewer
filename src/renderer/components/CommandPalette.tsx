@@ -20,11 +20,11 @@ export function CommandPalette() {
   const listRef = useRef<HTMLDivElement>(null)
 
   /**
-   * 已注册命令的快照
+   * 已注册命令的快照（过滤不可用命令）
    */
   const commands: Command[] = useMemo(() => {
     if (!open) return []
-    return commandRegistry.getAll()
+    return commandRegistry.getAll().filter((cmd) => !cmd.isAvailable || cmd.isAvailable())
   }, [open])
 
   /**
@@ -64,7 +64,6 @@ export function CommandPalette() {
    * 执行当前选中的命令并关闭面板
    */
   const executeCommand = async (cmd: Command) => {
-    if (cmd.isAvailable && !cmd.isAvailable()) return
     hide()
     try {
       await cmd.execute()
@@ -146,21 +145,19 @@ export function CommandPalette() {
           ) : (
             matches.map((cmd, idx) => {
               const isActive = idx === selectedIndex
-              const available = !cmd.isAvailable || cmd.isAvailable()
               return (
                 <button
                   key={cmd.id}
                   data-index={idx}
                   role="option"
                   aria-selected={isActive}
-                  disabled={!available}
                   onMouseEnter={() => setSelectedIndex(idx)}
                   onClick={() => void executeCommand(cmd)}
                   className={`w-full text-left px-4 py-2 flex items-center gap-3 text-sm ${
                     isActive
                       ? 'bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-200'
-                      : 'text-gray-700 dark:text-gray-200'
-                  } ${!available ? 'opacity-40 cursor-not-allowed' : 'hover:bg-gray-50 dark:hover:bg-gray-700/50'}`}
+                      : 'text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700/50'
+                  }`}
                 >
                   <span className="flex-1 truncate">{cmd.name}</span>
                   <span className="text-[10px] uppercase tracking-wide text-gray-400 dark:text-gray-500">

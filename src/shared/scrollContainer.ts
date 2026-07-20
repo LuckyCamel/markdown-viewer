@@ -62,13 +62,40 @@ export function scrollToAnchor(anchor: string): boolean {
 }
 
 /**
- * 内容搜索跳转：优先匹配行片段，失败则按行号估算
+ * 在 SourceViewer 中按行号精确定位并高亮
+ *
+ * 查找 .source-viewer 容器内的 [data-line=N] 元素，滚动到该行并短暂高亮。
+ * 如果找不到 SourceViewer，返回 false。
+ */
+export function scrollToSourceLine(line: number): boolean {
+  const sourceViewer = document.querySelector('.source-viewer')
+  if (!(sourceViewer instanceof HTMLElement)) return false
+
+  const lineEl = sourceViewer.querySelector(`[data-line="${line}"]`)
+  if (!(lineEl instanceof HTMLElement)) return false
+
+  const containerRect = sourceViewer.getBoundingClientRect()
+  const lineRect = lineEl.getBoundingClientRect()
+  const top = lineRect.top - containerRect.top + sourceViewer.scrollTop - 20
+  sourceViewer.scrollTo({ top, behavior: 'smooth' })
+
+  lineEl.classList.add('bg-yellow-200', 'dark:bg-yellow-900')
+  setTimeout(() => {
+    lineEl.classList.remove('bg-yellow-200', 'dark:bg-yellow-900')
+  }, 2000)
+
+  return true
+}
+
+/**
+ * 内容搜索跳转：优先 SourceViewer 精确行定位，其次匹配行片段，失败则按行号估算
  */
 export function scrollToContentMatch(
   line: number,
   lineContent: string,
   fileContent: string,
 ): boolean {
+  if (scrollToSourceLine(line)) return true
   if (scrollToTextInContainer(lineContent)) return true
   return scrollToApproxLine(line, fileContent)
 }

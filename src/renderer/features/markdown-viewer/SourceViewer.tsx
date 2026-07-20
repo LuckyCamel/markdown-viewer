@@ -9,7 +9,7 @@ interface SourceViewerProps {
 
 /**
  * 源码查看器：展示原始文本并根据文件类型进行语法高亮
- * 支持行号显示
+ * 支持行号显示、搜索行定位与高亮
  */
 export function SourceViewer({ content, filePath }: SourceViewerProps) {
   const codeRef = useRef<HTMLElement>(null)
@@ -43,7 +43,9 @@ export function SourceViewer({ content, filePath }: SourceViewerProps) {
       <div className="flex">
         <div className="select-none pr-3 pl-4 py-4 text-right text-gray-500 dark:text-gray-600 text-sm leading-relaxed border-r border-gray-200 dark:border-gray-700 min-w-[50px] bg-gray-50 dark:bg-gray-900/50">
           {lineNumbers.map((num) => (
-            <div key={num}>{num}</div>
+            <div key={num} data-line={num} className="transition-colors duration-500">
+              {num}
+            </div>
           ))}
         </div>
         <div className="flex-1 p-4">

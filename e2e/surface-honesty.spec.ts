@@ -57,4 +57,30 @@ test.describe('Surface Honesty - Non-MD Files', () => {
 
     ws.cleanup()
   })
+
+  test('non-markdown files do not show edit commands in command palette', async ({ page }) => {
+    const ws = createTestWorkspace({
+      'code.ts': 'export const foo = "bar";',
+    })
+
+    await launchApp(page, ws)
+    await openWorkspace(page, ws.dirPath)
+
+    await page.getByText('code.ts').first().click()
+    await page.waitForSelector('.source-viewer', { timeout: 5000 })
+
+    await page.keyboard.press('Control+Shift+p')
+    const commandInput = page.locator('input[placeholder*="command" i]').first()
+    await expect(commandInput).toBeVisible({ timeout: 5000 })
+
+    await commandInput.fill('Toggle View Mode')
+    const toggleViewCmd = page.getByText('切换阅读/编辑模式')
+    await expect(toggleViewCmd).not.toBeVisible({ timeout: 3000 })
+
+    await commandInput.fill('Save and Return')
+    const saveReturnCmd = page.getByText('保存并返回阅读')
+    await expect(saveReturnCmd).not.toBeVisible({ timeout: 3000 })
+
+    ws.cleanup()
+  })
 })

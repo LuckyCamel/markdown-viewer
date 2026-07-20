@@ -134,4 +134,65 @@ describe('CommandPalette', () => {
     render(<CommandPalette />)
     expect(screen.getByPlaceholderText('Type a command name to search…')).toBeDefined()
   })
+
+  it('isAvailable 返回 false 的命令不应显示在列表中', () => {
+    useCommandStore.setState({ open: true })
+    const cmdAvailable: Command = {
+      id: 'avail',
+      name: '可用命令',
+      category: 'view',
+      execute: () => {},
+      isAvailable: () => true,
+    }
+    const cmdUnavailable: Command = {
+      id: 'unavail',
+      name: '不可用命令',
+      category: 'view',
+      execute: () => {},
+      isAvailable: () => false,
+    }
+    commandRegistry.register(cmdAvailable)
+    commandRegistry.register(cmdUnavailable)
+    render(<CommandPalette />)
+    expect(screen.queryByText('可用命令')).toBeDefined()
+    expect(screen.queryByText('不可用命令')).toBeNull()
+  })
+
+  it('无 isAvailable 的命令应默认显示', () => {
+    useCommandStore.setState({ open: true })
+    const cmd: Command = {
+      id: 'noavail',
+      name: '无可用性判断命令',
+      category: 'file',
+      execute: () => {},
+    }
+    commandRegistry.register(cmd)
+    render(<CommandPalette />)
+    expect(screen.queryByText('无可用性判断命令')).toBeDefined()
+  })
+
+  it('搜索时也过滤 isAvailable=false 的命令', () => {
+    useCommandStore.setState({ open: true })
+    const cmd1: Command = {
+      id: 'a1',
+      name: '编辑模式开关',
+      category: 'view',
+      execute: () => {},
+      isAvailable: () => true,
+    }
+    const cmd2: Command = {
+      id: 'a2',
+      name: '编辑模式禁用',
+      category: 'view',
+      execute: () => {},
+      isAvailable: () => false,
+    }
+    commandRegistry.register(cmd1)
+    commandRegistry.register(cmd2)
+    render(<CommandPalette />)
+    const input = screen.getByPlaceholderText('输入命令名称以搜索…')
+    fireEvent.change(input, { target: { value: '编辑模式' } })
+    expect(screen.queryByText('编辑模式开关')).toBeDefined()
+    expect(screen.queryByText('编辑模式禁用')).toBeNull()
+  })
 })

@@ -215,7 +215,8 @@ release: vX.Y.Z
 - `src/renderer/lib/exporter.ts` — HTML / PDF 导出工具
 - `src/renderer/lib/dailyNote.ts` — 每日笔记创建/打开
 - `src/renderer/features/markdown-viewer/useEditorDocument.ts` — 统一编辑会话（状态机：saved/dirty/saving/error/conflict、seed/reset、保存、冲突处理）
-- `src/renderer/features/markdown-viewer/SourceViewer.tsx` — 文本/代码源码查看（语法高亮、行号显示）
+- `src/renderer/features/markdown-viewer/SourceViewer.tsx` — 文本/代码源码查看（语法高亮、行号显示、搜索行定位高亮）
+- `src/shared/scrollContainer.ts` — 滚动容器工具（正文滚动、SourceViewer 行定位、搜索跳转）
 - `src/renderer/lib/codemirror/pathCompletion.ts` — 相对路径补全（纯函数 + CodeMirror 扩展）
 - `src/renderer/lib/codemirror/table.ts` — 表格编辑核心（解析/插入/删除/导航 + keymap）
 - `src/renderer/components/TableInsertDialog.tsx` — 表格插入弹窗（行/列配置）

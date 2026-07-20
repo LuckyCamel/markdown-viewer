@@ -4,6 +4,7 @@ import { useCommandStore } from '../../stores/useCommandStore'
 import { useLayoutStore } from '../../stores/useLayoutStore'
 import { useTableDialogStore } from '../../stores/useTableDialogStore'
 import { useTabStore } from '../tabs/useTabStore'
+import { getDocumentSurface } from '../../lib/surface'
 
 /**
  * 命令注册 hook 接收的命令定义工厂
@@ -27,6 +28,8 @@ export interface CommandFactoryContext {
   toggleViewMode: () => void
   /** 切换编辑预览面板 */
   togglePreview: () => void
+  /** 保存并返回阅读模式 */
+  saveAndReturnToRead: () => Promise<void> | void
   /** 打开文件搜索 */
   openFileSearch: () => void
   /** 打开内容搜索 */
@@ -116,6 +119,15 @@ function buildCommands(ctx: CommandFactoryContext): Command[] {
       alias: 'Toggle View Mode',
       category: 'view',
       execute: ctx.toggleViewMode,
+      isAvailable: () => {
+        const s = useTabStore.getState()
+        if (!s.activeFile) return false
+        const surface = getDocumentSurface(s.activeFile, s.getViewMode(s.activeFile), {
+          isLoading: false,
+          hasError: false,
+        })
+        return surface.capabilities.allowsEditMode
+      },
     },
     {
       id: 'view.togglePreview',
@@ -126,6 +138,22 @@ function buildCommands(ctx: CommandFactoryContext): Command[] {
       isAvailable: () => {
         const s = useTabStore.getState()
         return s.activeFile !== null && s.getViewMode(s.activeFile) === 'edit'
+      },
+    },
+    {
+      id: 'file.saveAndReturnToRead',
+      name: '保存并返回阅读',
+      alias: 'Save and Return to Read',
+      category: 'file',
+      execute: () => void ctx.saveAndReturnToRead(),
+      isAvailable: () => {
+        const s = useTabStore.getState()
+        if (!s.activeFile) return false
+        const surface = getDocumentSurface(s.activeFile, s.getViewMode(s.activeFile), {
+          isLoading: false,
+          hasError: false,
+        })
+        return surface.capabilities.allowsEditMode && s.getViewMode(s.activeFile) === 'edit'
       },
     },
     {
@@ -225,6 +253,7 @@ export function useRegisterCommands(
     openDailyNote: CommandFactoryContext['openDailyNote']
     exportPdf: CommandFactoryContext['exportPdf']
     exportHtml: CommandFactoryContext['exportHtml']
+    saveAndReturnToRead: CommandFactoryContext['saveAndReturnToRead']
   }>,
 ): void {
   useEffect(() => {
@@ -269,6 +298,7 @@ export function useRegisterCommands(
       openDailyNote: overrides?.openDailyNote ?? (() => undefined),
       exportPdf: overrides?.exportPdf ?? (() => undefined),
       exportHtml: overrides?.exportHtml ?? (() => undefined),
+      saveAndReturnToRead: overrides?.saveAndReturnToRead ?? (() => undefined),
     }
     const commands = buildCommands(ctx)
     for (const cmd of commands) {

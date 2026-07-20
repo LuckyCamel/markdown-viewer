@@ -20,13 +20,16 @@ export function TabBar() {
   const openFiles = useTabStore((s) => s.openFiles)
   const activeFile = useTabStore((s) => s.activeFile)
   const viewModes = useTabStore((s) => s.viewModes)
+  const previewEnabled = useTabStore((s) => s.previewEnabled)
   const isDirty = useTabStore((s) => s.isDirty)
   const setActive = useTabStore((s) => s.setActive)
   const closeFile = useTabStore((s) => s.closeFile)
   const setViewMode = useTabStore((s) => s.setViewMode)
+  const togglePreview = useTabStore((s) => s.togglePreview)
   const [menu, setMenu] = useState<MenuState | null>(null)
 
   const viewMode: ViewMode = activeFile ? (viewModes[activeFile] ?? 'read') : 'read'
+  const isPreviewActive = activeFile ? (previewEnabled[activeFile] ?? false) : false
 
   const surface = activeFile
     ? getDocumentSurface(activeFile, viewMode, { isLoading: false, hasError: false })
@@ -138,6 +141,26 @@ export function TabBar() {
             >
               <path d="M12 20h9" />
               <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z" />
+            </svg>
+          </button>
+        )}
+        {surface?.kind === 'markdown-edit' && (
+          <button
+            onClick={() => activeFile && togglePreview(activeFile)}
+            title="切换预览面板"
+            className={`p-1.5 rounded ${isPreviewActive ? 'bg-blue-100 dark:bg-blue-900 text-blue-600 dark:text-blue-300' : 'text-gray-500 hover:bg-gray-100 dark:hover:bg-gray-700'}`}
+          >
+            <svg
+              viewBox="0 0 24 24"
+              className="w-4 h-4"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
+              <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+              <circle cx="12" cy="12" r="3" />
             </svg>
           </button>
         )}

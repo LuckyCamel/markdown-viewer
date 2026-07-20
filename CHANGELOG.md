@@ -2,6 +2,35 @@
 
 本文件记录 Markdown-Viewer 各版本的变更摘要。
 
+## [1.4.7] - 2026-07-21
+
+### 新增
+
+- **大文档分片渲染**：行数 > 1000 的 Markdown 文档首屏只渲染前 200 行，IntersectionObserver 监听哨兵元素进入视口时追加 200 行；锚点跳转场景一次性渲染全部
+  - `useChunkedContent` hook：纯函数式分片策略，可配置阈值 / 首屏行数 / 追加行数
+  - `MarkdownViewer` 集成：渲染区底部附加哨兵 div，可见时触发追加
+- **大文件守护 FileSizeGuard**：打开文件前检查大小与类型，防止误打开超大文件卡 UI
+  - 纯函数 `checkFileSize(path, size, kind, thresholds?)`：按 Markdown 5MB / 文本 2MB 阈值决策
+  - 二进制文件直接 `alert` 拒绝读取为文本
+  - 超阈值文件 `confirm` 询问，用户取消则不打开
+  - 集成于 `useTabStore.openFile` 入口；未 list 过的目录跳过检查不阻塞
+- **文件树懒加载 UI 边界补齐**：展开子目录过程中显示 loading 占位符；展开后无可见子条目显示「空目录」提示
+- **性能基线度量脚本**：`e2e/perf/markdown-render.perf.ts` 与 `e2e/perf/file-tree.perf.ts`，`pnpm test:perf` 触发，度量结果作为分片决策依据
+
+### 变更
+
+- **开发规范统一收敛至 AGENTS.md**：将 `docs/development.md` 内容迁入 `AGENTS.md`，消除双轨维护
+  - AGENTS.md 新增章节：开发命令、测试规范（测试金字塔/E2E 策略/mock IPC 维护规则）、工作流查询（gh CLI）、发布流程
+  - 删除 `docs/development.md`
+  - 更新 `README.md`、`docs/product.md` 中对 development.md 的引用
+- **E2E 工具函数 `createTestWorkspace`**：递归扫描子目录构建完整 `directoryTree` map，支持子目录懒加载场景；新增 `sizeOverride` 选项用于 FileSizeGuard 测试
+
+### 测试
+
+- 单元测试：新增 `useChunkedContent.test.ts`（8 用例）、`fileSizeGuard.test.ts`（12 用例）、`useTabStoreFileSize.test.ts`（8 集成用例）
+- E2E 测试：新增 `file-size-guard.spec.ts`（4 用例）、`markdown-large-doc.spec.ts`（3 用例）、`file-tree-loading.spec.ts`（2 用例）
+- 全部 84 个 E2E 测试通过，508 个单元测试通过
+
 ## [1.4.6] - 2026-07-20
 
 ### 新增
@@ -358,6 +387,7 @@
 ## [1.0.3] - 2026-07-08
 
 ### 变更
+
 - **框架迁移**：从 Electron 全面迁移至 Tauri 2
   - 后端从 Node.js 重写为 Rust（5 个核心 command）
   - 构建工具从 electron-vite 切换为 Vite + Tauri CLI
@@ -368,22 +398,26 @@
   - 快捷键从 Electron 菜单加速器改为纯前端 Hook
 
 ### 修复
+
 - 移除 ci.yml 中与 packageManager 冲突的 pnpm version 9 声明
 
 ## [1.0.2] - 2026-07-07
 
 ### 新增
+
 - CLI 参数解析器（`-v` 版本号 / `-h` 帮助）
 - 文件树类型过滤：`markdownExtensions` 可配置 + `file-filter` 缓存层 + 设置面板编辑器
 - 可拖拽面板分隔条：sidebarWidth / outlineWidth 持久化
 
 ### 修复
+
 - 修复 E2E 预存测试失败（断言目标更新、删除过期用例）
 - 面板分隔条点击区域和拖拽反馈改进
 
 ## [1.0.1] - 2026-06-29
 
 ### 修复
+
 - 统一产品名称为 Markdown-Viewer，消除空格防止 Linux 安装路径问题
 - 为 Linux/macOS 添加 artifactName 防止文件名含空格
 - 为 electron-builder 构建步骤注入 GH_TOKEN 以解决 GitHub API 限流
@@ -393,6 +427,7 @@
 ## [1.0.0] - 2026-06-22
 
 ### 新增
+
 - 完整 Markdown 渲染：GFM、KaTeX、Mermaid、highlight.js
 - 多标签管理：切换、关闭、脏标记、惰性加载
 - 文件树：递归浏览、隐藏文件标注、可配置忽略列表

@@ -19,10 +19,7 @@ test.describe('Search Highlight', () => {
    * 通过限定到 max-h-64 容器避免与文件树的同名条目冲突
    */
   async function clickSearchResult(page: import('@playwright/test').Page, fileName: string) {
-    const resultButton = page
-      .locator('div.max-h-64 button')
-      .filter({ hasText: fileName })
-      .first()
+    const resultButton = page.locator('div.max-h-64 button').filter({ hasText: fileName }).first()
     await resultButton.click()
   }
 

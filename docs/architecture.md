@@ -11,6 +11,7 @@
 ## 2. 架构风格与分层
 
 ### 2.1 两层进程模型
+
 Tauri Rust 后端 + Web 前端，通过 IPC 通信。
 
 ```
@@ -33,6 +34,7 @@ Tauri Rust 后端 + Web 前端，通过 IPC 通信。
 ```
 
 ### 2.2 前端分层
+
 - **features**：按业务域组织的功能模块（file-tree、tabs、markdown-viewer 等），每个 feature 自包含组件 + store
 - **stores**：全局 UI 状态按域拆分为 useThemeStore / useLayoutStore / useNavigationStore；feature 级 store 放在各自 feature 目录下
 - **hooks**：跨 feature 复用的副作用逻辑（文件监控、键盘快捷键、原生菜单事件、滚动恢复等）
@@ -40,6 +42,7 @@ Tauri Rust 后端 + Web 前端，通过 IPC 通信。
 - **lib**：基础设施封装（IPC 适配器）
 
 ### 2.3 后端分层
+
 - **Commands**：Tauri `#[tauri::command]` 标注的异步函数，前端通过 `invoke` 调用
 - **State**：Tauri 托管的共享状态（如 `WatcherState`），通过 `State<'_, T>` 注入 command
 - **Tauri Plugins**：官方插件（fs / dialog / shell），通过 capabilities 配置权限
@@ -50,56 +53,58 @@ Tauri Rust 后端 + Web 前端，通过 IPC 通信。
 
 ### 3.1 后端模块（Rust）
 
-| 目录/模块 | 职责 |
-|-----------|------|
-| `lib.rs` | 注册插件、State、`invoke_handler`、`menu::setup_menu` |
-| `commands/` | `list_directory`、`search_content`、`cancel_search`、`watch_file`、`unwatch_file`、`get_launch_paths`、`grant_workspace`、`get_setting`/`set_setting`/`migrate_settings`、`save_file`、`get_mtime` 等薄 Adapter |
-| `state/` | `WatcherState`、`LaunchState`、`StoreState`（KV 持久化） |
-| `search/` | `walk_dir`、`matcher`（行匹配）、`types`（`SearchProgress` 增量协议）、`SearchSession`（编排）、`CancelledStore`（取消） |
-| `filesystem/` | `Filesystem` — 统一 `FileEntry` 与 list/create/rename/save/mtime/trash 入口；commands 仅做注入与错误映射 |
-| `workspace/` | `WorkspaceState` — 统一 plugin-fs scope 授权与 `allowed_roots` 门禁；`grant` / `grant_many` / `assert_allowed` |
-| `filters.rs` | `FileFilters` — 从 `StoreState` 实时读取 `ignoreList` / `markdownExtensions`；`is_ignored` / `is_markdown_file` / `is_text_file` |
-| `menu.rs` | 原生菜单构建；点击 emit `menu-action` 至前端 |
-| `cli.rs` | `-v`/`-h` 与启动路径解析 |
+| 目录/模块     | 职责                                                                                                                                                                                                            |
+| ------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `lib.rs`      | 注册插件、State、`invoke_handler`、`menu::setup_menu`                                                                                                                                                           |
+| `commands/`   | `list_directory`、`search_content`、`cancel_search`、`watch_file`、`unwatch_file`、`get_launch_paths`、`grant_workspace`、`get_setting`/`set_setting`/`migrate_settings`、`save_file`、`get_mtime` 等薄 Adapter |
+| `state/`      | `WatcherState`、`LaunchState`、`StoreState`（KV 持久化）                                                                                                                                                        |
+| `search/`     | `walk_dir`、`matcher`（行匹配）、`types`（`SearchProgress` 增量协议）、`SearchSession`（编排）、`CancelledStore`（取消）                                                                                        |
+| `filesystem/` | `Filesystem` — 统一 `FileEntry` 与 list/create/rename/save/mtime/trash 入口；commands 仅做注入与错误映射                                                                                                        |
+| `workspace/`  | `WorkspaceState` — 统一 plugin-fs scope 授权与 `allowed_roots` 门禁；`grant` / `grant_many` / `assert_allowed`                                                                                                  |
+| `filters.rs`  | `FileFilters` — 从 `StoreState` 实时读取 `ignoreList` / `markdownExtensions`；`is_ignored` / `is_markdown_file` / `is_text_file`                                                                                |
+| `menu.rs`     | 原生菜单构建；点击 emit `menu-action` 至前端                                                                                                                                                                    |
+| `cli.rs`      | `-v`/`-h` 与启动路径解析                                                                                                                                                                                        |
 
 > 文件读取通过 `@tauri-apps/plugin-fs` 的 `readTextFile` / `stat`；无自定义 `read_file` command。
 > 写路径 command 通过 `workspace.assert_allowed(path)` 纵深防御，并构造 `FileFilters::from_store(&store)` 应用过滤。
 
 ### 3.2 前端模块
 
-| 模块 | 位置 | 职责 | 复杂度 | 主要依赖 |
-|------|------|------|--------|----------|
-| FileTree | `features/file-tree/` | 递归文件树渲染、展开/折叠 | 中 | useFileStore |
-| Tabs | `features/tabs/` | 多标签管理、切换、关闭 | 中 | useTabStore |
-| MarkdownViewer | `features/markdown-viewer/` | Markdown 渲染（react-markdown + 插件链）、CodeMirror 6 编辑器、自动保存、冲突检测、表格编辑、编辑时预览面板 | 深 | useEditorStore, mermaid, katex, @codemirror/* |
-| SourceViewer | `features/markdown-viewer/SourceViewer.tsx` | 文本/代码文件源码查看、语法高亮、行号显示 | 浅 | highlight.js |
-| FileKindModule | `shared/fileTypes.ts` | 统一文件类型判断（markdown/code/text/binary）、编辑/预览能力判断 | 浅 | — |
-| DocumentSurface | `renderer/lib/surface.ts` | 根据文件类型和视图模式确定渲染策略和能力 | 浅 | FileKindModule |
-| Outline | `features/outline/` | 标题提取 + 大纲面板 + 点击跳转（rehypeHeadingIds 注入 id） | 中 | headingToId |
-| Search | `features/search/` | 文件搜索 + 全局内容搜索 | 中 | useSearchStore |
-| Settings | `features/settings/` | 主题切换 + 忽略列表 + 扩展名编辑器 | 浅 | useSettingsStore |
-| WelcomePage | `features/welcome/` | 欢迎页：最近文件、恢复会话 | 浅 | useEditorStore |
-| Layout | `components/Layout.tsx` | 三栏布局 + 可拖拽面板分隔条 | 中 | useLayoutStore |
-| ThemeProvider | `components/ThemeProvider.tsx` | 主题上下文 + OS 主题监听 | 浅 | useThemeStore |
-| App | `App.tsx` | 顶层组装 hook + UI 组件 | 中 | 所有 feature hook |
-| ipc adapter | `lib/ipc.ts` | 集中式 Tauri API 封装（invoke + 插件） | 浅 | @tauri-apps/api |
-| ErrorBoundary | `components/ErrorBoundary.tsx` | React 组件崩溃降级 UI | 中 | logger |
+| 模块              | 位置                                            | 职责                                                                                                                        | 复杂度 | 主要依赖                                                          |
+| ----------------- | ----------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------- | ------ | ----------------------------------------------------------------- |
+| FileTree          | `features/file-tree/`                           | 递归文件树渲染、展开/折叠、懒加载子目录（loading 占位 + 空目录提示）                                                        | 中     | useFileStore                                                      |
+| Tabs              | `features/tabs/`                                | 多标签管理、切换、关闭；打开文件前调用 FileSizeGuard 守护                                                                   | 中     | useTabStore, FileSizeGuard                                        |
+| MarkdownViewer    | `features/markdown-viewer/`                     | Markdown 渲染（react-markdown + 插件链）、CodeMirror 6 编辑器、自动保存、冲突检测、表格编辑、编辑时预览面板、大文档分片渲染 | 深     | useEditorStore, useChunkedContent, mermaid, katex, @codemirror/\* |
+| SourceViewer      | `features/markdown-viewer/SourceViewer.tsx`     | 文本/代码文件源码查看、语法高亮、行号显示                                                                                   | 浅     | highlight.js                                                      |
+| FileKindModule    | `shared/fileTypes.ts`                           | 统一文件类型判断（markdown/code/text/binary）、编辑/预览能力判断                                                            | 浅     | —                                                                 |
+| FileSizeGuard     | `renderer/lib/fileSizeGuard.ts`                 | 大文件守护纯函数（按大小+类型决定是否允许直接打开，阈值可配置）                                                             | 浅     | FileKindModule                                                    |
+| useChunkedContent | `features/markdown-viewer/useChunkedContent.ts` | 大文档分片渲染 hook（首屏 N 行 + IntersectionObserver 追加 + renderAll 锚点场景）                                           | 浅     | react                                                             |
+| DocumentSurface   | `renderer/lib/surface.ts`                       | 根据文件类型和视图模式确定渲染策略和能力                                                                                    | 浅     | FileKindModule                                                    |
+| Outline           | `features/outline/`                             | 标题提取 + 大纲面板 + 点击跳转（rehypeHeadingIds 注入 id）                                                                  | 中     | headingToId                                                       |
+| Search            | `features/search/`                              | 文件搜索 + 全局内容搜索                                                                                                     | 中     | useSearchStore                                                    |
+| Settings          | `features/settings/`                            | 主题切换 + 忽略列表 + 扩展名编辑器                                                                                          | 浅     | useSettingsStore                                                  |
+| WelcomePage       | `features/welcome/`                             | 欢迎页：最近文件、恢复会话                                                                                                  | 浅     | useEditorStore                                                    |
+| Layout            | `components/Layout.tsx`                         | 三栏布局 + 可拖拽面板分隔条                                                                                                 | 中     | useLayoutStore                                                    |
+| ThemeProvider     | `components/ThemeProvider.tsx`                  | 主题上下文 + OS 主题监听                                                                                                    | 浅     | useThemeStore                                                     |
+| App               | `App.tsx`                                       | 顶层组装 hook + UI 组件                                                                                                     | 中     | 所有 feature hook                                                 |
+| ipc adapter       | `lib/ipc.ts`                                    | 集中式 Tauri API 封装（invoke + 插件）                                                                                      | 浅     | @tauri-apps/api                                                   |
+| ErrorBoundary     | `components/ErrorBoundary.tsx`                  | React 组件崩溃降级 UI                                                                                                       | 中     | logger                                                            |
 
 ### 3.3 Store 清单
 
-| Store | 位置 | 职责 | 持久化 |
-|-------|------|------|--------|
-| useThemeStore | `src/renderer/stores/useThemeStore.ts` | 主题模式、主题配色 ID、代码高亮主题 | theme、themeId、codeTheme（Rust store） |
-| useLayoutStore | `src/renderer/stores/useLayoutStore.ts` | 侧边栏/大纲面板可见性与宽度、搜索面板状态 | sidebarWidth、outlineWidth（Rust store） |
-| useNavigationStore | `src/renderer/stores/useNavigationStore.ts` | 跨文件跳转意图（pendingContentJump / pendingAnchorJump）、搜索高亮 | — |
-| useCommandStore | `src/renderer/stores/useCommandStore.ts` | 命令面板显示状态（open 布尔 + show/hide/toggle） | — |
-| useWorkspaceStore | `src/renderer/stores/useWorkspaceStore.ts` | workspace 授权根、启动状态、最近文件/目录；启动时统一 `init()` 恢复 | lastWorkspace、openFiles、activeFile、recentFiles、recentDirs（Rust store） |
-| useEditorStore | `features/markdown-viewer/useEditorStore.ts` | 文件内容缓存（惰性加载）、滚动位置 | readingPositions（Rust store） |
-| useSettingsStore | `features/settings/useSettingsStore.ts` | 阅读设置（fontSize / lineHeight / contentMaxWidth / fontFamily / codeFontFamily） | 同名字段（Rust store）；ignore/extensions 改由 SettingsPanel 直接 `ipc.store.set`/`get` |
-| useTabStore | `features/tabs/useTabStore.ts` | openFiles、activeFile、dirtyFiles、viewModes、previewEnabled；关闭时清理 Editor 缓存 | —（持久化由 useWorkspaceStore.init 恢复） |
-| useFileStore | `features/file-tree/useFileStore.ts` | 文件树数据、展开状态、加载状态（惰性加载守卫） | — |
-| useSearchStore | `features/search/useSearchStore.ts` | 搜索关键词、结果、搜索状态 | — |
-| useTableDialogStore | `src/renderer/stores/useTableDialogStore.ts` | 表格插入弹窗开关与编辑器视图引用 | — |
+| Store               | 位置                                         | 职责                                                                                 | 持久化                                                                                  |
+| ------------------- | -------------------------------------------- | ------------------------------------------------------------------------------------ | --------------------------------------------------------------------------------------- |
+| useThemeStore       | `src/renderer/stores/useThemeStore.ts`       | 主题模式、主题配色 ID、代码高亮主题                                                  | theme、themeId、codeTheme（Rust store）                                                 |
+| useLayoutStore      | `src/renderer/stores/useLayoutStore.ts`      | 侧边栏/大纲面板可见性与宽度、搜索面板状态                                            | sidebarWidth、outlineWidth（Rust store）                                                |
+| useNavigationStore  | `src/renderer/stores/useNavigationStore.ts`  | 跨文件跳转意图（pendingContentJump / pendingAnchorJump）、搜索高亮                   | —                                                                                       |
+| useCommandStore     | `src/renderer/stores/useCommandStore.ts`     | 命令面板显示状态（open 布尔 + show/hide/toggle）                                     | —                                                                                       |
+| useWorkspaceStore   | `src/renderer/stores/useWorkspaceStore.ts`   | workspace 授权根、启动状态、最近文件/目录；启动时统一 `init()` 恢复                  | lastWorkspace、openFiles、activeFile、recentFiles、recentDirs（Rust store）             |
+| useEditorStore      | `features/markdown-viewer/useEditorStore.ts` | 文件内容缓存（惰性加载）、滚动位置                                                   | readingPositions（Rust store）                                                          |
+| useSettingsStore    | `features/settings/useSettingsStore.ts`      | 阅读设置（fontSize / lineHeight / contentMaxWidth / fontFamily / codeFontFamily）    | 同名字段（Rust store）；ignore/extensions 改由 SettingsPanel 直接 `ipc.store.set`/`get` |
+| useTabStore         | `features/tabs/useTabStore.ts`               | openFiles、activeFile、dirtyFiles、viewModes、previewEnabled；关闭时清理 Editor 缓存 | —（持久化由 useWorkspaceStore.init 恢复）                                               |
+| useFileStore        | `features/file-tree/useFileStore.ts`         | 文件树数据、展开状态、加载状态（惰性加载守卫）                                       | —                                                                                       |
+| useSearchStore      | `features/search/useSearchStore.ts`          | 搜索关键词、结果、搜索状态                                                           | —                                                                                       |
+| useTableDialogStore | `src/renderer/stores/useTableDialogStore.ts` | 表格插入弹窗开关与编辑器视图引用                                                     | —                                                                                       |
 
 > 设计原则：store 各自独立，避免隐式循环 import；允许通过 action 或 `getState()` 进行显式协同。组件通过 hook 订阅，不直接操作 store。lib 层工具函数不应直接依赖 store，应通过参数注入状态，以提高复用性和可测试性。
 
@@ -108,16 +113,23 @@ Tauri Rust 后端 + Web 前端，通过 IPC 通信。
 ## 4. 核心数据流
 
 ### 4.1 文件打开流程
+
 ```
 用户点击文件树 / 菜单 / WelcomePage
-  → ipc.workspace.grant([path])       // 动态 fs scope + allowed_roots
   → useTabStore.openFile(path)
+    → FileSizeGuard.checkFileSize(path, size, kind)
+      → 二进制 → alert 拒绝
+      → 超阈值 → confirm 询问；取消则中止
+      → 通过 → 继续
+    → ipc.workspace.grant([path])       // 动态 fs scope + allowed_roots
   → useEditorStore.loadContent(path)
     → ipc.files.readFile(path)        // plugin-fs readTextFile
   → 渲染 MarkdownViewer（rehypeRaw → rehypeSanitize → …）
+    → useChunkedContent：行数 > 1000 时首屏渲染前 200 行 + 哨兵监听追加
 ```
 
 ### 4.2 全文搜索流程
+
 ```
 用户输入搜索关键词
   → useSearchStore.appendResults 增量合并
@@ -129,6 +141,7 @@ Tauri Rust 后端 + Web 前端，通过 IPC 通信。
 ```
 
 ### 4.3 文件变更通知流程
+
 ```
 磁盘文件变更
   → notify crate 触发
@@ -144,6 +157,7 @@ Tauri Rust 后端 + Web 前端，通过 IPC 通信。
 ```
 
 ### 4.4 编辑保存流程（Edit 模式）
+
 ```
 App 挂载 useEditorDocument(activeMarkdownPath, content)
   → 路径变化：reset()；内容首次就绪：reset({ content }) seed，避免误标 dirty
@@ -164,6 +178,7 @@ EditorPane 仅聚合 Toolbar + ConflictBanner + Editor UI
 ```
 
 ### 4.5 冲突检测流程
+
 ```
 自动保存 / Ctrl+S 触发保存
   → 先获取磁盘 mtime
@@ -188,6 +203,7 @@ EditorPane 仅聚合 Toolbar + ConflictBanner + Editor UI
 ### 5.1 错误处理
 
 核心原则：**纯函数自然抛出，边界层统一捕获**。
+
 - 纯函数（Rust 命令逻辑、前端工具函数等）自然抛出，不写 try/catch
 - 边界层（Tauri command、事件监听器、React 副作用 hook）统一捕获
 - 格式：`logError('模块名:子操作', err)`
@@ -211,17 +227,20 @@ EditorPane 仅聚合 Toolbar + ConflictBanner + Editor UI
 所有 IPC 调用集中封装在 `src/renderer/lib/ipc.ts`，前端不直接调用 `invoke` / `emit`。
 
 ### 5.3 日志
+
 - 前端：`src/renderer/logger.ts` → `console.error`
 - 后端：Rust `log` crate
 - 前端统一通过 `logError` 函数记录，格式一致
 
 ### 5.4 状态管理原则
+
 - 每个 feature 维护自己的 store，避免隐式循环 import；允许通过 action 或 `getState()` 进行显式协同
 - 全局 UI 状态按域拆分：主题（useThemeStore）、布局 chrome（useLayoutStore）、导航意图（useNavigationStore）
 - 组件通过 selector 订阅，避免不必要的重渲染
 - lib 层工具函数不应直接依赖 store，应通过参数注入状态
 
 ### 5.5 安全
+
 - 前端运行在 WebView 沙箱中，无 Node.js 环境
 - **fs:scope**：`capabilities` 静态 `allow: []`；打开工作区/文件时 `grant_workspace` 动态授权；`WorkspaceState.grant` 内部同时调用 `app.fs_scope().allow_directory/allow_file` 与 `add_root`；写路径 command 层 `workspace.assert_allowed(path)` 纵深防御
 - 本地图片通过 `asset://localhost/` 引用
@@ -230,9 +249,14 @@ EditorPane 仅聚合 Toolbar + ConflictBanner + Editor UI
 - 外部链接经 `plugin-shell` 打开，不直接在 WebView 跳转
 
 ### 5.6 渲染优化
+
 - **Mermaid**：动态 `import('mermaid')` + 单例缓存（`mermaid.ts` / `MermaidBlock.tsx`），首次遇到 mermaid 代码块时加载，Vite 代码分割为独立 chunk
+- **大文档分片渲染**：行数 > 1000 时触发分片，首屏渲染前 200 行，IntersectionObserver 监听哨兵元素进入视口时追加 200 行；锚点跳转场景调用 `renderAll()` 一次性渲染全部，保证目标锚点已渲染（hook 位于 `useChunkedContent.ts`）
+- **文件树懒加载**：仅 list 根目录，展开子目录时按需 list 并缓存；展开过程中显示 loading 占位符，空目录显示「空目录」提示（`useFileStore.directoryCache` + `FileTree.tsx` 边界处理）
+- **大文件守护**：`useTabStore.openFile` 入口调用 `FileSizeGuard.checkFileSize`，超阈值文件（Markdown 5MB / 文本 2MB）弹 confirm 询问，二进制文件直接 alert 拒绝；未 list 过的目录跳过检查不阻塞
 
 ### 5.7 持久化
+
 - 生产环境：`app_data_dir/settings.json`（Rust `StoreState`），`ipc.store` 经 invoke 读写
 - 首次启动：`ensureStoreMigrated()` 从 localStorage 批量导入
 - E2E mock：仍用 localStorage（`ipc.mock.ts`）
@@ -250,19 +274,22 @@ EditorPane 仅聚合 Toolbar + ConflictBanner + Editor UI
 
 ## 7. 术语表
 
-| 术语 | 定义 |
-|------|------|
-| 工作区 (Workspace) | 用户打开的文件系统目录，文件树根节点 |
-| Entry | 文件树节点（文件或目录），由 `FileEntry` 类型描述 |
-| Tab | 已打开文件的导航单元，`openFiles[]` + `activeFile` |
-| 内容 (Content) | 磁盘文件原始字符串，缓存在 `contents[filePath]` |
-| Command | Tauri 后端暴露给前端的 Rust 函数，通过 `invoke` 调用 |
-| Event | 后端向前端推送的单向通知，通过 `emit/listen` 通信 |
-| IPC Adapter | `lib/ipc.ts` 集中封装的 Tauri API 调用层 |
-| 忽略列表 (Ignore List) | 用户配置的目录/文件忽略规则 |
-| Panel Resizer | 侧边栏/大纲面板的可拖拽宽度调节器 |
-| Capabilities | Tauri 权限配置，定义前端可访问的后端能力 |
-| WatcherState | Rust 后端共享状态，管理 notify watcher 与已监控路径 |
-| WorkspaceState | Rust 后端共享状态，管理 plugin-fs scope 授权与 `allowed_roots` 列表 |
-| FileFilters | Rust 后端无状态结构体，每次 command 调用时从 `StoreState` 实时构造，提供 `is_ignored` / `is_markdown_file` / `is_text_file` |
-| shared/settingsDefaults.ts | 前后端一致的默认设置常量（`DEFAULT_IGNORE_LIST` / `DEFAULT_MARKDOWN_EXTENSIONS`） |
+| 术语                       | 定义                                                                                                                        |
+| -------------------------- | --------------------------------------------------------------------------------------------------------------------------- |
+| 工作区 (Workspace)         | 用户打开的文件系统目录，文件树根节点                                                                                        |
+| Entry                      | 文件树节点（文件或目录），由 `FileEntry` 类型描述                                                                           |
+| Tab                        | 已打开文件的导航单元，`openFiles[]` + `activeFile`                                                                          |
+| 内容 (Content)             | 磁盘文件原始字符串，缓存在 `contents[filePath]`                                                                             |
+| Command                    | Tauri 后端暴露给前端的 Rust 函数，通过 `invoke` 调用                                                                        |
+| Event                      | 后端向前端推送的单向通知，通过 `emit/listen` 通信                                                                           |
+| IPC Adapter                | `lib/ipc.ts` 集中封装的 Tauri API 调用层                                                                                    |
+| 忽略列表 (Ignore List)     | 用户配置的目录/文件忽略规则                                                                                                 |
+| Panel Resizer              | 侧边栏/大纲面板的可拖拽宽度调节器                                                                                           |
+| Capabilities               | Tauri 权限配置，定义前端可访问的后端能力                                                                                    |
+| WatcherState               | Rust 后端共享状态，管理 notify watcher 与已监控路径                                                                         |
+| WorkspaceState             | Rust 后端共享状态，管理 plugin-fs scope 授权与 `allowed_roots` 列表                                                         |
+| FileFilters                | Rust 后端无状态结构体，每次 command 调用时从 `StoreState` 实时构造，提供 `is_ignored` / `is_markdown_file` / `is_text_file` |
+| shared/settingsDefaults.ts | 前后端一致的默认设置常量（`DEFAULT_IGNORE_LIST` / `DEFAULT_MARKDOWN_EXTENSIONS`）                                           |
+| FileSizeGuard              | 大文件守护纯函数模块，按文件大小+类型决定是否允许直接打开；阈值 Markdown 5MB / 文本 2MB                                     |
+| useChunkedContent          | 大文档分片渲染 hook，行数超过阈值时首屏渲染部分行 + IntersectionObserver 追加                                               |
+| Chunk Sentinel             | 分片渲染哨兵元素，进入视口时触发追加渲染下一批行                                                                            |

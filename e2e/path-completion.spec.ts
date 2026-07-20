@@ -17,7 +17,9 @@ test.describe('Path Completion', () => {
    */
   async function openFileInEditMode(page: import('@playwright/test').Page, fileName: string) {
     await page.getByText(fileName).first().click()
-    await expect(page.getByRole('tab', { name: new RegExp(fileName.replace('.', '\\.')) })).toBeVisible({
+    await expect(
+      page.getByRole('tab', { name: new RegExp(fileName.replace('.', '\\.')) }),
+    ).toBeVisible({
       timeout: 10000,
     })
 
@@ -47,9 +49,9 @@ test.describe('Path Completion', () => {
     await expect(completionList).toBeVisible({ timeout: 5000 })
 
     // 验证列表中包含其他 md 文件
-    await expect(
-      page.locator('.cm-completionLabel', { hasText: 'api.md' }).first(),
-    ).toBeVisible({ timeout: 3000 })
+    await expect(page.locator('.cm-completionLabel', { hasText: 'api.md' }).first()).toBeVisible({
+      timeout: 3000,
+    })
 
     ws.cleanup()
   })
@@ -72,9 +74,9 @@ test.describe('Path Completion', () => {
     await expect(completionList).toBeVisible({ timeout: 5000 })
 
     // 验证列表中包含 other.md
-    await expect(
-      page.locator('.cm-completionLabel', { hasText: 'other.md' }).first(),
-    ).toBeVisible({ timeout: 3000 })
+    await expect(page.locator('.cm-completionLabel', { hasText: 'other.md' }).first()).toBeVisible({
+      timeout: 3000,
+    })
 
     ws.cleanup()
   })

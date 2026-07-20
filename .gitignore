@@ -8,6 +8,7 @@ releases/
 coverage/
 playwright/
 playwright-report/
+playwright-perf-report/
 test-results/
 \.sdd/
 candidate_icons/

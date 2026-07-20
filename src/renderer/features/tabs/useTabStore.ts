@@ -1,7 +1,10 @@
 import { create } from 'zustand'
 import { useEditorStore } from '../markdown-viewer/useEditorStore'
+import { useFileStore } from '../file-tree/useFileStore'
 import { ipc } from '../../lib/ipc'
 import { logError } from '../../logger'
+import { checkFileSize } from '../../lib/fileSizeGuard'
+import { getFileKind } from '../../../shared/fileTypes'
 import type { ViewMode } from '../../../shared/types'
 
 interface TabState {
@@ -37,6 +40,44 @@ function purgeEditorCache(filePaths: string[]) {
   }
 }
 
+/**
+ * FileSizeGuard 集成：根据文件大小与类型决定是否允许打开
+ *
+ * - 二进制文件：alert 提示无法读取，返回 false
+ * - 超阈值文件：confirm 询问是否仍要打开（只读前 N 行），用户取消则返回 false
+ * - 正常文件：返回 true
+ *
+ * 文件大小从 useFileStore.entries 查找；若未 list 过该目录则跳过检查（不阻塞）。
+ */
+function shouldAllowOpenFile(filePath: string): boolean {
+  const { entries } = useFileStore.getState()
+  const parentDir = filePath.split(/[\\/]/).slice(0, -1).join('/') || '/'
+  const dirEntries = entries[parentDir]
+  if (!dirEntries) {
+    // 未 list 过该目录，跳过检查
+    return true
+  }
+  const entry = dirEntries.find((e) => e.path === filePath)
+  if (!entry || entry.size === undefined) {
+    return true
+  }
+  const kind = getFileKind(filePath)
+  const result = checkFileSize(filePath, entry.size, kind)
+  if (result.allowed) {
+    return true
+  }
+  if (result.reason === 'binary') {
+    alert(`无法以文本方式读取二进制文件：\n${filePath}\n\n文件类型：${kind}`)
+    return false
+  }
+  // too_large
+  const sizeMB = (entry.size / (1024 * 1024)).toFixed(2)
+  const confirmed = confirm(
+    `文件较大（${sizeMB} MB），可能影响性能或导致卡顿。\n\n仍要打开吗？\n\n${filePath}`,
+  )
+  return confirmed
+}
+
 export const useTabStore = create<TabState>((set, get) => ({
   openFiles: [],
   activeFile: null,
@@ -47,6 +88,11 @@ export const useTabStore = create<TabState>((set, get) => ({
   getViewMode: (filePath) => get().viewModes[filePath] ?? 'read',
   isPreviewEnabled: (filePath) => get().previewEnabled[filePath] ?? false,
   openFile: (filePath) => {
+    // FileSizeGuard：打开前检查文件大小与类型，超阈值或二进制给出提示
+    if (!shouldAllowOpenFile(filePath)) {
+      return
+    }
+
     ipc.workspace.grant([filePath]).catch((err) => logError('useTabStore:grant', err))
     const { openFiles, viewModes } = get()
     if (!openFiles.includes(filePath)) {

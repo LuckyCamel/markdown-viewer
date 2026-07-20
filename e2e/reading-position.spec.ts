@@ -39,12 +39,15 @@ test.describe('Reading Position Restore', () => {
 
     // 等待滚动恢复（双 rAF + 重试，最长 ~750ms），放宽到 3s
     await expect
-      .poll(async () => {
-        const top = await page
-          .locator('[data-scroll-container]')
-          .evaluate((el: HTMLElement) => el.scrollTop)
-        return top
-      }, { timeout: 5000, intervals: [200, 400, 800] })
+      .poll(
+        async () => {
+          const top = await page
+            .locator('[data-scroll-container]')
+            .evaluate((el: HTMLElement) => el.scrollTop)
+          return top
+        },
+        { timeout: 5000, intervals: [200, 400, 800] },
+      )
       .toBeGreaterThan(100)
 
     ws.cleanup()
@@ -82,9 +85,12 @@ test.describe('Reading Position Restore', () => {
 
     // 验证滚动位置被恢复（≥ 200，允许一定误差）
     await expect
-      .poll(async () => {
-        return container.evaluate((el: HTMLElement) => el.scrollTop)
-      }, { timeout: 5000, intervals: [200, 400, 800] })
+      .poll(
+        async () => {
+          return container.evaluate((el: HTMLElement) => el.scrollTop)
+        },
+        { timeout: 5000, intervals: [200, 400, 800] },
+      )
       .toBeGreaterThan(200)
 
     ws.cleanup()

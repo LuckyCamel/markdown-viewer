@@ -99,7 +99,9 @@ test.describe('Workspace Init', () => {
 
     // 输入命令并执行（直接对 input 触发 Enter，确保事件发送到输入框）
     await input.fill('Add Folder to Workspace')
-    await expect(page.getByRole('option', { name: /Add Folder to Workspace|添加文件夹到工作区/i })).toBeVisible({
+    await expect(
+      page.getByRole('option', { name: /Add Folder to Workspace|添加文件夹到工作区/i }),
+    ).toBeVisible({
       timeout: 5000,
     })
     await input.press('Enter')

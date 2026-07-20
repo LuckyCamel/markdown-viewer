@@ -12,7 +12,9 @@ test.describe('Table Editor', () => {
    */
   async function openFileInEditMode(page: import('@playwright/test').Page, fileName: string) {
     await page.getByText(fileName).first().click()
-    await expect(page.getByRole('tab', { name: new RegExp(fileName.replace('.', '\\.')) })).toBeVisible({
+    await expect(
+      page.getByRole('tab', { name: new RegExp(fileName.replace('.', '\\.')) }),
+    ).toBeVisible({
       timeout: 10000,
     })
 
@@ -26,7 +28,11 @@ test.describe('Table Editor', () => {
   /**
    * 辅助函数：通过工具栏弹窗插入指定大小的表格
    */
-  async function insertTableViaToolbar(page: import('@playwright/test').Page, rows: number, cols: number) {
+  async function insertTableViaToolbar(
+    page: import('@playwright/test').Page,
+    rows: number,
+    cols: number,
+  ) {
     await page.getByTitle('Table').click()
 
     const dialog = page.getByRole('dialog', { name: '插入表格' })
@@ -57,7 +63,7 @@ test.describe('Table Editor', () => {
     expect(content).toContain('Column 1')
     expect(content).toContain('Column 4')
     // 表头 + 分隔线 + 4 行数据
-    const tableRows = (await page.locator('.cm-line').count())
+    const tableRows = await page.locator('.cm-line').count()
     expect(tableRows).toBeGreaterThanOrEqual(6)
 
     ws.cleanup()
@@ -100,7 +106,11 @@ test.describe('Table Editor', () => {
     await page.waitForTimeout(200)
 
     // 新增一行后应包含两个数据行（不含表头）
-    const dataRows = (await page.locator('.cm-line').filter({ hasText: /^\|.*\|.*\|$/ }).count()) - 2
+    const dataRows =
+      (await page
+        .locator('.cm-line')
+        .filter({ hasText: /^\|.*\|.*\|$/ })
+        .count()) - 2
     expect(dataRows).toBe(2)
 
     ws.cleanup()
@@ -132,7 +142,11 @@ test.describe('Table Editor', () => {
     const content = await page.locator('.cm-content').textContent()
     expect(content).toContain('data1')
     // 数据行数量应增加为 2
-    const dataRows = (await page.locator('.cm-line').filter({ hasText: /^\|.*\|.*\|$/ }).count()) - 2
+    const dataRows =
+      (await page
+        .locator('.cm-line')
+        .filter({ hasText: /^\|.*\|.*\|$/ })
+        .count()) - 2
     expect(dataRows).toBe(2)
 
     ws.cleanup()

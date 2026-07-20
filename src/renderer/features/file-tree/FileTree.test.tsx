@@ -184,4 +184,68 @@ describe('FileTree', () => {
       expect(useFileStore.getState().rootPaths).toEqual(['/workspace2'])
     })
   })
+
+  describe('懒加载 UI 边界', () => {
+    it('展开目录时若处于 loading 状态应显示「加载中...」占位', () => {
+      useFileStore.setState({
+        rootPath: '/test',
+        rootPaths: ['/test'],
+        entries: {
+          '/test': [makeEntry('sub', true)],
+        },
+        expanded: { '/test/sub': true },
+        loading: { '/test/sub': true },
+      })
+      render(<FileTree />)
+      expect(screen.getByTestId('tree-loading-/test/sub')).toBeDefined()
+      expect(screen.getByTestId('tree-loading-/test/sub').textContent).toContain('加载中')
+    })
+
+    it('展开空目录应显示「空目录」提示', () => {
+      useFileStore.setState({
+        rootPath: '/test',
+        rootPaths: ['/test'],
+        entries: {
+          '/test': [makeEntry('empty', true)],
+          '/test/empty': [],
+        },
+        expanded: { '/test/empty': true },
+        loading: {},
+      })
+      render(<FileTree />)
+      expect(screen.getByTestId('tree-empty-/test/empty')).toBeDefined()
+      expect(screen.getByTestId('tree-empty-/test/empty').textContent).toContain('空目录')
+    })
+
+    it('展开非空目录不应显示空目录提示', () => {
+      useFileStore.setState({
+        rootPath: '/test',
+        rootPaths: ['/test'],
+        entries: {
+          '/test': [makeEntry('sub', true)],
+          '/test/sub': [makeEntry('child.md', false, '/test/sub')],
+        },
+        expanded: { '/test/sub': true },
+        loading: {},
+      })
+      render(<FileTree />)
+      expect(screen.queryByTestId('tree-empty-/test/sub')).toBeNull()
+      expect(screen.getByText('child.md')).toBeDefined()
+    })
+
+    it('未展开的目录不应显示 loading 或空目录提示', () => {
+      useFileStore.setState({
+        rootPath: '/test',
+        rootPaths: ['/test'],
+        entries: {
+          '/test': [makeEntry('sub', true)],
+        },
+        expanded: {},
+        loading: { '/test/sub': true },
+      })
+      render(<FileTree />)
+      expect(screen.queryByTestId('tree-loading-/test/sub')).toBeNull()
+      expect(screen.queryByTestId('tree-empty-/test/sub')).toBeNull()
+    })
+  })
 })

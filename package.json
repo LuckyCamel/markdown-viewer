@@ -1,6 +1,6 @@
 {
   "name": "markdown-viewer",
-  "version": "1.4.6",
+  "version": "1.4.7",
   "packageManager": "pnpm@9.15.9",
   "description": "A cross-platform Markdown viewer built with Tauri",
   "desktopName": "markdown-viewer",
@@ -19,6 +19,7 @@
     "format:check": "prettier --check src/",
     "typecheck": "tsc --noEmit -p tsconfig.json --skipLibCheck",
     "test:e2e": "playwright test --config e2e/playwright.config.ts",
+    "test:perf": "playwright test --config e2e/perf/playwright.config.ts",
     "prepare": "husky"
   },
   "devDependencies": {

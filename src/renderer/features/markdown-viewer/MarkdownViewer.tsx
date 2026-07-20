@@ -1,3 +1,4 @@
+import { useEffect } from 'react'
 import ReactMarkdown, { type Components } from 'react-markdown'
 import remarkGfm from 'remark-gfm'
 import remarkMath from 'remark-math'
@@ -15,6 +16,7 @@ import { dirname, joinPaths } from '../../../shared/utils'
 import { isInternalMarkdownHref, parseMarkdownHref } from '../../../shared/markdownLink'
 import { scrollToAnchor } from '../../../shared/scrollContainer'
 import { useNavigationStore } from '../../stores/useNavigationStore'
+import { useChunkedContent } from './useChunkedContent'
 
 interface MarkdownViewerProps {
   content: string
@@ -22,6 +24,16 @@ interface MarkdownViewerProps {
 }
 
 export function MarkdownViewer({ content, filePath }: MarkdownViewerProps) {
+  const { visibleContent, sentinelRef, hasMore, renderAll } = useChunkedContent(content)
+
+  // 锚点跳转场景：若目标锚点未在已渲染区域，一次性渲染全部
+  const pendingAnchorJump = useNavigationStore((s) => s.pendingAnchorJump)
+  useEffect(() => {
+    if (!hasMore || !pendingAnchorJump || !filePath) return
+    if (pendingAnchorJump.path !== filePath) return
+    renderAll()
+  }, [hasMore, pendingAnchorJump, filePath, renderAll])
+
   const components: Components = {
     code({ className, children, node: _node, ...props }) {
       const isMermaid = className?.includes('language-mermaid')
@@ -126,8 +138,11 @@ export function MarkdownViewer({ content, filePath }: MarkdownViewerProps) {
           rehypeHighlight,
         ]}
         components={{ ...markdownHeadingComponents, ...components }}
-        children={content}
+        children={visibleContent}
       />
+      {hasMore && (
+        <div ref={sentinelRef} data-testid="markdown-chunk-sentinel" style={{ height: '1px' }} />
+      )}
     </div>
   )
 }

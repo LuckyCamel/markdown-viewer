@@ -64,11 +64,16 @@ function FileTreeNode({
   onCancelCreate,
 }: FileTreeNodeProps) {
   const expanded = useFileStore((s) => s.expanded)
+  const loading = useFileStore((s) => s.loading)
   const toggleExpand = useFileStore((s) => s.toggleExpand)
   const children = allEntries[entry.path] ? getSortedEntries(entry.path) : undefined
+  const filteredChildren = children?.filter(isVisibleFileEntry)
 
   const isExpanded = expanded[entry.path] ?? false
   const isRenaming = renaming === entry.path
+  const isLoading = loading[entry.path] === true
+  const isEmpty =
+    isExpanded && !isLoading && children !== undefined && (filteredChildren?.length ?? 0) === 0
 
   /**
    * 点击节点：目录切换展开，文件打开标签页
@@ -116,7 +121,7 @@ function FileTreeNode({
         <FileIcon name={entry.name} isDirectory={entry.isDirectory} isOpen={isExpanded} size={16} />
         <span className="truncate">{entry.name}</span>
       </button>
-      {entry.isDirectory && isExpanded && children && (
+      {entry.isDirectory && isExpanded && (
         <div>
           {creating && creating.dirPath === entry.path && (
             <div className="px-2 py-0.5" style={{ paddingLeft: `${(depth + 1) * 16 + 8}px` }}>
@@ -129,22 +134,40 @@ function FileTreeNode({
               />
             </div>
           )}
-          {children.filter(isVisibleFileEntry).map((child) => (
-            <FileTreeNode
-              key={child.path}
-              entry={child}
-              depth={depth + 1}
-              allEntries={allEntries}
-              getSortedEntries={getSortedEntries}
-              onContextMenu={onContextMenu}
-              renaming={renaming}
-              onSubmitRename={onSubmitRename}
-              onCancelRename={onCancelRename}
-              creating={creating}
-              onSubmitCreate={onSubmitCreate}
-              onCancelCreate={onCancelCreate}
-            />
-          ))}
+          {isLoading ? (
+            <div
+              className="px-2 py-0.5 text-xs text-gray-400 italic"
+              style={{ paddingLeft: `${(depth + 1) * 16 + 8}px` }}
+              data-testid={`tree-loading-${entry.path}`}
+            >
+              加载中...
+            </div>
+          ) : isEmpty ? (
+            <div
+              className="px-2 py-0.5 text-xs text-gray-400 italic"
+              style={{ paddingLeft: `${(depth + 1) * 16 + 8}px` }}
+              data-testid={`tree-empty-${entry.path}`}
+            >
+              空目录
+            </div>
+          ) : (
+            filteredChildren?.map((child) => (
+              <FileTreeNode
+                key={child.path}
+                entry={child}
+                depth={depth + 1}
+                allEntries={allEntries}
+                getSortedEntries={getSortedEntries}
+                onContextMenu={onContextMenu}
+                renaming={renaming}
+                onSubmitRename={onSubmitRename}
+                onCancelRename={onCancelRename}
+                creating={creating}
+                onSubmitCreate={onSubmitCreate}
+                onCancelCreate={onCancelCreate}
+              />
+            ))
+          )}
         </div>
       )}
     </div>

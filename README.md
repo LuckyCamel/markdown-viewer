@@ -1,12 +1,12 @@
 # Markdown-Viewer
 
-> 当前版本：**1.4.5**
+> 当前版本：**1.4.7**
 
 打开文件夹就能流畅读、偶尔改的轻量 Markdown 阅读器与编辑器。
 
 ## 功能特性
 
-GFM 渲染、KaTeX、Mermaid、多标签、文件树、全文搜索、大纲导航、主题切换、状态恢复、原生菜单、阅读设置（字体大小/行高/页宽）、6 套内置主题、命令面板（Ctrl+Shift+P）、HTML/PDF 导出、每日笔记、多工作区、Markdown 编辑器（Edit 模式）、编辑时预览面板、自动保存、冲突检测、查找替换、多光标编辑、文本/代码伴读、行号显示等。
+GFM 渲染、KaTeX、Mermaid、多标签、文件树（按需懒加载子目录）、全文搜索、大纲导航、主题切换、状态恢复、原生菜单、阅读设置（字体大小/行高/页宽）、6 套内置主题、命令面板（Ctrl+Shift+P）、HTML/PDF 导出、每日笔记、多工作区、Markdown 编辑器（Edit 模式）、编辑时预览面板、自动保存、冲突检测、查找替换、多光标编辑、文本/代码伴读、行号显示、大文档分片渲染（> 1000 行首屏 200 行 + 滚动追加）、大文件守护（超阈值提示 / 二进制拒绝）等。
 **完整功能清单、快捷键与平台支持**见 [docs/product.md](docs/product.md)。
 
 ## 技术栈
@@ -35,7 +35,7 @@ pnpm build
 pnpm tauri build
 ```
 
-更多命令、测试策略与发布流程见 [docs/development.md](docs/development.md)。
+更多命令、测试策略与发布流程见 [AGENTS.md](AGENTS.md)。
 
 ## 项目结构
 
@@ -65,12 +65,12 @@ src/
 
 ## 文档
 
-| 读者 | 文档 | 说明 |
-|------|------|------|
-| 用户 / 新贡献者 | [product.md](docs/product.md) | 功能、快捷键、平台 |
-| 日常开发者 | [development.md](docs/development.md) + [architecture.md](docs/architecture.md) | 开发与架构 |
-| 发布负责人 | [release-checklist.md](docs/release-checklist.md) + [CHANGELOG.md](CHANGELOG.md) | 冒烟与版本记录 |
-| AI Agent | [AGENTS.md](AGENTS.md) | 代码约束 |
+| 读者            | 文档                                                                             | 说明               |
+| --------------- | -------------------------------------------------------------------------------- | ------------------ |
+| 用户 / 新贡献者 | [product.md](docs/product.md)                                                    | 功能、快捷键、平台 |
+| 日常开发者      | [AGENTS.md](AGENTS.md) + [architecture.md](docs/architecture.md)                 | 开发与架构         |
+| 发布负责人      | [release-checklist.md](docs/release-checklist.md) + [CHANGELOG.md](CHANGELOG.md) | 冒烟与版本记录     |
+| AI Agent        | [AGENTS.md](AGENTS.md)                                                           | 代码约束           |
 
 ## 许可
 

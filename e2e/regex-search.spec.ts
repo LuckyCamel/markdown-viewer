@@ -78,10 +78,7 @@ test.describe('Regex Content Search', () => {
     await page.waitForTimeout(500)
 
     // 应看到搜索结果中的文件名（限定到 max-h-64 容器避免与文件树冲突）
-    const resultItem = page
-      .locator('div.max-h-64 button')
-      .filter({ hasText: 'doc.md' })
-      .first()
+    const resultItem = page.locator('div.max-h-64 button').filter({ hasText: 'doc.md' }).first()
     await expect(resultItem).toBeVisible({ timeout: 5000 })
 
     ws.cleanup()

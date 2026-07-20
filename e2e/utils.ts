@@ -15,12 +15,21 @@ function isMarkdownFileName(name: string): boolean {
 /**
  * 创建临时测试目录，并扫描内容生成 FileEntry 列表。
  * 返回目录路径、清理函数、文件内容映射和目录条目列表。
+ *
+ * @param files 文件相对路径 → 文件内容
+ * @param options.sizeOverride 可选：按文件相对路径覆盖 size（字节）
+ *   未提供覆盖时，size 字段省略（mock IPC 不传 size，FileSizeGuard 跳过检查）
  */
-export function createTestWorkspace(files: Record<string, string>): {
+export function createTestWorkspace(
+  files: Record<string, string>,
+  options?: { sizeOverride?: Record<string, number> },
+): {
   dirPath: string
   cleanup: () => void
   fileContents: Record<string, string>
   entries: FileEntry[]
+  /** 所有层级的目录条目（用于 mock IPC listDirectory） */
+  directoryTree: Map<string, FileEntry[]>
 } {
   const tmpDir = mkdtempSync(join(tmpdir(), 'mde2e-'))
   const dirPath = tmpDir.replace(/\\/g, '/')
@@ -32,27 +41,55 @@ export function createTestWorkspace(files: Record<string, string>): {
     writeFileSync(fullPath, content, 'utf-8')
   }
 
-  const entries: FileEntry[] = []
-  try {
-    const items = readdirSync(tmpDir)
-    for (const name of items) {
-      const fullPath = join(tmpDir, name)
-      try {
-        const stat = statSync(fullPath)
-        entries.push({
-          name,
-          path: fullPath.replace(/\\/g, '/'),
-          isDirectory: stat.isDirectory(),
-          isHidden: name.startsWith('.'),
-          isMarkdown: !stat.isDirectory() && isMarkdownFileName(name),
-        })
-      } catch {
-        // skip
-      }
+  // 收集所有 size 覆盖（绝对路径 → size）
+  const sizeOverrideMap = new Map<string, number>()
+  if (options?.sizeOverride) {
+    for (const [name, size] of Object.entries(options.sizeOverride)) {
+      const fullPath = join(tmpDir, name).replace(/\\/g, '/')
+      sizeOverrideMap.set(fullPath, size)
     }
-  } catch {
-    // dir not found
   }
+
+  // 递归扫描，构建 directoryTree map（每个目录的 entries）
+  const directoryTree = new Map<string, FileEntry[]>()
+  function scanDir(absDir: string) {
+    const dirPathNorm = absDir.replace(/\\/g, '/')
+    const items: FileEntry[] = []
+    try {
+      const names = readdirSync(absDir)
+      for (const name of names) {
+        const fullPath = join(absDir, name)
+        try {
+          const stat = statSync(fullPath)
+          const fullPathNorm = fullPath.replace(/\\/g, '/')
+          const entry: FileEntry = {
+            name,
+            path: fullPathNorm,
+            isDirectory: stat.isDirectory(),
+            isHidden: name.startsWith('.'),
+            isMarkdown: !stat.isDirectory() && isMarkdownFileName(name),
+          }
+          const overrideSize = sizeOverrideMap.get(fullPathNorm)
+          if (overrideSize !== undefined) {
+            entry.size = overrideSize
+          }
+          items.push(entry)
+          if (stat.isDirectory()) {
+            scanDir(fullPath)
+          }
+        } catch {
+          // skip
+        }
+      }
+    } catch {
+      // dir not found
+    }
+    directoryTree.set(dirPathNorm, items)
+  }
+  scanDir(tmpDir)
+
+  // 根 entries（保持向后兼容字段）
+  const entries = directoryTree.get(dirPath) ?? []
 
   const fileContents: Record<string, string> = {}
   for (const [relPath, content] of Object.entries(files)) {
@@ -61,7 +98,7 @@ export function createTestWorkspace(files: Record<string, string>): {
   }
 
   const cleanup = () => rmSync(tmpDir, { recursive: true, force: true })
-  return { dirPath, cleanup, fileContents, entries }
+  return { dirPath, cleanup, fileContents, entries, directoryTree }
 }
 
 /**
@@ -75,6 +112,7 @@ export async function launchApp(
     dirPath: string
     fileContents: Record<string, string>
     entries: FileEntry[]
+    directoryTree?: Map<string, FileEntry[]>
   },
 ): Promise<void> {
   // 拦截 ipc.ts 请求，重定向到 mock 版本
@@ -89,15 +127,20 @@ export async function launchApp(
   })
 
   if (workspace) {
+    // 优先使用完整 directoryTree（含子目录）；否则回退到只有根目录的 map
+    const tree = workspace.directoryTree ?? new Map([[workspace.dirPath, workspace.entries]])
+    const treeObj = Object.fromEntries(tree)
+
     await page.addInitScript(
-      ({ dirPath, fileContents, entries }) => {
+      ({ dirPath, fileContents, treeObj }) => {
         localStorage.clear()
         localStorage.setItem('locale', 'en-US')
         window.__E2E__ = {
           files: new Map(Object.entries(fileContents)),
-          directoryTree: new Map([[dirPath, entries]]),
+          directoryTree: new Map(Object.entries(treeObj)),
           dialogResult: dirPath,
           openExternalCalls: [],
+          revealPathCalls: [],
           searchResults: null,
           fileChangeListeners: new Map(),
           searchResultListeners: new Set(),
@@ -108,7 +151,7 @@ export async function launchApp(
       {
         dirPath: workspace.dirPath,
         fileContents: workspace.fileContents,
-        entries: workspace.entries,
+        treeObj,
       },
     )
   } else {
@@ -120,6 +163,7 @@ export async function launchApp(
         directoryTree: new Map(),
         dialogResult: null,
         openExternalCalls: [],
+        revealPathCalls: [],
         searchResults: null,
         fileChangeListeners: new Map(),
         searchResultListeners: new Set(),

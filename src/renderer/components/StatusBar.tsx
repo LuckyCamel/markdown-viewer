@@ -1,10 +1,12 @@
 import type { ReadingStats } from '../../shared/readingStats'
 import type { SaveStatus } from '../features/markdown-viewer/useEditorDocument'
+import { getFileKind } from '../../shared/fileTypes'
 
 interface StatusBarProps {
   stats: ReadingStats | null
   saveStatus?: SaveStatus
   viewMode?: 'read' | 'edit'
+  filePath?: string | null
 }
 
 function getSaveStatusText(status: SaveStatus): string {
@@ -24,7 +26,21 @@ function getSaveStatusText(status: SaveStatus): string {
   }
 }
 
-function getViewModeText(mode: 'read' | 'edit'): string {
+function getViewModeText(mode: 'read' | 'edit', filePath?: string | null): string {
+  if (!filePath) {
+    switch (mode) {
+      case 'read':
+        return '阅读'
+      case 'edit':
+        return '编辑'
+      default:
+        return ''
+    }
+  }
+  const kind = getFileKind(filePath)
+  if (kind !== 'markdown') {
+    return '源码伴读'
+  }
   switch (mode) {
     case 'read':
       return '阅读'
@@ -38,7 +54,7 @@ function getViewModeText(mode: 'read' | 'edit'): string {
 /**
  * 底部状态栏，显示阅读统计信息、保存状态和视图模式
  */
-export function StatusBar({ stats, saveStatus, viewMode }: StatusBarProps) {
+export function StatusBar({ stats, saveStatus, viewMode, filePath }: StatusBarProps) {
   return (
     <div className="flex items-center justify-between px-3 py-1 text-xs text-gray-500 dark:text-gray-400 border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900">
       <div className="flex items-center gap-4">
@@ -67,7 +83,7 @@ export function StatusBar({ stats, saveStatus, viewMode }: StatusBarProps) {
             <span>·</span>
           </>
         )}
-        {viewMode && <span>{getViewModeText(viewMode)}</span>}
+        {viewMode && <span>{getViewModeText(viewMode, filePath)}</span>}
       </div>
     </div>
   )

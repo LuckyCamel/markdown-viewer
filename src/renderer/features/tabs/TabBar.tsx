@@ -4,6 +4,7 @@ import { useTabStore } from './useTabStore'
 import { FileIcon } from '../../components/FileIcon'
 import { ContextMenu, type ContextMenuItem } from '../../components/ContextMenu'
 import { copyPathToClipboard, revealPathInDir } from '../../lib/fileActions'
+import { getDocumentSurface } from '../../lib/surface'
 import type { ViewMode } from '../../../shared/types'
 
 interface MenuState {
@@ -27,8 +28,12 @@ export function TabBar() {
 
   const viewMode: ViewMode = activeFile ? (viewModes[activeFile] ?? 'read') : 'read'
 
+  const surface = activeFile
+    ? getDocumentSurface(activeFile, viewMode, { isLoading: false, hasError: false })
+    : null
+
   const handleSetViewMode = (mode: ViewMode) => {
-    if (activeFile) {
+    if (activeFile && surface?.capabilities.allowsEditMode) {
       setViewMode(activeFile, mode)
     }
   }
@@ -104,6 +109,7 @@ export function TabBar() {
           onClick={() => handleSetViewMode('read')}
           title="阅读视图"
           className={`p-1.5 rounded ${viewMode === 'read' ? 'bg-blue-100 dark:bg-blue-900 text-blue-600 dark:text-blue-300' : 'text-gray-500 hover:bg-gray-100 dark:hover:bg-gray-700'}`}
+          disabled={!surface?.capabilities.allowsEditMode}
         >
           <svg
             viewBox="0 0 24 24"
@@ -115,24 +121,26 @@ export function TabBar() {
             <path d="M4 5h16M4 10h16M4 15h10M4 20h7" />
           </svg>
         </button>
-        <button
-          onClick={() => handleSetViewMode('edit')}
-          title="编辑视图"
-          className={`p-1.5 rounded ${viewMode === 'edit' ? 'bg-blue-100 dark:bg-blue-900 text-blue-600 dark:text-blue-300' : 'text-gray-500 hover:bg-gray-100 dark:hover:bg-gray-700'}`}
-        >
-          <svg
-            viewBox="0 0 24 24"
-            className="w-4 h-4"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2"
-            strokeLinecap="round"
-            strokeLinejoin="round"
+        {surface?.capabilities.allowsEditMode && (
+          <button
+            onClick={() => handleSetViewMode('edit')}
+            title="编辑视图"
+            className={`p-1.5 rounded ${viewMode === 'edit' ? 'bg-blue-100 dark:bg-blue-900 text-blue-600 dark:text-blue-300' : 'text-gray-500 hover:bg-gray-100 dark:hover:bg-gray-700'}`}
           >
-            <path d="M12 20h9" />
-            <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z" />
-          </svg>
-        </button>
+            <svg
+              viewBox="0 0 24 24"
+              className="w-4 h-4"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
+              <path d="M12 20h9" />
+              <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z" />
+            </svg>
+          </button>
+        )}
       </div>
       {menu && (
         <ContextMenu x={menu.x} y={menu.y} items={menuItems} onClose={() => setMenu(null)} />

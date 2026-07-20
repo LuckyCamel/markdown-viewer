@@ -25,6 +25,8 @@ export interface CommandFactoryContext {
   toggleSettings: () => void
   /** 切换阅读/编辑模式 */
   toggleViewMode: () => void
+  /** 切换编辑预览面板 */
+  togglePreview: () => void
   /** 打开文件搜索 */
   openFileSearch: () => void
   /** 打开内容搜索 */
@@ -114,6 +116,17 @@ function buildCommands(ctx: CommandFactoryContext): Command[] {
       alias: 'Toggle View Mode',
       category: 'view',
       execute: ctx.toggleViewMode,
+    },
+    {
+      id: 'view.togglePreview',
+      name: '切换编辑预览面板',
+      alias: 'Toggle Preview',
+      category: 'view',
+      execute: ctx.togglePreview,
+      isAvailable: () => {
+        const s = useTabStore.getState()
+        return s.activeFile !== null && s.getViewMode(s.activeFile) === 'edit'
+      },
     },
     {
       id: 'search.openFile',
@@ -226,6 +239,10 @@ export function useRegisterCommands(
       toggleViewMode: () => {
         const s = useTabStore.getState()
         if (s.activeFile) s.toggleViewMode(s.activeFile)
+      },
+      togglePreview: () => {
+        const s = useTabStore.getState()
+        if (s.activeFile) s.togglePreview(s.activeFile)
       },
       openFileSearch: () => useLayoutStore.getState().openSearch('file'),
       openContentSearch: () => useLayoutStore.getState().openSearch('content'),

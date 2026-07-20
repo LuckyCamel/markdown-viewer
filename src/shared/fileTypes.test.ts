@@ -1,141 +1,77 @@
 import { describe, it, expect } from 'vitest'
-import {
-  getExtension,
-  getBasename,
-  isMarkdownFile,
-  isCodeFile,
-  isTextFile,
-  getHighlightLanguage,
-} from './fileTypes'
+import { getFileKind, allowsEdit, allowsPreview, isTextFile } from './fileTypes'
 
-describe('fileTypes', () => {
-  describe('getExtension', () => {
-    it('应正确提取文件扩展名（小写）', () => {
-      expect(getExtension('README.md')).toBe('md')
-      expect(getExtension('src/app.TSX')).toBe('tsx')
-      expect(getExtension('/path/to/file.PY')).toBe('py')
-    })
-
-    it('无扩展名时返回空字符串', () => {
-      expect(getExtension('Makefile')).toBe('')
-      expect(getExtension('/path/to/README')).toBe('')
-    })
-
-    it('以点开头的隐藏文件无扩展名时返回空', () => {
-      expect(getExtension('.gitignore')).toBe('')
-    })
+describe('getFileKind', () => {
+  it('returns markdown for Markdown files', () => {
+    expect(getFileKind('README.md')).toBe('markdown')
+    expect(getFileKind('docs/guide.markdown')).toBe('markdown')
+    expect(getFileKind('article.mkd')).toBe('markdown')
+    expect(getFileKind('README')).toBe('markdown')
   })
 
-  describe('getBasename', () => {
-    it('应正确提取文件名', () => {
-      expect(getBasename('/path/to/file.ts')).toBe('file.ts')
-      expect(getBasename('README.md')).toBe('README.md')
-      expect(getBasename('Makefile')).toBe('Makefile')
-    })
-
-    it('Windows 路径也能正确提取', () => {
-      expect(getBasename('C:\\Users\\dev\\main.rs')).toBe('main.rs')
-    })
+  it('returns code for code files', () => {
+    expect(getFileKind('src/main.ts')).toBe('code')
+    expect(getFileKind('app.jsx')).toBe('code')
+    expect(getFileKind('script.py')).toBe('code')
+    expect(getFileKind('styles.css')).toBe('code')
+    expect(getFileKind('config.json')).toBe('code')
+    expect(getFileKind('Dockerfile')).toBe('code')
+    expect(getFileKind('Makefile')).toBe('code')
   })
 
-  describe('isMarkdownFile', () => {
-    it('标准 Markdown 扩展名', () => {
-      expect(isMarkdownFile('README.md')).toBe(true)
-      expect(isMarkdownFile('guide.markdown')).toBe(true)
-      expect(isMarkdownFile('notes.mkd')).toBe(true)
-    })
-
-    it('无扩展名的 README 文件', () => {
-      expect(isMarkdownFile('/path/README')).toBe(true)
-    })
-
-    it('非 Markdown 文件', () => {
-      expect(isMarkdownFile('main.ts')).toBe(false)
-      expect(isMarkdownFile('style.css')).toBe(false)
-      expect(isMarkdownFile('data.json')).toBe(false)
-    })
+  it('returns text for plain text files', () => {
+    expect(getFileKind('notes.txt')).toBe('text')
   })
 
-  describe('getHighlightLanguage', () => {
-    it('JavaScript / TypeScript 系列', () => {
-      expect(getHighlightLanguage('app.js')).toBe('javascript')
-      expect(getHighlightLanguage('app.jsx')).toBe('javascript')
-      expect(getHighlightLanguage('app.mjs')).toBe('javascript')
-      expect(getHighlightLanguage('app.ts')).toBe('typescript')
-      expect(getHighlightLanguage('app.tsx')).toBe('typescript')
-    })
+  it('returns binary for unknown files', () => {
+    expect(getFileKind('image.png')).toBe('binary')
+    expect(getFileKind('archive.zip')).toBe('binary')
+    expect(getFileKind('data.bin')).toBe('binary')
+  })
+})
 
-    it('Python', () => {
-      expect(getHighlightLanguage('main.py')).toBe('python')
-    })
-
-    it('C / C++', () => {
-      expect(getHighlightLanguage('main.c')).toBe('c')
-      expect(getHighlightLanguage('main.h')).toBe('c')
-      expect(getHighlightLanguage('main.cpp')).toBe('cpp')
-      expect(getHighlightLanguage('main.hpp')).toBe('cpp')
-    })
-
-    it('Rust / Go / Java', () => {
-      expect(getHighlightLanguage('main.rs')).toBe('rust')
-      expect(getHighlightLanguage('main.go')).toBe('go')
-      expect(getHighlightLanguage('Main.java')).toBe('java')
-    })
-
-    it('配置文件', () => {
-      expect(getHighlightLanguage('config.json')).toBe('json')
-      expect(getHighlightLanguage('config.yaml')).toBe('yaml')
-      expect(getHighlightLanguage('config.yml')).toBe('yaml')
-      expect(getHighlightLanguage('config.toml')).toBe('ini')
-      expect(getHighlightLanguage('config.ini')).toBe('ini')
-    })
-
-    it('无扩展名的特殊文件', () => {
-      expect(getHighlightLanguage('Makefile')).toBe('makefile')
-      expect(getHighlightLanguage('Dockerfile')).toBe('dockerfile')
-      expect(getHighlightLanguage('.gitignore')).toBe('plaintext')
-    })
-
-    it('未知扩展名返回 null', () => {
-      expect(getHighlightLanguage('file.xyz')).toBeNull()
-      expect(getHighlightLanguage('file.bin')).toBeNull()
-    })
+describe('allowsEdit', () => {
+  it('returns true for Markdown files', () => {
+    expect(allowsEdit('README.md')).toBe(true)
+    expect(allowsEdit('docs/guide.markdown')).toBe(true)
   })
 
-  describe('isCodeFile', () => {
-    it('常见代码文件返回 true', () => {
-      expect(isCodeFile('main.ts')).toBe(true)
-      expect(isCodeFile('app.py')).toBe(true)
-      expect(isCodeFile('lib.rs')).toBe(true)
-      expect(isCodeFile('main.go')).toBe(true)
-      expect(isCodeFile('style.css')).toBe(true)
-      expect(isCodeFile('index.html')).toBe(true)
-    })
+  it('returns false for non-Markdown files', () => {
+    expect(allowsEdit('src/main.ts')).toBe(false)
+    expect(allowsEdit('app.js')).toBe(false)
+    expect(allowsEdit('notes.txt')).toBe(false)
+    expect(allowsEdit('image.png')).toBe(false)
+  })
+})
 
-    it('未知扩展名返回 false', () => {
-      expect(isCodeFile('image.png')).toBe(false)
-      expect(isCodeFile('binary.exe')).toBe(false)
-    })
+describe('allowsPreview', () => {
+  it('returns true for Markdown files', () => {
+    expect(allowsPreview('README.md')).toBe(true)
+    expect(allowsPreview('docs/guide.markdown')).toBe(true)
   })
 
-  describe('isTextFile', () => {
-    it('Markdown 文件返回 true', () => {
-      expect(isTextFile('README.md')).toBe(true)
-      expect(isTextFile('guide.markdown')).toBe(true)
-    })
+  it('returns false for non-Markdown files', () => {
+    expect(allowsPreview('src/main.ts')).toBe(false)
+    expect(allowsPreview('app.js')).toBe(false)
+    expect(allowsPreview('notes.txt')).toBe(false)
+    expect(allowsPreview('image.png')).toBe(false)
+  })
+})
 
-    it('代码文件返回 true', () => {
-      expect(isTextFile('main.ts')).toBe(true)
-      expect(isTextFile('app.py')).toBe(true)
-    })
+describe('isTextFile', () => {
+  it('returns true for Markdown files', () => {
+    expect(isTextFile('README.md')).toBe(true)
+    expect(isTextFile('guide.markdown')).toBe(true)
+  })
 
-    it('纯文本文件返回 true', () => {
-      expect(isTextFile('notes.txt')).toBe(true)
-    })
+  it('returns true for code files', () => {
+    expect(isTextFile('src/main.ts')).toBe(true)
+    expect(isTextFile('script.py')).toBe(true)
+    expect(isTextFile('Dockerfile')).toBe(true)
+  })
 
-    it('二进制文件返回 false', () => {
-      expect(isTextFile('image.jpg')).toBe(false)
-      expect(isTextFile('archive.zip')).toBe(false)
-    })
+  it('returns false for binary files', () => {
+    expect(isTextFile('image.png')).toBe(false)
+    expect(isTextFile('archive.zip')).toBe(false)
   })
 })

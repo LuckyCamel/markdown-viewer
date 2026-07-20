@@ -9,14 +9,18 @@ interface TabState {
   activeFile: string | null
   dirtyFiles: Set<string>
   viewModes: Record<string, ViewMode>
+  previewEnabled: Record<string, boolean>
   isDirty: (filePath: string) => boolean
   getViewMode: (filePath: string) => ViewMode
+  isPreviewEnabled: (filePath: string) => boolean
   openFile: (filePath: string) => void
   closeFile: (filePath: string) => void
   renameFile: (oldPath: string, newPath: string) => void
   setActive: (filePath: string) => void
   setViewMode: (filePath: string, mode: ViewMode) => void
   toggleViewMode: (filePath: string) => void
+  togglePreview: (filePath: string) => void
+  setPreviewEnabled: (filePath: string, enabled: boolean) => void
   markDirty: (filePath: string) => void
   clearDirty: (filePath: string) => void
   closeOthers: (filePath: string) => void
@@ -38,8 +42,10 @@ export const useTabStore = create<TabState>((set, get) => ({
   activeFile: null,
   dirtyFiles: new Set<string>(),
   viewModes: {},
+  previewEnabled: {},
   isDirty: (filePath) => get().dirtyFiles.has(filePath),
   getViewMode: (filePath) => get().viewModes[filePath] ?? 'read',
+  isPreviewEnabled: (filePath) => get().previewEnabled[filePath] ?? false,
   openFile: (filePath) => {
     ipc.workspace.grant([filePath]).catch((err) => logError('useTabStore:grant', err))
     const { openFiles, viewModes } = get()
@@ -54,13 +60,15 @@ export const useTabStore = create<TabState>((set, get) => ({
     }
   },
   closeFile: (filePath) => {
-    const { openFiles, activeFile, dirtyFiles, viewModes } = get()
+    const { openFiles, activeFile, dirtyFiles, viewModes, previewEnabled } = get()
     const idx = openFiles.indexOf(filePath)
     const next = openFiles.filter((f) => f !== filePath)
     const nextDirty = new Set(dirtyFiles)
     nextDirty.delete(filePath)
     const nextViewModes = { ...viewModes }
     delete nextViewModes[filePath]
+    const nextPreviewEnabled = { ...previewEnabled }
+    delete nextPreviewEnabled[filePath]
     const nextActive =
       activeFile === filePath ? next[Math.min(idx, next.length - 1)] || null : activeFile
     purgeEditorCache([filePath])
@@ -69,10 +77,11 @@ export const useTabStore = create<TabState>((set, get) => ({
       activeFile: nextActive,
       dirtyFiles: nextDirty,
       viewModes: nextViewModes,
+      previewEnabled: nextPreviewEnabled,
     })
   },
   renameFile: (oldPath, newPath) => {
-    const { openFiles, activeFile, dirtyFiles, viewModes } = get()
+    const { openFiles, activeFile, dirtyFiles, viewModes, previewEnabled } = get()
     // 旧路径未打开则无需处理
     if (!openFiles.includes(oldPath)) return
     const next = openFiles.map((f) => (f === oldPath ? newPath : f))
@@ -89,6 +98,12 @@ export const useTabStore = create<TabState>((set, get) => ({
       nextViewModes[newPath] = nextViewModes[oldPath]
       delete nextViewModes[oldPath]
     }
+    // 迁移 previewEnabled
+    const nextPreviewEnabled = { ...previewEnabled }
+    if (oldPath in nextPreviewEnabled) {
+      nextPreviewEnabled[newPath] = nextPreviewEnabled[oldPath]
+      delete nextPreviewEnabled[oldPath]
+    }
     // 迁移编辑器缓存（保留未保存内容）
     const editor = useEditorStore.getState()
     const cached = editor.contents[oldPath]
@@ -101,6 +116,7 @@ export const useTabStore = create<TabState>((set, get) => ({
       activeFile: nextActive,
       dirtyFiles: nextDirty,
       viewModes: nextViewModes,
+      previewEnabled: nextPreviewEnabled,
     })
   },
   setActive: (filePath) => set({ activeFile: filePath }),
@@ -114,6 +130,15 @@ export const useTabStore = create<TabState>((set, get) => ({
       const next: ViewMode = current === 'read' ? 'edit' : 'read'
       return { viewModes: { ...s.viewModes, [filePath]: next } }
     }),
+  togglePreview: (filePath) =>
+    set((s) => {
+      const current = s.previewEnabled[filePath] ?? false
+      return { previewEnabled: { ...s.previewEnabled, [filePath]: !current } }
+    }),
+  setPreviewEnabled: (filePath, enabled) =>
+    set((s) => ({
+      previewEnabled: { ...s.previewEnabled, [filePath]: enabled },
+    })),
   markDirty: (filePath) =>
     set((s) => {
       const next = new Set(s.dirtyFiles)
@@ -127,12 +152,16 @@ export const useTabStore = create<TabState>((set, get) => ({
       return { dirtyFiles: next }
     }),
   closeOthers: (filePath) => {
-    const { openFiles, dirtyFiles, viewModes } = get()
+    const { openFiles, dirtyFiles, viewModes, previewEnabled } = get()
     const toClose = openFiles.filter((f) => f !== filePath)
     const nextDirty = dirtyFiles.has(filePath) ? new Set([filePath]) : new Set<string>()
     const nextViewModes: Record<string, ViewMode> = {}
     if (filePath in viewModes) {
       nextViewModes[filePath] = viewModes[filePath]
+    }
+    const nextPreviewEnabled: Record<string, boolean> = {}
+    if (filePath in previewEnabled) {
+      nextPreviewEnabled[filePath] = previewEnabled[filePath]
     }
     purgeEditorCache(toClose)
     set({
@@ -140,11 +169,18 @@ export const useTabStore = create<TabState>((set, get) => ({
       activeFile: filePath,
       dirtyFiles: nextDirty,
       viewModes: nextViewModes,
+      previewEnabled: nextPreviewEnabled,
     })
   },
   closeAll: () => {
     const { openFiles } = get()
     purgeEditorCache(openFiles)
-    set({ openFiles: [], activeFile: null, dirtyFiles: new Set(), viewModes: {} })
+    set({
+      openFiles: [],
+      activeFile: null,
+      dirtyFiles: new Set(),
+      viewModes: {},
+      previewEnabled: {},
+    })
   },
 }))

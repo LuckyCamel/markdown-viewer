@@ -1,19 +1,13 @@
 import type { FileEntry, FileContent, SearchProgress, FileChangeEvent } from '../../shared/types'
+import { isMarkdownFile, isTextFile } from '../../shared/fileTypes'
 
-/**
- * 与 Rust SettingsState 默认规则一致，供 mock listDirectory 补全 isMarkdown
- */
-function isMarkdownFileName(name: string): boolean {
-  if (/\.(md|markdown)$/i.test(name)) return true
-  return !name.includes('.')
-}
-
-/**
- * 补全目录条目上的 isMarkdown 标记
- */
 function enrichFileEntry(entry: FileEntry): FileEntry {
   if (entry.isDirectory || entry.isMarkdown === true) return entry
-  return { ...entry, isMarkdown: isMarkdownFileName(entry.name) }
+  return {
+    ...entry,
+    isMarkdown: isMarkdownFile(entry.path),
+    isTextFile: isTextFile(entry.path),
+  }
 }
 
 /**
@@ -99,13 +93,13 @@ export async function checkExists(paths: string[]): Promise<boolean[]> {
 export async function createFile(dirPath: string, name: string): Promise<FileEntry> {
   ensureE2E()
   const path = `${dirPath}/${name}`
-  const isMarkdown = /\.(md|markdown)$/i.test(name) || !name.includes('.')
   const entry: FileEntry = {
     name,
     path,
     isDirectory: false,
     isHidden: name.startsWith('.'),
-    isMarkdown,
+    isMarkdown: isMarkdownFile(path),
+    isTextFile: isTextFile(path),
   }
   const entries = window.__E2E__.directoryTree.get(dirPath) || []
   window.__E2E__.directoryTree.set(dirPath, [...entries, entry])
@@ -151,6 +145,8 @@ export async function renameEntry(oldPath: string, newName: string): Promise<Fil
     path: newPath,
     isDirectory: isDir,
     isHidden: newName.startsWith('.'),
+    isMarkdown: isMarkdownFile(newPath),
+    isTextFile: isTextFile(newPath),
   } as FileEntry
 
   const newEntries = entries.map((e) => (e.path === oldPath ? newEntry : e))

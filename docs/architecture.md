@@ -4,7 +4,7 @@
 
 - **定位**：跨平台 Tauri 桌面应用，以工作区方式浏览、渲染和编辑 Markdown 文件
 - **技术栈**：Tauri 2 · Rust · React 19 · TypeScript · zustand · Tailwind CSS · Vite · CodeMirror 6
-- **核心特性**：GFM 渲染、KaTeX、Mermaid、多标签、全文搜索、原生菜单、主题切换、Markdown 编辑器、自动保存、冲突检测
+- **核心特性**：GFM 渲染、KaTeX、Mermaid、多标签、全文搜索、原生菜单、主题切换、Markdown 编辑器、编辑时预览面板、自动保存、冲突检测、文本/代码伴读
 
 ---
 
@@ -71,7 +71,10 @@ Tauri Rust 后端 + Web 前端，通过 IPC 通信。
 |------|------|------|--------|----------|
 | FileTree | `features/file-tree/` | 递归文件树渲染、展开/折叠 | 中 | useFileStore |
 | Tabs | `features/tabs/` | 多标签管理、切换、关闭 | 中 | useTabStore |
-| MarkdownViewer | `features/markdown-viewer/` | Markdown 渲染（react-markdown + 插件链）、CodeMirror 6 编辑器、自动保存、冲突检测、表格编辑 | 深 | useEditorStore, mermaid, katex, @codemirror/* |
+| MarkdownViewer | `features/markdown-viewer/` | Markdown 渲染（react-markdown + 插件链）、CodeMirror 6 编辑器、自动保存、冲突检测、表格编辑、编辑时预览面板 | 深 | useEditorStore, mermaid, katex, @codemirror/* |
+| SourceViewer | `features/markdown-viewer/SourceViewer.tsx` | 文本/代码文件源码查看、语法高亮、行号显示 | 浅 | highlight.js |
+| FileKindModule | `shared/fileTypes.ts` | 统一文件类型判断（markdown/code/text/binary）、编辑/预览能力判断 | 浅 | — |
+| DocumentSurface | `renderer/lib/surface.ts` | 根据文件类型和视图模式确定渲染策略和能力 | 浅 | FileKindModule |
 | Outline | `features/outline/` | 标题提取 + 大纲面板 + 点击跳转（rehypeHeadingIds 注入 id） | 中 | headingToId |
 | Search | `features/search/` | 文件搜索 + 全局内容搜索 | 中 | useSearchStore |
 | Settings | `features/settings/` | 主题切换 + 忽略列表 + 扩展名编辑器 | 浅 | useSettingsStore |
@@ -93,7 +96,7 @@ Tauri Rust 后端 + Web 前端，通过 IPC 通信。
 | useWorkspaceStore | `src/renderer/stores/useWorkspaceStore.ts` | workspace 授权根、启动状态、最近文件/目录；启动时统一 `init()` 恢复 | lastWorkspace、openFiles、activeFile、recentFiles、recentDirs（Rust store） |
 | useEditorStore | `features/markdown-viewer/useEditorStore.ts` | 文件内容缓存（惰性加载）、滚动位置 | readingPositions（Rust store） |
 | useSettingsStore | `features/settings/useSettingsStore.ts` | 阅读设置（fontSize / lineHeight / contentMaxWidth / fontFamily / codeFontFamily） | 同名字段（Rust store）；ignore/extensions 改由 SettingsPanel 直接 `ipc.store.set`/`get` |
-| useTabStore | `features/tabs/useTabStore.ts` | openFiles、activeFile、dirtyFiles；关闭时清理 Editor 缓存 | —（持久化由 useWorkspaceStore.init 恢复） |
+| useTabStore | `features/tabs/useTabStore.ts` | openFiles、activeFile、dirtyFiles、viewModes、previewEnabled；关闭时清理 Editor 缓存 | —（持久化由 useWorkspaceStore.init 恢复） |
 | useFileStore | `features/file-tree/useFileStore.ts` | 文件树数据、展开状态、加载状态（惰性加载守卫） | — |
 | useSearchStore | `features/search/useSearchStore.ts` | 搜索关键词、结果、搜索状态 | — |
 | useTableDialogStore | `src/renderer/stores/useTableDialogStore.ts` | 表格插入弹窗开关与编辑器视图引用 | — |

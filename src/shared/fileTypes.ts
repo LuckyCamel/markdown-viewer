@@ -1,3 +1,5 @@
+export type FileKind = 'markdown' | 'code' | 'text' | 'binary'
+
 /**
  * 文件扩展名到 highlight.js 语言名的映射
  * 覆盖 25+ 种主流编程语言和配置格式
@@ -192,4 +194,48 @@ export function isCodeFile(path: string): boolean {
  */
 export function isTextFile(path: string): boolean {
   return isMarkdownFile(path) || isCodeFile(path)
+}
+
+/**
+ * 获取文件的 kind 类型
+ * - markdown: Markdown 文件（.md, .markdown 等）
+ * - code: 可高亮的代码文件（.ts, .js, .py 等）
+ * - text: 纯文本文件（.txt 等）
+ * - binary: 不可预览的二进制文件
+ */
+export function getFileKind(path: string): FileKind {
+  if (isMarkdownFile(path)) return 'markdown'
+  const ext = getExtension(path)
+  if (ext === 'txt') return 'text'
+  if (isCodeFile(path)) return 'code'
+  return 'binary'
+}
+
+/**
+ * 判断文件是否允许编辑模式
+ * 只有 Markdown 文件允许编辑
+ */
+export function allowsEdit(path: string): boolean {
+  return getFileKind(path) === 'markdown'
+}
+
+/**
+ * 判断文件是否允许预览
+ * Markdown 文件允许预览，其他文件不允许
+ */
+export function allowsPreview(path: string): boolean {
+  return getFileKind(path) === 'markdown'
+}
+
+/**
+ * 文件树可见条目：目录或文本文件（Markdown + 代码文件）
+ */
+export function isVisibleFileEntry(entry: {
+  isDirectory: boolean
+  isMarkdown?: boolean
+  isTextFile?: boolean
+}): boolean {
+  if (entry.isDirectory) return true
+  if (entry.isTextFile !== undefined) return entry.isTextFile
+  return entry.isMarkdown === true
 }

@@ -41,7 +41,7 @@ import { useReadingStats } from './hooks/useReadingStats'
 import { useSearchHighlight } from './hooks/useSearchHighlight'
 import { StatusBar } from './components/StatusBar'
 import { SearchHighlightBar } from './components/SearchHighlightBar'
-import { isMarkdownFile } from '../shared/fileTypes'
+import { getDocumentSurface } from './lib/surface'
 import type { RecentEntry } from '../shared/types'
 
 function App() {
@@ -156,8 +156,14 @@ function App() {
       .catch((err) => logError('App:loadRecentFiles', err))
   }, [searchPanel])
 
+  // 活动文件的表面信息，用于决定渲染策略
+  const surface = useMemo(() => {
+    if (!activeFile) return null
+    return getDocumentSurface(activeFile, viewMode, { isLoading: loading, hasError: !!loadError })
+  }, [activeFile, viewMode, loading, loadError])
+
   // 活动 Markdown 的编辑会话（任意视图模式均挂载，保证 StatusBar / Ctrl+S 可用）
-  const sessionFilePath = activeFile && isMarkdownFile(activeFile) ? activeFile : null
+  const sessionFilePath = surface?.capabilities.hasSession ? activeFile : null
   const { saveStatus, forceSave, loadDisk, keepMine, setContent, handleExternalChange } =
     useEditorDocument(sessionFilePath)
 
@@ -328,26 +334,25 @@ function App() {
                     message={loadError}
                     onRetry={() => activeFile && loadContent(activeFile)}
                   />
-                ) : content !== undefined ? (
-                  activeFile && isMarkdownFile(activeFile) ? (
-                    viewMode === 'edit' ? (
-                      <EditorPane
-                        filePath={activeFile}
-                        content={content}
-                        saveStatus={saveStatus}
-                        onLoadDisk={() => {
-                          void loadDisk()
-                        }}
-                        onKeepMine={() => {
-                          void keepMine()
-                        }}
-                        onChange={setContent}
-                      />
-                    ) : (
-                      <MarkdownViewer content={content} filePath={activeFile} />
-                    )
+                ) : content !== undefined && surface && activeFile ? (
+                  surface.kind === 'markdown-edit' ? (
+                    <EditorPane
+                      filePath={activeFile}
+                      content={content}
+                      saveStatus={saveStatus}
+                      onLoadDisk={() => {
+                        void loadDisk()
+                      }}
+                      onKeepMine={() => {
+                        void keepMine()
+                      }}
+                      onChange={setContent}
+                      previewEnabled={useTabStore.getState().isPreviewEnabled(activeFile)}
+                    />
+                  ) : surface.kind === 'markdown-read' ? (
+                    <MarkdownViewer content={content} filePath={activeFile} />
                   ) : (
-                    <SourceViewer content={content} filePath={activeFile ?? undefined} />
+                    <SourceViewer content={content} filePath={activeFile} />
                   )
                 ) : loading ? (
                   <div className="flex items-center justify-center h-full text-gray-500">
@@ -355,7 +360,12 @@ function App() {
                   </div>
                 ) : null}
               </div>
-              <StatusBar stats={readingStats} saveStatus={saveStatus} viewMode={viewMode} />
+              <StatusBar
+                stats={readingStats}
+                saveStatus={saveStatus}
+                viewMode={viewMode}
+                filePath={activeFile}
+              />
             </div>
           ) : (
             <WelcomePage
@@ -365,9 +375,7 @@ function App() {
             />
           )
         }
-        outline={
-          activeFile && content && isMarkdownFile(activeFile) ? <Outline content={content} /> : null
-        }
+        outline={surface?.capabilities.hasOutline && content ? <Outline content={content} /> : null}
         sidebarVisible={sidebarVisible}
         outlineVisible={outlineVisible}
       />

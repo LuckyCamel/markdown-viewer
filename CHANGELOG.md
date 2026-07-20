@@ -2,6 +2,38 @@
 
 本文件记录 Markdown-Viewer 各版本的变更摘要。
 
+## [1.4.6] - 2026-07-20
+
+### 新增
+
+- **FileKindModule**：统一文件类型判断，将文件分类为 `markdown` / `code` / `text` / `binary` 四种类型
+  - `getFileKind(path)`：根据扩展名返回文件类型
+  - `allowsEdit(path)`：判断文件是否允许编辑
+  - `allowsPreview(path)`：判断文件是否允许预览
+  - `isVisibleFileEntry(entry)`：统一判断文件是否在文件树中显示
+- **DocumentSurface Module**：根据文件类型和视图模式确定渲染策略和能力
+  - `getDocumentSurface(path, viewMode, loadState)`：返回 surface 类型和 capabilities
+  - 消除 App.tsx 中零散的 `isMarkdownFile` 分支判断
+- **编辑时预览面板**：编辑模式下右侧实时预览 Markdown 渲染结果
+  - `useTabStore` 新增 `previewEnabled` 字段和 `togglePreview` / `setPreviewEnabled` 方法
+  - `EditorPane` 支持 `previewEnabled` prop，启用时水平分栏显示编辑器和预览
+  - 新增「切换编辑预览面板」命令，可在命令面板中搜索执行
+- **SourceViewer 行号显示**：文本/代码文件查看时左侧显示行号
+  - 行号区域独立，灰色背景，右对齐，不可选中
+  - 语法高亮保持不变
+
+### 变更
+
+- **TabBar 视图诚实化**：根据 `capabilities.allowsEditMode` 决定是否显示编辑按钮
+- **状态栏区分模式**：非 Markdown 文件显示「源码伴读」而非「阅读」/「编辑」
+- **删除重复判断逻辑**：移除 `settingsDefaults.ts` 中重复的 `isVisibleFileEntry`
+
+### 测试
+
+- 单元测试：新增 `fileTypes.test.ts`（FileKindModule）、`surface.test.ts`（DocumentSurface Module）
+- E2E 测试：新增 `surface-honesty.spec.ts`（非 MD 文件视图诚实化）、`editor-preview.spec.ts`（编辑预览面板）、`source-viewer.spec.ts`（行号显示）
+- 全部 75 个 E2E 测试通过，476 个单元测试通过
+
 ## [1.4.5] - 2026-07-19
 
 ### 新增

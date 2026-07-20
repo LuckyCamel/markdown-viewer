@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { basename } from '../../../shared/utils'
-import { isVisibleFileEntry } from '../../../shared/settingsDefaults'
+import { isVisibleFileEntry } from '../../../shared/fileTypes'
 import { useFileStore } from './useFileStore'
 import { useTabStore } from '../tabs/useTabStore'
 import { FileIcon } from '../../components/FileIcon'

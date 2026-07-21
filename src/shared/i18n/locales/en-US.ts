@@ -118,7 +118,7 @@ const enUS: Record<TranslationKey, string> = {
   'recent.hoursAgo': '{n} hours ago',
   'recent.daysAgo': '{n} days ago',
 
-  'welcome.hint': 'Open a folder to browse and preview markdown files',
+  'welcome.hint': 'Open a folder to read docs and browse source code',
   'welcome.recentWorkspaces': 'Recent Workspaces',
   'welcome.addToWorkspace': 'Add to Workspace',
 

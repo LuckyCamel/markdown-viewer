@@ -2,6 +2,27 @@
 
 本文件记录 Markdown-Viewer 各版本的变更摘要。
 
+## [1.4.9] - 2026-07-21
+
+### 新增
+
+- **文件类型图标系统**：为 25+ 编程语言和配置文件提供专用图标，通过首字母 + 颜色区分，提升文件树视觉识别度
+  - 编程语言：rs/go/py/js/ts/java/cpp/c/csharp/swift/kotlin/rust/scala/clojure/erlang/haskell/elixir
+  - 脚本/配置：sh/bash/zsh/powershell/json/yaml/toml/xml
+  - 文档：md/txt/mdbook
+  - 实现：`src/renderer/components/FileIcon.tsx` 中 `languageIcons` 和 `namedFiles` 映射表
+
+### 变更
+
+- **产品定位升级**：正式宣称「文档+代码伴读」能力，更新欢迎页、README、product.md 的价值主张文案
+- **价值主张更新**：从「打开文件夹就能流畅读、偶尔改」升级为「打开文件夹读文档、顺带看源码」
+- **国际化同步**：中英文 i18n 同步更新欢迎页提示文本
+
+### 测试
+
+- 单元测试：515 个用例全部通过
+- E2E 测试：93 个用例全部通过（含 `surface-honesty.spec.ts` 4 个用例验证伴读诚实化）
+
 ## [1.4.8] - 2026-07-21
 
 ### 新增

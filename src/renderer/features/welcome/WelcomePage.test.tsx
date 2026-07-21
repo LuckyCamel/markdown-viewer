@@ -36,7 +36,7 @@ describe('WelcomePage', () => {
   it('should render welcome message', async () => {
     render(<WelcomePage />)
     expect(screen.getByText('Markdown-Viewer')).toBeDefined()
-    expect(screen.getByText('打开文件夹就能流畅读、偶尔改')).toBeDefined()
+    expect(screen.getAllByText('打开文件夹读文档、顺带看源码').length).toBeGreaterThan(0)
   })
 
   it('should show open folder button', () => {

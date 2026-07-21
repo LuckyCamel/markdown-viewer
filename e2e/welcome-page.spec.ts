@@ -4,7 +4,7 @@ import { launchApp } from './utils'
 test.describe('Welcome Page', () => {
   test('should display value proposition', async ({ page }) => {
     await launchApp(page)
-    await expect(page.getByText('打开文件夹就能流畅读、偶尔改')).toBeVisible({ timeout: 10000 })
+    await expect(page.getByText('打开文件夹读文档、顺带看源码')).toBeVisible({ timeout: 10000 })
   })
 
   test('should display application name', async ({ page }) => {

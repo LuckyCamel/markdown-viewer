@@ -117,7 +117,7 @@ const zhCN: Record<TranslationKey, string> = {
   'recent.hoursAgo': '{n} 小时前',
   'recent.daysAgo': '{n} 天前',
 
-  'welcome.hint': '打开文件夹以浏览和预览 Markdown 文件',
+  'welcome.hint': '打开文件夹读文档、顺带看源码',
   'welcome.recentWorkspaces': '最近的工作区',
   'welcome.addToWorkspace': '添加到工作区',
 

@@ -143,10 +143,11 @@ gh run cancel <run-id>
 
 1. 更新版本号（**须用户明确许可**，见上方「版本号规范」）
 2. 更新 [CHANGELOG.md](CHANGELOG.md) `[Unreleased]` 条目
-3. commit 并 push 到 `main`
-4. **打 tag `v*`**（如 `v1.2.3`）并 push — 触发 [.github/workflows/release.yml](.github/workflows/release.yml)
-5. 按 [docs/release-checklist.md](docs/release-checklist.md) 手工冒烟
-6. 确认 GitHub Release 含各平台安装包（Windows exe、macOS dmg、Linux deb）
+3. 维护发布面和开发面文档，发布面文档需要反应代码变更， 开发面文档需要反应已完成的工作，确保两者一致
+4. commit 并 push 到 `main`
+5. **打 tag `v*`**（如 `v1.2.3`）并 push — 触发 [.github/workflows/release.yml](.github/workflows/release.yml)
+6. 按 [docs/release-checklist.md](docs/release-checklist.md) 手工冒烟
+7. 确认 GitHub Release 含各平台安装包（Windows exe、macOS dmg、Linux deb）
 
 > **注意**：仅 push main **不会**触发 Release；必须 push `v*` tag。
 
@@ -221,4 +222,5 @@ release: vX.Y.Z
 - `src/renderer/lib/codemirror/table.ts` — 表格编辑核心（解析/插入/删除/导航 + keymap）
 - `src/renderer/components/TableInsertDialog.tsx` — 表格插入弹窗（行/列配置）
 - `src/renderer/stores/useTableDialogStore.ts` — 表格弹窗状态（工具栏与命令面板共享）
+- `src/renderer/components/FileIcon.tsx` — 文件类型图标组件（25+ 编程语言与配置文件专用图标）
 - `src-tauri/src/commands/export.rs` — `save_text_file` Rust command

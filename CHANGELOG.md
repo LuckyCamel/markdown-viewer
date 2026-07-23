@@ -11,6 +11,7 @@
   - 脚本/配置：sh/bash/zsh/powershell/json/yaml/toml/xml
   - 文档：md/txt/mdbook
   - 实现：`src/renderer/components/FileIcon.tsx` 中 `languageIcons` 和 `namedFiles` 映射表
+- **可配置文本扩展名**：设置面板新增「文本扩展名」配置项，用户可自定义哪些文件扩展名参与全文搜索，默认包含 50+ 常见编程语言和配置文件扩展名
 
 ### 变更
 

@@ -10,7 +10,11 @@ import { CODE_THEMES } from '../../lib/codeThemes'
 import { t, setLocale, getLocale, type Locale } from '../../../shared/i18n'
 import { getThemesByVariant, type ThemeId } from '../../lib/themes'
 import { COMMON_PROPORTIONAL_FONTS, COMMON_MONOSPACE_FONTS } from '../../lib/fonts'
-import { DEFAULT_IGNORE_LIST, DEFAULT_MARKDOWN_EXTENSIONS } from '../../../shared/settingsDefaults'
+import {
+  DEFAULT_IGNORE_LIST,
+  DEFAULT_MARKDOWN_EXTENSIONS,
+  DEFAULT_TEXT_EXTENSIONS,
+} from '../../../shared/settingsDefaults'
 import { parseExtensionLines, formatExtensionLines } from '../../../shared/parseExtensionLines'
 
 type SettingsTab = 'general' | 'shortcuts'
@@ -49,10 +53,13 @@ export function SettingsPanel({ onClose }: SettingsPanelProps) {
   const setContentMaxWidth = useSettingsStore((s) => s.setContentMaxWidth)
   const setFontFamily = useSettingsStore((s) => s.setFontFamily)
   const setCodeFontFamily = useSettingsStore((s) => s.setCodeFontFamily)
-  // ignoreList / markdownExtensions 直接读写 KV，不经过 useSettingsStore
+  // ignoreList / markdownExtensions / textExtensions 直接读写 KV，不经过 useSettingsStore
   const [ignoreListText, setIgnoreListText] = useState<string>(DEFAULT_IGNORE_LIST.join('\n'))
   const [extensionsText, setExtensionsText] = useState<string>(
     formatExtensionLines(DEFAULT_MARKDOWN_EXTENSIONS),
+  )
+  const [textExtensionsText, setTextExtensionsText] = useState<string>(
+    DEFAULT_TEXT_EXTENSIONS.join('\n'),
   )
   const [activeTab, setActiveTab] = useState<SettingsTab>('general')
   // 语言切换后强制刷新面板，使 t() 文案立即生效
@@ -73,6 +80,12 @@ export function SettingsPanel({ onClose }: SettingsPanelProps) {
         if (Array.isArray(exts)) setExtensionsText(formatExtensionLines(exts))
       })
       .catch((err) => logError('SettingsPanel:loadExtensions', err))
+    ipc.store
+      .get<string[]>('textExtensions')
+      .then((exts) => {
+        if (Array.isArray(exts)) setTextExtensionsText(exts.join('\n'))
+      })
+      .catch((err) => logError('SettingsPanel:loadTextExtensions', err))
   }, [loadFromDisk])
 
   /**
@@ -111,19 +124,34 @@ export function SettingsPanel({ onClose }: SettingsPanelProps) {
   }
 
   /**
-   * 修改 ignoreList / markdownExtensions 时：
+   * 修改 ignoreList / markdownExtensions / textExtensions 时：
    * 1. 更新本地 textarea 文本（受控组件）
    * 2. 解析为列表后直接写入后端 KV
    * 3. 刷新当前根目录的文件树以应用新的过滤规则
    */
-  const handleSettingsChange = async (type: 'ignoreList' | 'extensions', value: string) => {
+  const handleSettingsChange = async (
+    type: 'ignoreList' | 'extensions' | 'textExtensions',
+    value: string,
+  ) => {
     if (type === 'ignoreList') {
       setIgnoreListText(value)
+    } else if (type === 'textExtensions') {
+      setTextExtensionsText(value)
     } else {
       setExtensionsText(value)
     }
-    const list = type === 'ignoreList' ? parseLines(value) : parseExtensionLines(value)
-    const key = type === 'ignoreList' ? 'ignoreList' : 'markdownExtensions'
+    const list =
+      type === 'ignoreList'
+        ? parseLines(value)
+        : type === 'textExtensions'
+          ? parseLines(value)
+          : parseExtensionLines(value)
+    const key =
+      type === 'ignoreList'
+        ? 'ignoreList'
+        : type === 'textExtensions'
+          ? 'textExtensions'
+          : 'markdownExtensions'
     await ipc.store.set(key, list).catch((err) => logError('SettingsPanel:setKV', err))
     if (rootPath) {
       useFileStore.getState().setRoot(rootPath)
@@ -422,6 +450,18 @@ export function SettingsPanel({ onClose }: SettingsPanelProps) {
               placeholder={'.md\n.markdown'}
             />
             <p className="text-xs text-gray-500 mt-1">{t('settings.markdownExtensionsHint')}</p>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium mb-2">{t('settings.textExtensions')}</label>
+            <textarea
+              value={textExtensionsText}
+              onChange={(e) => handleSettingsChange('textExtensions', e.target.value)}
+              rows={5}
+              className="w-full px-3 py-1.5 text-sm border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-800 font-mono"
+              placeholder={'js\nts\npy\nrs'}
+            />
+            <p className="text-xs text-gray-500 mt-1">{t('settings.textExtensionsHint')}</p>
           </div>
 
           <div>

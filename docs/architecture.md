@@ -61,7 +61,7 @@ Tauri Rust 后端 + Web 前端，通过 IPC 通信。
 | `search/`     | `walk_dir`、`matcher`（行匹配）、`types`（`SearchProgress` 增量协议）、`SearchSession`（编排）、`CancelledStore`（取消）                                                                                        |
 | `filesystem/` | `Filesystem` — 统一 `FileEntry` 与 list/create/rename/save/mtime/trash 入口；commands 仅做注入与错误映射                                                                                                        |
 | `workspace/`  | `WorkspaceState` — 统一 plugin-fs scope 授权与 `allowed_roots` 门禁；`grant` / `grant_many` / `assert_allowed`                                                                                                  |
-| `filters.rs`  | `FileFilters` — 从 `StoreState` 实时读取 `ignoreList` / `markdownExtensions`；`is_ignored` / `is_markdown_file` / `is_text_file`                                                                                |
+| `filters.rs`  | `FileFilters` — 从 `StoreState` 实时读取 `ignoreList` / `markdownExtensions` / `textExtensions`；`is_ignored` / `is_markdown_file` / `is_text_file`                                                                                |
 | `menu.rs`     | 原生菜单构建；点击 emit `menu-action` 至前端                                                                                                                                                                    |
 | `cli.rs`      | `-v`/`-h` 与启动路径解析                                                                                                                                                                                        |
 
@@ -290,7 +290,7 @@ EditorPane 仅聚合 Toolbar + ConflictBanner + Editor UI
 | WatcherState               | Rust 后端共享状态，管理 notify watcher 与已监控路径                                                                         |
 | WorkspaceState             | Rust 后端共享状态，管理 plugin-fs scope 授权与 `allowed_roots` 列表                                                         |
 | FileFilters                | Rust 后端无状态结构体，每次 command 调用时从 `StoreState` 实时构造，提供 `is_ignored` / `is_markdown_file` / `is_text_file` |
-| shared/settingsDefaults.ts | 前后端一致的默认设置常量（`DEFAULT_IGNORE_LIST` / `DEFAULT_MARKDOWN_EXTENSIONS`）                                           |
+| shared/settingsDefaults.ts | 前后端一致的默认设置常量（`DEFAULT_IGNORE_LIST` / `DEFAULT_MARKDOWN_EXTENSIONS` / `DEFAULT_TEXT_EXTENSIONS`）                |
 | FileSizeGuard              | 大文件守护纯函数模块，按文件大小+类型决定是否允许直接打开；阈值 Markdown 5MB / 文本 2MB                                     |
 | useChunkedContent          | 大文档分片渲染 hook，行数超过阈值时首屏渲染部分行 + IntersectionObserver 追加                                               |
 | Chunk Sentinel             | 分片渲染哨兵元素，进入视口时触发追加渲染下一批行                                                                            |

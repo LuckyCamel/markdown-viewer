@@ -40,6 +40,8 @@ const enUS: Record<TranslationKey, string> = {
   'settings.markdownExtensions': 'Markdown Extensions',
   'settings.markdownExtensionsHint':
     'File extensions to show in the file tree. Use an empty line for no-extension text files (e.g., README, LICENSE).',
+  'settings.textExtensions': 'Text Extensions',
+  'settings.textExtensionsHint': 'Text file extensions to include in full-text search.',
   'settings.ignoreList': 'Ignore List',
   'settings.ignoreListPlaceholder': 'Enter directory/file names to ignore (one per line)',
   'settings.ignoreListHint':

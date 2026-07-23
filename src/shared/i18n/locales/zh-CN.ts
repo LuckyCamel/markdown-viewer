@@ -40,6 +40,8 @@ const zhCN: Record<TranslationKey, string> = {
   'settings.markdownExtensions': 'Markdown 扩展名',
   'settings.markdownExtensionsHint':
     '文件树中显示的文件扩展名。使用空行表示无扩展名的文本文件（如 README、LICENSE）。',
+  'settings.textExtensions': '文本扩展名',
+  'settings.textExtensionsHint': '参与全文搜索的文本文件扩展名。',
   'settings.ignoreList': '忽略列表',
   'settings.ignoreListPlaceholder': '输入要忽略的目录/文件名（每行一个）',
   'settings.ignoreListHint': '匹配这些名称的目录和文件将在文件树中隐藏。',

@@ -36,6 +36,8 @@ export type TranslationKey =
   | 'settings.themeDark'
   | 'settings.markdownExtensions'
   | 'settings.markdownExtensionsHint'
+  | 'settings.textExtensions'
+  | 'settings.textExtensionsHint'
   | 'settings.ignoreList'
   | 'settings.ignoreListPlaceholder'
   | 'settings.ignoreListHint'

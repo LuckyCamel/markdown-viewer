@@ -223,4 +223,6 @@ release: vX.Y.Z
 - `src/renderer/components/TableInsertDialog.tsx` — 表格插入弹窗（行/列配置）
 - `src/renderer/stores/useTableDialogStore.ts` — 表格弹窗状态（工具栏与命令面板共享）
 - `src/renderer/components/FileIcon.tsx` — 文件类型图标组件（25+ 编程语言与配置文件专用图标）
+- `src-tauri/src/filters.rs` — FileFilters 模块（ignore_list / markdown_extensions / text_extensions 可配置）
+- `src/shared/settingsDefaults.ts` — 前后端一致的默认设置常量
 - `src-tauri/src/commands/export.rs` — `save_text_file` Rust command

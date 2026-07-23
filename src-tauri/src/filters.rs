@@ -13,7 +13,33 @@ const DEFAULT_IGNORE_LIST: &[&str] = &[".git", "node_modules", "__pycache__", ".
 const DEFAULT_MARKDOWN_EXTENSIONS: &[&str] = &["md", "markdown"];
 
 /**
- * 文件过滤器：从 StoreState 读取 ignore_list / markdown_extensions
+ * 默认文本扩展名（KV 中无 textExtensions 时使用）
+ */
+const DEFAULT_TEXT_EXTENSIONS: &[&str] = &[
+    // 前端/脚本
+    "js", "jsx", "mjs", "cjs", "ts", "tsx",
+    // Python
+    "py", "pyw", "pyi",
+    // Shell
+    "sh", "bash", "zsh",
+    // 数据/配置
+    "json", "jsonc", "yaml", "yml", "toml", "ini", "cfg",
+    // Web
+    "html", "htm", "xml", "svg", "css", "scss", "less",
+    // SQL
+    "sql",
+    // 系统语言
+    "go", "rs", "rust", "java",
+    "c", "h", "cpp", "cc", "cxx", "hpp", "hh",
+    "cs", "csx", "php", "phtml",
+    "rb", "ruby", "swift", "kt", "kts", "dart",
+    // 其他
+    "lua", "pl", "pm", "r", "scala", "hs", "lhs",
+    "txt", "md", "markdown", "mkd",
+];
+
+/**
+ * 文件过滤器：从 StoreState 读取 ignore_list / markdown_extensions / text_extensions
  *
  * 每次 command 调用时构造，不缓存（StoreState 内部已有内存缓存）。
  * 替代原 `SettingsState` 的文件类型判断职责。
@@ -21,13 +47,14 @@ const DEFAULT_MARKDOWN_EXTENSIONS: &[&str] = &["md", "markdown"];
 pub struct FileFilters {
     ignore_list: Vec<String>,
     markdown_extensions: Vec<String>,
+    text_extensions: Vec<String>,
 }
 
 impl FileFilters {
     /**
-     * 从 StoreState 读取 ignore_list 和 markdown_extensions
+     * 从 StoreState 读取 ignore_list、markdown_extensions 和 text_extensions
      *
-     * KV 中无对应键时，使用 `DEFAULT_IGNORE_LIST` / `DEFAULT_MARKDOWN_EXTENSIONS`。
+     * KV 中无对应键时，使用对应的默认值。
      */
     pub fn from_store(store: &StoreState) -> Result<Self, String> {
         let ignore_list = store
@@ -41,9 +68,13 @@ impl FileFilters {
                     .map(|s| s.to_string())
                     .collect()
             });
+        let text_extensions = store
+            .get::<Vec<String>>("textExtensions")?
+            .unwrap_or_else(|| DEFAULT_TEXT_EXTENSIONS.iter().map(|s| s.to_string()).collect());
         Ok(Self {
             ignore_list,
             markdown_extensions,
+            text_extensions,
         })
     }
 
@@ -70,7 +101,7 @@ impl FileFilters {
     }
 
     /**
-     * 判断路径是否参与全文搜索
+     * 判断路径是否为文本文件（参与全文搜索）
      */
     pub fn is_text_file(&self, path: &Path) -> bool {
         if self.is_markdown_file(path) {
@@ -78,29 +109,7 @@ impl FileFilters {
         }
         if let Some(ext) = path.extension() {
             let ext_str = ext.to_string_lossy().to_string().to_lowercase();
-            let text_extensions = [
-                // 前端/脚本
-                "js", "jsx", "mjs", "cjs", "ts", "tsx",
-                // Python
-                "py", "pyw", "pyi",
-                // Shell
-                "sh", "bash", "zsh",
-                // 数据/配置
-                "json", "jsonc", "yaml", "yml", "toml", "ini", "cfg",
-                // Web
-                "html", "htm", "xml", "svg", "css", "scss", "less",
-                // SQL
-                "sql",
-                // 系统语言
-                "go", "rs", "rust", "java",
-                "c", "h", "cpp", "cc", "cxx", "hpp", "hh",
-                "cs", "csx", "php", "phtml",
-                "rb", "ruby", "swift", "kt", "kts", "dart",
-                // 其他
-                "lua", "pl", "pm", "r", "scala", "hs", "lhs",
-                "txt", "md", "markdown", "mkd",
-            ];
-            text_extensions.contains(&ext_str.as_str())
+            self.text_extensions.iter().any(|e| e == &ext_str)
         } else {
             // 无扩展名的常见文本文件
             if let Some(name) = path.file_name() {
@@ -183,5 +192,22 @@ mod tests {
         assert!(filters.is_text_file(Path::new("Makefile")));
         assert!(!filters.is_text_file(Path::new("image.png")));
         assert!(!filters.is_text_file(Path::new("archive.zip")));
+    }
+
+    #[test]
+    fn from_store_reads_custom_text_extensions() {
+        let mut data = HashMap::new();
+        data.insert(
+            "textExtensions".to_string(),
+            serde_json::json!(["md", "custom_ext"]),
+        );
+        let store = StoreState::from_map_for_test(data);
+        let filters = FileFilters::from_store(&store).unwrap();
+
+        assert!(filters.is_text_file(Path::new("guide.md")));
+        assert!(filters.is_text_file(Path::new("file.custom_ext")));
+        // 默认扩展名不再被识别
+        assert!(!filters.is_text_file(Path::new("main.rs")));
+        assert!(!filters.is_text_file(Path::new("app.ts")));
     }
 }
